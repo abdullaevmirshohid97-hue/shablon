@@ -1,0 +1,35 @@
+{
+  "name": "@mubosher/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "tsc -p tsconfig.json && electron .",
+    "build": "tsc -p tsconfig.json",
+    "package": "npm run build && electron-builder",
+    "lint": "eslint . --config ../../packages/config/eslint.base.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "echo 'no tests yet'",
+    "clean": "rimraf dist .turbo"
+  },
+  "devDependencies": {
+    "@mubosher/config": "*",
+    "@types/node": "^20.17.6",
+    "electron": "^33.0.2",
+    "electron-builder": "^25.1.8",
+    "eslint": "^9.15.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.3"
+  },
+  "build": {
+    "appId": "uz.mubosher.desktop",
+    "productName": "Mubosher",
+    "files": ["dist/**/*"],
+    "directories": {
+      "output": "out"
+    },
+    "win": { "target": "nsis" },
+    "mac": { "target": "dmg" },
+    "linux": { "target": "AppImage" }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "loading": "Загрузка...",
+    "error": "Произошла ошибка"
+  },
+  "ledger": {
+    "date": "Дата",
+    "description": "Операция",
+    "debit": "Дебет",
+    "credit": "Кредит",
+    "balance": "Текущее сальдо",
+    "owesUs": "Должен нам",
+    "weOwe": "Мы должны"
+  },
+  "transaction": {
+    "counterparty": "Контрагент",
+    "category": "Категория",
+    "quantity": "Количество",
+    "amount": "Сумма",
+    "currency": "Валюта"
+  }
+}

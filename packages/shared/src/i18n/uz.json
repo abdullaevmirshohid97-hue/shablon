@@ -1,0 +1,25 @@
+{
+  "common": {
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "delete": "O'chirish",
+    "loading": "Yuklanmoqda...",
+    "error": "Xatolik yuz berdi"
+  },
+  "ledger": {
+    "date": "Sana",
+    "description": "Operatsiya",
+    "debit": "Debet",
+    "credit": "Kredit",
+    "balance": "Joriy saldo",
+    "owesUs": "Bizga qarzdor",
+    "weOwe": "Biz qarzdormiz"
+  },
+  "transaction": {
+    "counterparty": "Kontragent",
+    "category": "Kategoriya",
+    "quantity": "Miqdor",
+    "amount": "Summa",
+    "currency": "Valyuta"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Mubosher",
+    "slug": "mubosher-mobile",
+    "scheme": "mubosher",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0f172a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "uz.mubosher.mobile"
+    },
+    "android": {
+      "package": "uz.mubosher.mobile"
+    },
+    "plugins": ["expo-router", "expo-secure-store", "expo-sqlite"],
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+node_modules/
+.turbo/
+dist/
+build/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# expo
+apps/mobile/.expo/
+apps/mobile/android/
+apps/mobile/ios/
+
+# electron
+apps/desktop/dist/
+apps/desktop/out/
+
+# supabase
+packages/database/supabase/.branches/
+packages/database/supabase/.temp/
+
+# os
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+npm-debug.log*

@@ -1,0 +1,12 @@
+{
+  "extends": "../../packages/config/tsconfig.rn.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "noEmit": true,
+    "composite": false,
+    "declaration": false
+  },
+  "include": ["src", "app", "app.d.ts", "expo-env.d.ts"]
+}

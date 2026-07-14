@@ -1,0 +1,19 @@
+{
+  "name": "@mubosher/database",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:diff": "supabase db diff -f",
+    "types:generate": "supabase gen types typescript --local > ../shared/src/database.types.ts",
+    "lint": "echo 'no lint for sql package'",
+    "typecheck": "echo 'no typecheck for sql package'",
+    "test": "echo 'no tests for sql package'",
+    "clean": "rimraf .turbo"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1"
+  }
+}
