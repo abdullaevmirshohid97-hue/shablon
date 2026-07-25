@@ -1,25 +1,152 @@
 {
   "common": {
     "save": "Saqlash",
+    "saving": "Saqlanmoqda...",
     "cancel": "Bekor qilish",
     "delete": "O'chirish",
+    "edit": "Tahrirlash",
     "loading": "Yuklanmoqda...",
-    "error": "Xatolik yuz berdi"
+    "error": "Xatolik yuz berdi",
+    "errorRetry": "Xatolik yuz berdi, qayta urinib ko'ring.",
+    "apply": "Qo'llash",
+    "close": "Bekor"
+  },
+  "header": {
+    "title": "Mubosher"
+  },
+  "nav": {
+    "clients": "Umumiy analitika",
+    "allClients": "Mijozlar",
+    "signOut": "Chiqish",
+    "modules": "Modullar",
+    "settings": "Sozlamalar"
+  },
+  "login": {
+    "title": "Tizimga kirish",
+    "tabPassword": "Parol bilan",
+    "tabMagicLink": "Havola bilan (email)",
+    "emailPlaceholder": "email@company.uz",
+    "passwordPlaceholder": "Parol",
+    "signingIn": "Kirilmoqda...",
+    "signIn": "Kirish",
+    "sending": "Yuborilmoqda...",
+    "sendMagicLink": "Kirish havolasini yuborish",
+    "magicLinkSent": "Emailingizga kirish havolasi yuborildi."
+  },
+  "dashboard": {
+    "welcomeTitle": "Xush kelibsiz",
+    "noOrgMessage": "Sizga hali birorta tashkilotga a'zolik berilmagan. Super-admin bilan bog'laning.",
+    "title": "Mijozlar ro'yxati",
+    "empty": "Hozircha mijozlar yo'q",
+    "onboardingTitle": "Mubosher'ga xush kelibsiz!",
+    "onboardingMessage": "Ishni boshlash uchun birinchi mijozingizni qo'shing. Modullar (kategoriyalar) keyinroq, xohlagan paytingizda qo'shilishi mumkin.",
+    "onboardingCta": "Birinchi mijozni qo'shish"
+  },
+  "addCounterparty": {
+    "nameLabel": "Mijoz nomi",
+    "namePlaceholder": "Masalan: Jafar aka",
+    "phoneLabel": "Telefon (ixtiyoriy)",
+    "phonePlaceholder": "+998 90 123 45 67",
+    "categoriesLabel": "Kategoriya (ixtiyoriy)",
+    "addCategoryPlaceholder": "Boshqa kategoriya...",
+    "addCategoryButton": "Qo'shish",
+    "submit": "Mijoz qo'shish"
+  },
+  "settings": {
+    "title": "Sozlamalar",
+    "modulesTitle": "Modullar",
+    "modulesDescription": "Har bir modul yon paneldagi alohida havolaga va o'zining mijozlar/hisobot sahifasiga aylanadi.",
+    "namePlaceholder": "Yangi modul nomi",
+    "addButton": "Modul qo'shish",
+    "renameTooltip": "Nomini o'zgartirish",
+    "deleteTooltip": "O'chirish",
+    "deleteConfirm": "Bu modulni o'chirasizmi? Uning nomi barcha mijozlardan ham olib tashlanadi.",
+    "empty": "Hozircha modul yo'q",
+    "saveTooltip": "Saqlash",
+    "cancelTooltip": "Bekor qilish"
+  },
+  "categories": {
+    "shaxsiy": "Shaxsiy",
+    "biznes": "Biznes",
+    "ishxona": "Ishxona",
+    "kocha": "Ko'cha",
+    "all": "Barchasi",
+    "uncategorized": "Kategoriyasiz"
   },
   "ledger": {
     "date": "Sana",
+    "documentNo": "Hujjat №",
+    "quantity": "Miqdor",
     "description": "Operatsiya",
+    "process": "Jarayon",
     "debit": "Debet",
     "credit": "Kredit",
+    "kirim": "Kirim",
+    "chiqim": "Chiqim",
+    "qarz": "Qarz",
+    "haq": "Haq",
+    "jami": "Jami",
+    "qoldi": "Qoldi",
+    "fabrika": "Fabrika",
+    "shaxsiy": "Shaxsiy",
     "balance": "Joriy saldo",
     "owesUs": "Bizga qarzdor",
-    "weOwe": "Biz qarzdormiz"
+    "weOwe": "Biz qarzdormiz",
+    "empty": "Hozircha tranzaksiyalar yo'q",
+    "exportExcel": "Excel yuklab olish",
+    "exportPdf": "PDF chiqarish",
+    "editTitle": "Tranzaksiyani tahrirlash",
+    "dueDate": "Srok",
+    "includeAnalyticsInPdf": "PDF hisobotga davriy analitikani ham qo'shaymi?",
+    "scroll": "Jadvalni ko'rish uchun aylantiring",
+    "kg": "Kg",
+    "dona": "Dona",
+    "chiqimSumma": "Chiqim summa",
+    "kirimSumma": "Kirim summa",
+    "chiqimMuddati": "Chiqim muddati",
+    "auto": "avtomatik",
+    "inlineNoCategoryError": "Bu turdagi kategoriya topilmadi"
   },
   "transaction": {
     "counterparty": "Kontragent",
     "category": "Kategoriya",
+    "type": "Turi",
+    "source": "Manba",
     "quantity": "Miqdor",
     "amount": "Summa",
-    "currency": "Valyuta"
+    "date": "Sana",
+    "dueDate": "Srok (ixtiyoriy)",
+    "description": "Izoh",
+    "currency": "Valyuta",
+    "calculator": "Kalkulyator"
+  },
+  "analytics": {
+    "title": "Davriy analitika",
+    "week": "Hafta",
+    "month": "Oy",
+    "quarter": "Chorak",
+    "year": "Yil",
+    "custom": "Davrdan davrgacha",
+    "from": "Dan",
+    "to": "Gacha",
+    "totalKirim": "Jami kirim",
+    "totalChiqim": "Jami chiqim",
+    "net": "Sof aylanma",
+    "transactionCount": "Amaliyotlar soni",
+    "byCategory": "Tur bo'yicha",
+    "category": "Turi",
+    "unit": "Birlik",
+    "amount": "Summa",
+    "overdueTitle": "Muddati o'tgan",
+    "dueSoonTitle": "Muddati yaqinlashgan (7 kun)",
+    "noDueItems": "Muddati yaqinlashgan yoki o'tgan yozuvlar yo'q",
+    "noData": "Bu davrda ma'lumot yo'q"
+  },
+  "overview": {
+    "topDebtors": "Eng ko'p qarzdorlar",
+    "noDebtors": "Hozircha qarzdorlik yo'q",
+    "byModule": "Modullar bo'yicha",
+    "module": "Modul",
+    "clientCount": "Mijozlar"
   }
 }

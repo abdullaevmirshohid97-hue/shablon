@@ -1,25 +1,152 @@
 {
   "common": {
     "save": "Сохранить",
+    "saving": "Сохранение...",
     "cancel": "Отмена",
     "delete": "Удалить",
+    "edit": "Редактировать",
     "loading": "Загрузка...",
-    "error": "Произошла ошибка"
+    "error": "Произошла ошибка",
+    "errorRetry": "Произошла ошибка, попробуйте снова.",
+    "apply": "Применить",
+    "close": "Отмена"
+  },
+  "header": {
+    "title": "Mubosher"
+  },
+  "nav": {
+    "clients": "Общая аналитика",
+    "allClients": "Клиенты",
+    "signOut": "Выйти",
+    "modules": "Модули",
+    "settings": "Настройки"
+  },
+  "login": {
+    "title": "Вход в систему",
+    "tabPassword": "По паролю",
+    "tabMagicLink": "По ссылке (email)",
+    "emailPlaceholder": "email@company.uz",
+    "passwordPlaceholder": "Пароль",
+    "signingIn": "Вход...",
+    "signIn": "Войти",
+    "sending": "Отправка...",
+    "sendMagicLink": "Отправить ссылку для входа",
+    "magicLinkSent": "На вашу почту отправлена ссылка для входа."
+  },
+  "dashboard": {
+    "welcomeTitle": "Добро пожаловать",
+    "noOrgMessage": "Вам ещё не назначена ни одна организация. Свяжитесь с супер-администратором.",
+    "title": "Список клиентов",
+    "empty": "Пока нет клиентов",
+    "onboardingTitle": "Добро пожаловать в Mubosher!",
+    "onboardingMessage": "Чтобы начать работу, добавьте первого клиента. Модули (категории) можно добавить позже, в любой момент.",
+    "onboardingCta": "Добавить первого клиента"
+  },
+  "addCounterparty": {
+    "nameLabel": "Имя клиента",
+    "namePlaceholder": "Например: Джафар ака",
+    "phoneLabel": "Телефон (необязательно)",
+    "phonePlaceholder": "+998 90 123 45 67",
+    "categoriesLabel": "Категория (необязательно)",
+    "addCategoryPlaceholder": "Другая категория...",
+    "addCategoryButton": "Добавить",
+    "submit": "Добавить клиента"
+  },
+  "settings": {
+    "title": "Настройки",
+    "modulesTitle": "Модули",
+    "modulesDescription": "Каждый модуль становится отдельной ссылкой в боковой панели со своей страницей клиентов/отчёта.",
+    "namePlaceholder": "Название нового модуля",
+    "addButton": "Добавить модуль",
+    "renameTooltip": "Переименовать",
+    "deleteTooltip": "Удалить",
+    "deleteConfirm": "Удалить этот модуль? Его название также будет убрано у всех клиентов.",
+    "empty": "Пока нет модулей",
+    "saveTooltip": "Сохранить",
+    "cancelTooltip": "Отмена"
+  },
+  "categories": {
+    "shaxsiy": "Личное",
+    "biznes": "Бизнес",
+    "ishxona": "Офис",
+    "kocha": "Улица",
+    "all": "Все",
+    "uncategorized": "Без категории"
   },
   "ledger": {
     "date": "Дата",
+    "documentNo": "Документ №",
+    "quantity": "Количество",
     "description": "Операция",
+    "process": "Операция",
     "debit": "Дебет",
     "credit": "Кредит",
+    "kirim": "Приход",
+    "chiqim": "Расход",
+    "qarz": "Долг",
+    "haq": "К возврату",
+    "jami": "Итого",
+    "qoldi": "Остаток",
+    "fabrika": "Фабрика",
+    "shaxsiy": "Личное",
     "balance": "Текущее сальдо",
     "owesUs": "Должен нам",
-    "weOwe": "Мы должны"
+    "weOwe": "Мы должны",
+    "empty": "Пока нет транзакций",
+    "exportExcel": "Скачать Excel",
+    "exportPdf": "Экспорт в PDF",
+    "editTitle": "Редактирование транзакции",
+    "dueDate": "Срок",
+    "includeAnalyticsInPdf": "Добавить периодическую аналитику в PDF-отчёт?",
+    "scroll": "Прокрутите, чтобы увидеть таблицу",
+    "kg": "Кг",
+    "dona": "Штук",
+    "chiqimSumma": "Сумма расхода",
+    "kirimSumma": "Сумма прихода",
+    "chiqimMuddati": "Срок расхода",
+    "auto": "авто",
+    "inlineNoCategoryError": "Категория для этого типа не найдена"
   },
   "transaction": {
     "counterparty": "Контрагент",
     "category": "Категория",
+    "type": "Тип",
+    "source": "Источник",
     "quantity": "Количество",
     "amount": "Сумма",
-    "currency": "Валюта"
+    "date": "Дата",
+    "dueDate": "Срок (необязательно)",
+    "description": "Комментарий",
+    "currency": "Валюта",
+    "calculator": "Калькулятор"
+  },
+  "analytics": {
+    "title": "Периодическая аналитика",
+    "week": "Неделя",
+    "month": "Месяц",
+    "quarter": "Квартал",
+    "year": "Год",
+    "custom": "Произвольный период",
+    "from": "С",
+    "to": "По",
+    "totalKirim": "Итого приход",
+    "totalChiqim": "Итого расход",
+    "net": "Чистый оборот",
+    "transactionCount": "Количество операций",
+    "byCategory": "По типам",
+    "category": "Тип",
+    "unit": "Ед.",
+    "amount": "Сумма",
+    "overdueTitle": "Просрочено",
+    "dueSoonTitle": "Срок приближается (7 дней)",
+    "noDueItems": "Нет записей с приближающимся или просроченным сроком",
+    "noData": "За этот период данных нет"
+  },
+  "overview": {
+    "topDebtors": "Крупнейшие должники",
+    "noDebtors": "Пока нет задолженностей",
+    "byModule": "По модулям",
+    "module": "Модуль",
+    "clientCount": "Клиентов"
   }
 }

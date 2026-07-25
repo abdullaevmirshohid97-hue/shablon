@@ -22,22 +22,28 @@ export function useTransactions(
     queryKey,
     enabled: !!orgId && !!counterpartyId,
     queryFn: async () => {
-      const [{ data: accounts, error: accountsError }, { data: txs, error: txError }] =
-        await Promise.all([
-          supabase.from('accounts').select('*').eq('org_id', orgId!),
-          supabase
-            .from('transactions')
-            .select('*')
-            .eq('counterparty_id', counterpartyId!)
-            .order('occurred_at')
-            .order('created_at'),
-        ]);
+      const [
+        { data: accounts, error: accountsError },
+        { data: categories, error: categoriesError },
+        { data: txs, error: txError },
+      ] = await Promise.all([
+        supabase.from('accounts').select('*').eq('org_id', orgId!),
+        supabase.from('transaction_categories').select('*').eq('org_id', orgId!),
+        supabase
+          .from('transactions')
+          .select('*')
+          .eq('counterparty_id', counterpartyId!)
+          .order('occurred_at')
+          .order('created_at'),
+      ]);
 
       if (accountsError) throw accountsError;
+      if (categoriesError) throw categoriesError;
       if (txError) throw txError;
 
       const accountsById = new Map(accounts.map((a) => [a.id, a]));
-      return txs.map((t) => toLedgerTransaction(t, accountsById));
+      const categoriesById = new Map(categories.map((c) => [c.id, c]));
+      return txs.map((t) => toLedgerTransaction(t, accountsById, categoriesById));
     },
   });
 
@@ -48,7 +54,12 @@ export function useTransactions(
       .channel(`transactions:${counterpartyId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'transactions', filter: `counterparty_id=eq.${counterpartyId}` },
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+          filter: `counterparty_id=eq.${counterpartyId}`,
+        },
         () => {
           void queryClient.invalidateQueries({ queryKey });
         },

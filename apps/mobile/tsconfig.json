@@ -8,5 +8,5 @@
     "composite": false,
     "declaration": false
   },
-  "include": ["src", "app", "app.d.ts", "expo-env.d.ts"]
+  "include": ["src", "app", "app.d.ts"]
 }

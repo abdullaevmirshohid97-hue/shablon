@@ -85,15 +85,20 @@ export interface Database {
           org_id: string;
           counterparty_id: string;
           category_id: string | null;
+          document_no: string | null;
           occurred_at: string;
+          due_date: string | null;
           description: string | null;
           quantity: number | null;
           unit: string | null;
+          quantity_kg: number | null;
+          quantity_dona: number | null;
           debit_account_id: string;
           debit_amount: number;
           credit_account_id: string;
           credit_amount: number;
           currency: string;
+          source: 'fabrika' | 'shaxsiy';
           created_by: string | null;
           client_local_id: string | null;
           synced_at: string;
@@ -107,6 +112,7 @@ export interface Database {
           credit_account_id: string;
           credit_amount: number;
           currency: string;
+          source: 'fabrika' | 'shaxsiy';
         };
         Update: Partial<Database['public']['Tables']['transactions']['Row']>;
         Relationships: [];
@@ -137,9 +143,32 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['profiles']['Row']>;
         Relationships: [];
       };
+      modules: {
+        Row: {
+          id: string;
+          org_id: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['modules']['Row']> & {
+          org_id: string;
+          name: string;
+        };
+        Update: Partial<Database['public']['Tables']['modules']['Row']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      rename_module_category: {
+        Args: { target_org_id: string; old_name: string; new_name: string };
+        Returns: void;
+      };
+      remove_module_category: {
+        Args: { target_org_id: string; name_to_remove: string };
+        Returns: void;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

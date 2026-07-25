@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { computeRunningBalance } from './balance';
+import { computeRunningBalance, computeSourceBalances } from './balance';
 import type { LedgerTransaction } from './types';
 
-function tx(partial: Partial<LedgerTransaction> & Pick<LedgerTransaction, 'id' | 'occurredAt'>): LedgerTransaction {
+function tx(
+  partial: Partial<LedgerTransaction> & Pick<LedgerTransaction, 'id' | 'occurredAt'>,
+): LedgerTransaction {
   return {
     orgId: 'org-1',
     counterpartyId: 'cp-1',
@@ -11,6 +13,7 @@ function tx(partial: Partial<LedgerTransaction> & Pick<LedgerTransaction, 'id' |
     creditAccountType: 'other',
     creditAmount: 0,
     currency: 'UZS',
+    source: 'fabrika',
     ...partial,
   };
 }
@@ -95,5 +98,64 @@ describe('computeRunningBalance', () => {
     ]);
 
     expect(entries[0]).toMatchObject({ balance: 0, side: 'debit' });
+  });
+});
+
+describe('computeSourceBalances', () => {
+  it('keeps fabrika and shaxsiy totals independent', () => {
+    const entries = computeSourceBalances([
+      tx({
+        id: 'sale-fabrika',
+        occurredAt: '2026-01-01T00:00:00Z',
+        debitAccountType: 'receivable',
+        debitAmount: 1000,
+        source: 'fabrika',
+      }),
+      tx({
+        id: 'sale-shaxsiy',
+        occurredAt: '2026-01-02T00:00:00Z',
+        debitAccountType: 'receivable',
+        debitAmount: 300,
+        source: 'shaxsiy',
+      }),
+      tx({
+        id: 'payment-fabrika',
+        occurredAt: '2026-01-03T00:00:00Z',
+        creditAccountType: 'receivable',
+        creditAmount: 400,
+        source: 'fabrika',
+      }),
+    ]);
+
+    // Fabrika: +1000 jami, then +400 jami (gross) = 1400; net qoldi = 1000 - 400 = 600.
+    expect(entries[2]).toMatchObject({
+      fabrikaJami: 1400,
+      fabrikaQoldi: 600,
+      shaxsiyJami: 300,
+      shaxsiyQoldi: 300,
+    });
+    // Shaxsiy untouched by the fabrika payment.
+    expect(entries[1]).toMatchObject({ shaxsiyJami: 300, shaxsiyQoldi: 300 });
+  });
+
+  it('ignores non-receivable postings for both sources', () => {
+    const [entry] = computeSourceBalances([
+      tx({
+        id: 'warehouse-issue',
+        occurredAt: '2026-01-01T00:00:00Z',
+        debitAccountType: 'other',
+        debitAmount: 38,
+        creditAccountType: 'inventory',
+        creditAmount: 38,
+        source: 'fabrika',
+      }),
+    ]);
+
+    expect(entry).toMatchObject({
+      fabrikaJami: 0,
+      fabrikaQoldi: 0,
+      shaxsiyJami: 0,
+      shaxsiyQoldi: 0,
+    });
   });
 });

@@ -4,6 +4,8 @@ export const accountTypeSchema = z.enum(['receivable', 'cash', 'sales', 'invento
 
 export const orgRoleSchema = z.enum(['owner', 'admin', 'staff']);
 
+export const fundSourceSchema = z.enum(['fabrika', 'shaxsiy']);
+
 export const organizationInputSchema = z.object({
   name: z.string().min(2).max(200),
   slug: z
@@ -35,11 +37,40 @@ export const transactionInputSchema = z.object({
   counterpartyId: z.string().uuid(),
   categoryId: z.string().uuid(),
   occurredAt: z.string().datetime(),
+  dueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
   description: z.string().max(500).optional(),
   quantity: z.number().positive().optional(),
   unit: z.string().max(20).optional(),
+  quantityKg: z.number().positive().optional(),
+  quantityDona: z.number().positive().optional(),
   amount: z.number().positive(),
   currency: z.string().length(3),
+  source: fundSourceSchema,
   clientLocalId: z.string().uuid(),
 });
 export type TransactionInput = z.infer<typeof transactionInputSchema>;
+
+/** Editing an existing transaction: same fields, keyed by id, no offline-sync id needed. */
+export const transactionUpdateSchema = z.object({
+  id: z.string().uuid(),
+  orgId: z.string().uuid(),
+  counterpartyId: z.string().uuid(),
+  categoryId: z.string().uuid(),
+  occurredAt: z.string().datetime(),
+  dueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  description: z.string().max(500).optional(),
+  quantity: z.number().positive().optional(),
+  unit: z.string().max(20).optional(),
+  quantityKg: z.number().positive().optional(),
+  quantityDona: z.number().positive().optional(),
+  amount: z.number().positive(),
+  currency: z.string().length(3),
+  source: fundSourceSchema,
+});
+export type TransactionUpdateInput = z.infer<typeof transactionUpdateSchema>;

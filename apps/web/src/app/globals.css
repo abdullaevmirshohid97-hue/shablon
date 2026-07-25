@@ -3,5 +3,55 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-50 text-slate-900;
+  @apply bg-slate-50 text-slate-900 antialiased;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+/* Financial figures line up on a fixed-width grid — never proportional. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+*:focus-visible {
+  @apply outline-none ring-2 ring-brand-500 ring-offset-1 ring-offset-white;
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  table {
+    width: 100% !important;
+    table-layout: auto !important;
+    font-size: 11px;
+  }
+  /* The on-screen ledger scrolls inside a fixed-height panel; printing must
+     show every row, so the height cap and clipping are lifted here. */
+  .ledger-scroll {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  thead {
+    position: static !important;
+  }
+  /* Let cell contents wrap instead of being clipped — there's no hover to
+     reveal a truncated title on paper. */
+  td,
+  th {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    padding: 4px 6px !important;
+  }
 }

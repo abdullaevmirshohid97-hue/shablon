@@ -29,6 +29,13 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
 
+  // CI/manual launch check: MUBOSHER_SMOKE_TEST=1 opens the window, proves
+  // the main process booted, then exits on its own.
+  if (process.env.MUBOSHER_SMOKE_TEST) {
+    console.warn('[smoke-test] window created, quitting');
+    setTimeout(() => app.quit(), 2000);
+  }
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

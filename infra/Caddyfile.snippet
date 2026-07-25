@@ -1,0 +1,96 @@
+# ============================================================================
+# Mubosher (merycollection.uz) — VPS'dagi UMUMIY /etc/caddy/Caddyfile'ga
+# QO'LDA qo'shiladigan bloklar.
+#
+# MUHIM: bu VPS'da boshqa loyihalar ham bor (Clary, Luxury Textile,
+# Yukchibolla/ilova). Ularning bloklarini O'CHIRMANG/O'ZGARTIRMANG — faqat
+# quyidagi 4 blokni fayl oxiriga qo'shing.
+#
+# Qo'shishdan oldin zaxira:
+#   cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak-$(date +%F)
+# Qo'shgandan keyin tekshirib qayta ishga tushiring:
+#   caddy validate --config /etc/caddy/Caddyfile
+#   systemctl reload caddy
+#
+# Caddy avtomatik Let's Encrypt SSL oladi — certbot kerak emas. Faqat DNS
+# A-record'lar (merycollection.uz, www, app, admin) shu VPS IP'siga to'g'ri
+# kelishi kifoya. Barcha 4 blok bitta Next.js jarayoniga (127.0.0.1:3100,
+# pm2: mery-web) yo'naltiriladi; kim qaysi subdomenga kirgani host bo'yicha
+# ilova ichida ajratiladi (super-admin roli = profiles.role_platform).
+# ============================================================================
+
+# ----- Asosiy domen (hozircha ilovaning o'zi; keyin alohida landing qo'yiladi) -----
+merycollection.uz {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+
+	reverse_proxy 127.0.0.1:3100 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+# ----- www -> asosiy domen redirect -----
+www.merycollection.uz {
+	redir https://merycollection.uz{uri} permanent
+}
+
+# ----- Mijozlar ilovasi (SaaS tenant app) -----
+app.merycollection.uz {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		# connect-src: Supabase (rest/realtime/storage) + o'zi. Xavfsizroq bo'lishi
+		# uchun `*.supabase.co` o'rniga aniq project-ref yozib qo'ysangiz ham bo'ladi.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+
+	reverse_proxy 127.0.0.1:3100 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+# ----- Super-admin paneli -----
+# Kirish ilova ichida Supabase Auth + super-admin roli (profiles.role_platform =
+# 'platform_admin') bilan cheklanadi. IP allowlist qo'yilmagan: operator IP'lari
+# (uy/mobil/DHCP) tez-tez o'zgaradi va u faqat 403 beradi, majburiy autentifikatsiya
+# ustiga real xavfsizlik qo'shmaydi. Panel indekslanmasligi kerak.
+admin.merycollection.uz {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		# Admin paneli hech qachon qidiruvga tushmasin va boshqa saytga embed bo'lmasin.
+		X-Robots-Tag "noindex, nofollow"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+
+	reverse_proxy 127.0.0.1:3100 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+}

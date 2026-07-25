@@ -1,3 +1,4 @@
+import { AppState } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { createSupabaseClient } from '@mubosher/api-client';
 
@@ -18,4 +19,14 @@ export const supabase = createSupabaseClient({
     persistSession: true,
     detectSessionInUrl: false,
   },
+});
+
+// React Native has no browser visibility events, so supabase-js needs to be
+// told when the app is foregrounded to keep the access token refreshed.
+AppState.addEventListener('change', (state) => {
+  if (state === 'active') {
+    void supabase.auth.startAutoRefresh();
+  } else {
+    void supabase.auth.stopAutoRefresh();
+  }
 });
