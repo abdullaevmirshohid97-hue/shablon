@@ -29,7 +29,7 @@ merycollection.uz {
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://zsegffswqmmvehclekji.supabase.co wss://zsegffswqmmvehclekji.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 		-Server
 	}
 
@@ -55,9 +55,9 @@ app.merycollection.uz {
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
-		# connect-src: Supabase (rest/realtime/storage) + o'zi. Xavfsizroq bo'lishi
-		# uchun `*.supabase.co` o'rniga aniq project-ref yozib qo'ysangiz ham bo'ladi.
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		# connect-src: Supabase (rest/realtime/storage) + o'zi. Production project
+		# ref'iga qadalgan (zsegffswqmmvehclekji). Loyiha o'zgarsa — shu ref'ni yangilang.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://zsegffswqmmvehclekji.supabase.co wss://zsegffswqmmvehclekji.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 		-Server
 	}
 
@@ -84,7 +84,7 @@ admin.merycollection.uz {
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
 		# Admin paneli hech qachon qidiruvga tushmasin va boshqa saytga embed bo'lmasin.
 		X-Robots-Tag "noindex, nofollow"
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://zsegffswqmmvehclekji.supabase.co wss://zsegffswqmmvehclekji.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 		-Server
 	}
 

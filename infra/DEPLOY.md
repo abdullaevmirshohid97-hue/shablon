@@ -129,9 +129,16 @@ curl -I http://127.0.0.1:3100        # jarayon javob beryaptimi
 - **Ma'lumot xavfsizligi** — Supabase RLS orqali (har tenant faqat o'z ma'lumotini
   ko'radi). Bu deploy'dan alohida, DB migratsiyalarida ta'minlanadi.
 
+### Production Supabase loyihasi
+
+- **`zsegffswqmmvehclekji`** (FAOL). App va mobil shunga ulangan; CSP shu ref'ga
+  qadalgan. `oxzenyupcolsamojccfg` — eski/arxiv, ishlatilmaydi.
+- `.env.production` faqat **anon** (publishable) kalitni oladi. `service_role`/
+  `secret` kalitni HECH QACHON `.env.production` yoki frontendga qo'ymang.
+
 ### Tavsiya (qo'shimcha qat'iylik uchun)
 
-- CSP'dagi `https://*.supabase.co` o'rniga aniq project-ref yozib qo'ying
-  (masalan `https://<ref>.supabase.co wss://<ref>.supabase.co`).
 - UFW/firewall: faqat 22 (SSH), 80, 443 ochiq; 3100 va boshqa app portlari
   tashqaridan yopiq bo'lsin.
+- Demo/ishga tushirishdan keyin chatda ochiq yuborilgan `service_role`, `secret`
+  va DB parolini Supabase Dashboard orqali **qayta generatsiya qiling** (rotate).
