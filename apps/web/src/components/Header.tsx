@@ -1,11 +1,16 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Segmented } from '@/components/ui/Segmented';
 
 export function Header() {
   const { locale, setLocale, t } = useLocale();
+  const pathname = usePathname();
+
+  // Super-admin panelining o'z sarlavhasi bor (AdminShell) — bu yerda ko'rsatmaymiz.
+  if (pathname?.startsWith('/admin')) return null;
 
   return (
     <header className="no-print sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
