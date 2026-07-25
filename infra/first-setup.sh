@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Mubosher web (merycollection.uz) — VPS'da BIRINCHI MARTA sozlash.
+# Mubosher web (idaa.uz) — VPS'da BIRINCHI MARTA sozlash.
 #
 # Bu skript repo ichida keladi, shuning uchun avval klonlab, keyin ishga
 # tushiring (klon bir marta, qo'lda):

@@ -1,5 +1,5 @@
 // ============================================================================
-// pm2 ecosystem — Mubosher web (merycollection.uz)
+// pm2 ecosystem — Mubosher web (idaa.uz)
 //
 // Bu VPS boshqa loyihalar bilan BIRGA ishlaydi (clary-api, luxury, ilova...).
 // Bu jarayon nomi `mery-web` — boshqalarga tegmaydi.

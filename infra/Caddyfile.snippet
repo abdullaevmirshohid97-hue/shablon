@@ -1,5 +1,5 @@
 # ============================================================================
-# Mubosher (merycollection.uz) — VPS'dagi UMUMIY /etc/caddy/Caddyfile'ga
+# Mubosher (idaa.uz) — VPS'dagi UMUMIY /etc/caddy/Caddyfile'ga
 # QO'LDA qo'shiladigan bloklar.
 #
 # MUHIM: bu VPS'da boshqa loyihalar ham bor (Clary, Luxury Textile,
@@ -13,14 +13,14 @@
 #   systemctl reload caddy
 #
 # Caddy avtomatik Let's Encrypt SSL oladi — certbot kerak emas. Faqat DNS
-# A-record'lar (merycollection.uz, www, app, admin) shu VPS IP'siga to'g'ri
+# A-record'lar (idaa.uz, www, app, admin) shu VPS IP'siga to'g'ri
 # kelishi kifoya. Barcha 4 blok bitta Next.js jarayoniga (127.0.0.1:3100,
 # pm2: mery-web) yo'naltiriladi; kim qaysi subdomenga kirgani host bo'yicha
 # ilova ichida ajratiladi (super-admin roli = profiles.role_platform).
 # ============================================================================
 
 # ----- Asosiy domen (hozircha ilovaning o'zi; keyin alohida landing qo'yiladi) -----
-merycollection.uz {
+idaa.uz {
 	encode zstd gzip
 
 	header {
@@ -41,12 +41,12 @@ merycollection.uz {
 }
 
 # ----- www -> asosiy domen redirect -----
-www.merycollection.uz {
-	redir https://merycollection.uz{uri} permanent
+www.idaa.uz {
+	redir https://idaa.uz{uri} permanent
 }
 
 # ----- Mijozlar ilovasi (SaaS tenant app) -----
-app.merycollection.uz {
+app.idaa.uz {
 	encode zstd gzip
 
 	header {
@@ -73,7 +73,7 @@ app.merycollection.uz {
 # 'platform_admin') bilan cheklanadi. IP allowlist qo'yilmagan: operator IP'lari
 # (uy/mobil/DHCP) tez-tez o'zgaradi va u faqat 403 beradi, majburiy autentifikatsiya
 # ustiga real xavfsizlik qo'shmaydi. Panel indekslanmasligi kerak.
-admin.merycollection.uz {
+admin.idaa.uz {
 	encode zstd gzip
 
 	header {

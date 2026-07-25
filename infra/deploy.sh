@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Mubosher web (merycollection.uz) — VPS'ga bir-buyruqli deploy
+# Mubosher web (idaa.uz) — VPS'ga bir-buyruqli deploy
 #
 # MUHIM: bu VPS boshqa loyihalar bilan BIRGA ishlaydi (clary-api, luxury,
 # ilova/yukchibolla...). Bu skript FAQAT /opt/mery papkasi va pm2'dagi
@@ -87,4 +87,4 @@ echo "   1) infra/Caddyfile.snippet ichidagi bloklarni /etc/caddy/Caddyfile oxir
 echo "   2) caddy validate --config /etc/caddy/Caddyfile"
 echo "   3) systemctl reload caddy"
 echo ""
-echo "DNS (o'zingiz sozlaysiz): merycollection.uz, www, app, admin → shu VPS IP (A-record)"
+echo "DNS (o'zingiz sozlaysiz): idaa.uz, www, app, admin → shu VPS IP (A-record)"

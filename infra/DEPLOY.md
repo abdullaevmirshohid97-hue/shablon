@@ -1,4 +1,4 @@
-# Mubosher — VPS deploy qo'llanmasi (merycollection.uz)
+# Mubosher — VPS deploy qo'llanmasi (idaa.uz)
 
 Bu qo'llanma Mubosher web-ilovasini (Next.js) mavjud VPS'ga — Clary, Luxury
 Textile va Yukchibolla/ilova bilan **yonma-yon** — joylashtirishni tushuntiradi.
@@ -12,10 +12,10 @@ Boshqa loyihalarga tegilmaydi.
                         ┌──────▼──────┐   avtomatik Let's Encrypt SSL
                         │    Caddy     │   /etc/caddy/Caddyfile (umumiy)
                         └──────┬──────┘
-        merycollection.uz ─────┤
-    www.merycollection.uz ─────┤  reverse_proxy 127.0.0.1:3100
-    app.merycollection.uz ─────┤
-  admin.merycollection.uz ─────┘
+          idaa.uz ─────┤
+      www.idaa.uz ─────┤  reverse_proxy 127.0.0.1:3100
+      app.idaa.uz ─────┤
+    admin.idaa.uz ─────┘
                                │
                      ┌─────────▼──────────┐
                      │  pm2: mery-web      │  Next.js standalone server
@@ -27,10 +27,10 @@ Boshqa loyihalarga tegilmaydi.
 
 - **Bitta** Next.js jarayoni uchala subdomenga xizmat qiladi. Kim qaysi subdomenga
   kirgani ilova ichida ajratiladi:
-  - `app.merycollection.uz` — mijozlar (SaaS tenant) ilovasi.
-  - `admin.merycollection.uz` — super-admin (`profiles.role_platform = 'platform_admin'`).
+  - `app.idaa.uz` — mijozlar (SaaS tenant) ilovasi.
+  - `admin.idaa.uz` — super-admin (`profiles.role_platform = 'platform_admin'`).
     Panel `noindex` + `no-referrer` bilan yopiq.
-  - `merycollection.uz` — asosiy domen (hozircha ilovaning o'zi; keyin alohida
+  - `idaa.uz` — asosiy domen (hozircha ilovaning o'zi; keyin alohida
     marketing-landing qo'yish mumkin).
 - Backend — Supabase (managed), VPS'da DB yo'q. Xavfsizlikning asosiy qatlami —
   Supabase **RLS** (Row Level Security) va rollar.
