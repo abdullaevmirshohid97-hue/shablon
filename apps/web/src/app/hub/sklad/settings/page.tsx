@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { SkladList } from './sklad-list';
+import { LookupSettings } from '../lookup-settings';
 
-export default async function SkladPage() {
+export default async function SkladSettingsPage() {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -16,9 +16,9 @@ export default async function SkladPage() {
     .eq('user_id', user.id);
 
   const membership = memberships?.[0];
-  if (!membership) redirect('/hub');
+  const isOrgAdmin = membership?.role === 'owner' || membership?.role === 'admin';
 
-  const isOrgAdmin = membership.role === 'owner' || membership.role === 'admin';
+  if (!membership || !isOrgAdmin) redirect('/hub/sklad');
 
-  return <SkladList orgId={membership.org_id} isOrgAdmin={isOrgAdmin} />;
+  return <LookupSettings orgId={membership.org_id} />;
 }

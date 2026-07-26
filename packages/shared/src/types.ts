@@ -124,3 +124,100 @@ export interface PeriodStats {
   transactionCount: number;
   byCategory: CategoryBreakdown[];
 }
+
+// ---------------------------------------------------------------------
+// Sklad (warehouse) — Phase 1: product card + reference data + batches
+// ---------------------------------------------------------------------
+
+export type SkladLookupKind = 'mahsulot_turi' | 'ip_turi' | 'olcham' | 'sort' | 'rang' | 'pantone';
+
+/** One admin-managed dropdown value (product type / yarn type / size / sort / color / pantone). */
+export interface SkladLookup {
+  id: string;
+  orgId: string;
+  kind: SkladLookupKind;
+  name: string;
+  createdAt: string;
+}
+
+/** Mahsulot kartasi — the reusable product definition, distinct from any physical lot of it. */
+export interface SkladItem {
+  id: string;
+  orgId: string;
+  artikul?: string | null;
+  kod?: string | null;
+  name: string;
+  productTypeId?: string | null;
+  yarnTypeId?: string | null;
+  gsm?: number | null;
+  sizeId?: string | null;
+  sortId?: string | null;
+  colorId?: string | null;
+  pantoneId?: string | null;
+  createdAt: string;
+}
+
+/** Buyurtma — mijoz reuses the existing Counterparty entity, not a separate customer table. */
+export interface SkladOrder {
+  id: string;
+  orgId: string;
+  orderNo?: string | null;
+  orderName?: string | null;
+  counterpartyId?: string | null;
+  createdAt: string;
+}
+
+export type SkladBatchStatus =
+  'tayyor' | 'qadoqlanmoqda' | 'omborda' | 'rezerv' | 'jonatildi' | 'qaytarildi' | 'brak';
+
+/** Narxlar — kept in a separate table so RLS can hide it from non-admins row-for-row. */
+export interface SkladBatchPrice {
+  batchId: string;
+  orgId: string;
+  pricePerKg?: number | null;
+  pricePerPiece?: number | null;
+  pricePerSet?: number | null;
+  totalAmount?: number | null;
+  purchaseCost?: number | null;
+  profitPercent?: number | null;
+  profitAmount?: number | null;
+  currency: string;
+}
+
+/** Ombor qoldig'i — one row per physical lot/batch of an item sitting in the warehouse. */
+export interface SkladBatch {
+  id: string;
+  orgId: string;
+  itemId: string;
+  orderId?: string | null;
+  bruttoKg?: number | null;
+  nettoKg?: number | null;
+  /** Generated column (brutto - netto) — never set directly. */
+  taraKg?: number | null;
+  donaSoni?: number | null;
+  naborSoni?: number | null;
+  palletSoni?: number | null;
+  /** Generated column (netto / dona) — never set directly. */
+  pieceWeightKg?: number | null;
+  qoldiqDona?: number | null;
+  ishlabChiqarilganSana?: string | null;
+  omborgaKirganSana: string;
+  status: SkladBatchStatus;
+  qcCheckedBy?: string | null;
+  qcCheckedAt?: string | null;
+  defectType?: string | null;
+  defectQty?: number | null;
+  notes?: string | null;
+  locationSector?: string | null;
+  locationRow?: string | null;
+  locationRack?: string | null;
+  locationShelf?: string | null;
+  createdAt: string;
+  // Denormalized display fields, populated via embedded selects in useSkladBatches.
+  itemName?: string;
+  itemArtikul?: string | null;
+  orderNo?: string | null;
+  orderName?: string | null;
+  counterpartyName?: string | null;
+  price?: SkladBatchPrice | null;
+}

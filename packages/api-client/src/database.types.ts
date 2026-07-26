@@ -157,6 +157,126 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['modules']['Row']>;
         Relationships: [];
       };
+      sklad_lookups: {
+        Row: {
+          id: string;
+          org_id: string;
+          kind: 'mahsulot_turi' | 'ip_turi' | 'olcham' | 'sort' | 'rang' | 'pantone';
+          name: string;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_lookups']['Row']> & {
+          org_id: string;
+          kind: 'mahsulot_turi' | 'ip_turi' | 'olcham' | 'sort' | 'rang' | 'pantone';
+          name: string;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_lookups']['Row']>;
+        Relationships: [];
+      };
+      sklad_items: {
+        Row: {
+          id: string;
+          org_id: string;
+          artikul: string | null;
+          kod: string | null;
+          name: string;
+          product_type_id: string | null;
+          yarn_type_id: string | null;
+          gsm: number | null;
+          size_id: string | null;
+          sort_id: string | null;
+          color_id: string | null;
+          pantone_id: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_items']['Row']> & {
+          org_id: string;
+          name: string;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_items']['Row']>;
+        Relationships: [];
+      };
+      sklad_orders: {
+        Row: {
+          id: string;
+          org_id: string;
+          order_no: string | null;
+          order_name: string | null;
+          counterparty_id: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_orders']['Row']> & {
+          org_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_orders']['Row']>;
+        Relationships: [];
+      };
+      sklad_batches: {
+        Row: {
+          id: string;
+          org_id: string;
+          item_id: string;
+          order_id: string | null;
+          brutto_kg: number | null;
+          netto_kg: number | null;
+          tara_kg: number | null;
+          dona_soni: number | null;
+          nabor_soni: number | null;
+          pallet_soni: number | null;
+          piece_weight_kg: number | null;
+          qoldiq_dona: number | null;
+          ishlab_chiqarilgan_sana: string | null;
+          omborga_kirgan_sana: string;
+          status:
+            'tayyor' | 'qadoqlanmoqda' | 'omborda' | 'rezerv' | 'jonatildi' | 'qaytarildi' | 'brak';
+          qc_checked_by: string | null;
+          qc_checked_at: string | null;
+          defect_type: string | null;
+          defect_qty: number | null;
+          notes: string | null;
+          location_sector: string | null;
+          location_row: string | null;
+          location_rack: string | null;
+          location_shelf: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        // tara_kg/piece_weight_kg are GENERATED ALWAYS columns — Postgres
+        // rejects writes that supply them, so they're omitted here.
+        Insert: Partial<
+          Omit<Database['public']['Tables']['sklad_batches']['Row'], 'tara_kg' | 'piece_weight_kg'>
+        > & {
+          org_id: string;
+          item_id: string;
+        };
+        Update: Partial<
+          Omit<Database['public']['Tables']['sklad_batches']['Row'], 'tara_kg' | 'piece_weight_kg'>
+        >;
+        Relationships: [];
+      };
+      sklad_batch_prices: {
+        Row: {
+          batch_id: string;
+          org_id: string;
+          price_per_kg: number | null;
+          price_per_piece: number | null;
+          price_per_set: number | null;
+          total_amount: number | null;
+          purchase_cost: number | null;
+          profit_percent: number | null;
+          profit_amount: number | null;
+          currency: string;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_batch_prices']['Row']> & {
+          batch_id: string;
+          org_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_batch_prices']['Row']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
