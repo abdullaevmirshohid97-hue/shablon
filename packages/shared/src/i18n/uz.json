@@ -40,7 +40,8 @@
     "empty": "Hozircha mijozlar yo'q",
     "onboardingTitle": "Mubosher'ga xush kelibsiz!",
     "onboardingMessage": "Ishni boshlash uchun birinchi mijozingizni qo'shing. Modullar (kategoriyalar) keyinroq, xohlagan paytingizda qo'shilishi mumkin.",
-    "onboardingCta": "Birinchi mijozni qo'shish"
+    "onboardingCta": "Birinchi mijozni qo'shish",
+    "overdue": "Muddati o'tgan"
   },
   "addCounterparty": {
     "nameLabel": "Mijoz nomi",

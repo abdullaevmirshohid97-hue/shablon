@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
-import { ToggleChip } from '@/components/ui/Badge';
+import { Badge, ToggleChip } from '@/components/ui/Badge';
+import type { CounterpartyDebt } from '@/lib/counterpartyDebt';
 
 interface CounterpartyRow {
   id: string;
@@ -12,6 +13,8 @@ interface CounterpartyRow {
   phone: string | null;
   categories: string[];
 }
+
+const currencyFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2 });
 
 const AVATAR_TONES = [
   'bg-brand-100 text-brand-700',
@@ -40,8 +43,15 @@ function toneFor(name: string): string {
 /** Sentinel filter value for counterparties that carry no category tag at all. */
 const UNCATEGORIZED = '__uncategorized__';
 
-export function CounterpartyList({ counterparties }: { counterparties: CounterpartyRow[] }) {
-  const { t } = useLocale();
+export function CounterpartyList({
+  counterparties,
+  debtByCounterparty = {},
+}: {
+  counterparties: CounterpartyRow[];
+  debtByCounterparty?: Record<string, CounterpartyDebt>;
+}) {
+  const { t, locale } = useLocale();
+  const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const allCategories = useMemo(() => {
@@ -93,36 +103,50 @@ export function CounterpartyList({ counterparties }: { counterparties: Counterpa
 
       {filtered.length ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((c) => (
-            <Link key={c.id} href={`/counterparty/${c.id}`}>
-              <Card className="flex items-center gap-3 p-4 transition-shadow hover:shadow-popover">
-                <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${toneFor(c.name)}`}
-                >
-                  {initials(c.name)}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium text-slate-900">{c.name}</span>
-                  {(c.phone || c.categories?.length) && (
-                    <span className="block truncate text-xs text-slate-500">
-                      {[c.phone, c.categories?.join(', ')].filter(Boolean).join(' · ')}
-                    </span>
-                  )}
-                </span>
-                <svg
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="h-4 w-4 shrink-0 text-slate-300"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </Card>
-            </Link>
-          ))}
+          {filtered.map((c) => {
+            const debt = debtByCounterparty[c.id];
+            return (
+              <Link key={c.id} href={`/counterparty/${c.id}`}>
+                <Card className="flex items-center gap-3 p-4 transition-shadow hover:shadow-popover">
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${toneFor(c.name)}`}
+                  >
+                    {initials(c.name)}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium text-slate-900">{c.name}</span>
+                    {(c.phone || c.categories?.length) && (
+                      <span className="block truncate text-xs text-slate-500">
+                        {[c.phone, c.categories?.join(', ')].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
+                    {debt && (
+                      <span className="mt-1 flex items-center gap-1.5">
+                        <Badge tone="danger">
+                          {t('dashboard.overdue')}:{' '}
+                          {new Date(debt.overdueDate).toLocaleDateString(dateLocale)}
+                        </Badge>
+                        <span className="text-xs font-semibold tabular-nums text-rose-600">
+                          {currencyFormatter.format(debt.overdueAmount)}
+                        </span>
+                      </span>
+                    )}
+                  </span>
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-4 w-4 shrink-0 text-slate-300"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       ) : (
         <Card className="px-4 py-10 text-center text-sm text-slate-500">

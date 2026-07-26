@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
+import { getOverdueDebts } from '@/lib/counterpartyDebt';
 import { AddCounterpartyForm } from '../add-counterparty-form';
 import { CounterpartyList } from '../counterparty-list';
 import { OverviewAnalytics } from '@/components/OverviewAnalytics';
@@ -37,12 +38,15 @@ export default async function CategoryModulePage({
     );
   }
 
-  const { data: counterparties } = await supabase
-    .from('counterparties')
-    .select('id, name, phone, categories')
-    .eq('org_id', org.org_id)
-    .contains('categories', [category])
-    .order('name');
+  const [{ data: counterparties }, debtByCounterparty] = await Promise.all([
+    supabase
+      .from('counterparties')
+      .select('id, name, phone, categories')
+      .eq('org_id', org.org_id)
+      .contains('categories', [category])
+      .order('name'),
+    getOverdueDebts(supabase, org.org_id),
+  ]);
 
   return (
     <div>
@@ -59,7 +63,10 @@ export default async function CategoryModulePage({
         <AddCounterpartyForm orgId={org.org_id} presetCategory={category} />
       </div>
 
-      <CounterpartyList counterparties={counterparties ?? []} />
+      <CounterpartyList
+        counterparties={counterparties ?? []}
+        debtByCounterparty={debtByCounterparty}
+      />
     </div>
   );
 }
