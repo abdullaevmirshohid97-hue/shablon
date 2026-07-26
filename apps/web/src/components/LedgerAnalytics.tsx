@@ -75,6 +75,7 @@ export function LedgerAnalytics({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-base font-semibold text-slate-900">{t('analytics.title')}</h2>
         <Segmented
+          className="no-print"
           value={periodKind}
           onChange={setPeriodKind}
           options={[
@@ -88,7 +89,7 @@ export function LedgerAnalytics({
       </div>
 
       {periodKind === 'custom' && (
-        <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div className="no-print mb-4 flex flex-wrap items-end gap-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-500">
               {t('analytics.from')}
