@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { AppShell } from './app-shell';
+import { FinancePinGate } from './finance-pin-gate';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createSupabaseServerClient();
@@ -29,8 +30,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <AppShell orgName={orgName} userEmail={user.email ?? ''} moduleCategories={moduleCategories}>
-      {children}
-    </AppShell>
+    <FinancePinGate orgId={orgId}>
+      <AppShell orgName={orgName} userEmail={user.email ?? ''} moduleCategories={moduleCategories}>
+        {children}
+      </AppShell>
+    </FinancePinGate>
   );
 }

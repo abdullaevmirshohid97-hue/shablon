@@ -12,14 +12,16 @@
     "close": "Bekor"
   },
   "header": {
-    "title": "Mubosher"
+    "title": "Finance",
+    "brand": "Mubosher"
   },
   "nav": {
     "clients": "Umumiy analitika",
     "allClients": "Mijozlar",
     "signOut": "Chiqish",
     "modules": "Modullar",
-    "settings": "Sozlamalar"
+    "settings": "Sozlamalar",
+    "back": "Orqaga"
   },
   "login": {
     "title": "Tizimga kirish",
@@ -150,5 +152,36 @@
     "byModule": "Modullar bo'yicha",
     "module": "Modul",
     "clientCount": "Mijozlar"
+  },
+  "hub": {
+    "finance": "Finance",
+    "financeDescription": "Mijozlar reestri va moliyaviy hisob-kitob",
+    "sklad": "Sklad",
+    "skladDescription": "Ombor hisobi",
+    "comingSoonTitle": "Tez orada",
+    "comingSoonMessage": "Bu modul hali ishlab chiqilmoqda."
+  },
+  "financePin": {
+    "enterTitle": "Finance PIN",
+    "enterPrompt": "Davom etish uchun shaxsiy PIN kodingizni kiriting",
+    "placeholder": "PIN kod",
+    "submit": "Kirish",
+    "verifying": "Tekshirilmoqda...",
+    "incorrect": "PIN kod noto'g'ri",
+    "notSetTitle": "PIN kod o'rnatilmagan",
+    "notSetMessage": "Finance moduliga kirishdan oldin sozlamalarda shaxsiy PIN kodingizni o'rnating.",
+    "goToSettings": "Sozlamalarga o'tish"
+  },
+  "settingsFinancePin": {
+    "title": "Finance PIN",
+    "description": "Bu shaxsiy PIN kod faqat sizga tegishli — Finance moduliga kirishda so'raladi, boshqa xodimlar sizning nomingizdan kira olmasligi uchun.",
+    "statusSet": "PIN o'rnatilgan",
+    "statusNotSet": "PIN hali o'rnatilmagan",
+    "newLabel": "Yangi PIN (4-8 raqam)",
+    "confirmLabel": "PIN ni tasdiqlang",
+    "save": "PIN ni saqlash",
+    "saved": "PIN saqlandi",
+    "mismatch": "PIN kodlar mos emas",
+    "invalid": "PIN 4-8 ta raqamdan iborat bo'lishi kerak"
   }
 }

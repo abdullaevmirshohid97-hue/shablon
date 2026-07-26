@@ -168,6 +168,18 @@ export interface Database {
         Args: { target_org_id: string; name_to_remove: string };
         Returns: void;
       };
+      set_finance_pin: {
+        Args: { target_org_id: string; pin: string };
+        Returns: void;
+      };
+      verify_finance_pin: {
+        Args: { target_org_id: string; pin: string };
+        Returns: boolean;
+      };
+      has_finance_pin: {
+        Args: { target_org_id: string };
+        Returns: boolean;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

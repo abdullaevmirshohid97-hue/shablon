@@ -24,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .eq('id', user.id)
     .single();
 
-  if (profile?.role_platform !== 'platform_admin') redirect('/dashboard');
+  if (profile?.role_platform !== 'platform_admin') redirect('/hub');
 
   return <AdminShell userName={profile.full_name ?? user.email ?? ''}>{children}</AdminShell>;
 }

@@ -12,15 +12,39 @@ export function Header() {
   // Super-admin panelining o'z sarlavhasi bor (AdminShell) — bu yerda ko'rsatmaymiz.
   if (pathname?.startsWith('/admin')) return null;
 
+  // Faqat Finance ilovasi (dashboard/clients/settings/counterparty) ichida
+  // "Finance" nomi + orqaga tugmasi ko'rinadi; login va hub'da umumiy brend.
+  const financePrefixes = ['/dashboard', '/clients', '/settings', '/counterparty'];
+  const inFinance = financePrefixes.some((p) => pathname === p || pathname?.startsWith(`${p}/`));
+
   return (
     <header className="no-print sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
       <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-10">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-            M
-          </span>
-          <span className="font-semibold tracking-tight text-slate-900">{t('header.title')}</span>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/hub" className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
+              M
+            </span>
+            <span className="font-semibold tracking-tight text-slate-900">
+              {inFinance ? t('header.title') : t('header.brand')}
+            </span>
+          </Link>
+          {inFinance && (
+            <Link
+              href="/hub"
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                <path
+                  fillRule="evenodd"
+                  d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {t('nav.back')}
+            </Link>
+          )}
+        </div>
 
         <Segmented
           value={locale}
