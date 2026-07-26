@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { ModulesSettings } from './modules-settings';
-import { FinancePinSettings } from './finance-pin-settings';
 
 export default async function SettingsPage() {
   const supabase = await createSupabaseServerClient();
@@ -35,7 +34,6 @@ export default async function SettingsPage() {
         {t('settings.title')}
       </h1>
       <div className="flex flex-col gap-6">
-        <FinancePinSettings orgId={org.org_id} />
         <ModulesSettings orgId={org.org_id} />
       </div>
     </div>

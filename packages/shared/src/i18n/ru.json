@@ -181,29 +181,25 @@
     "columnEmail": "Email",
     "columnRole": "Роль",
     "columnCreatedAt": "Дата добавления",
-    "noAccessMessage": "Эта страница доступна только владельцу или администратору организации."
+    "noAccessMessage": "Эта страница доступна только владельцу или администратору организации.",
+    "editTooltip": "Редактировать",
+    "cancelTooltip": "Отмена",
+    "saveButton": "Сохранить",
+    "saving": "Сохранение...",
+    "updated": "Данные сохранены",
+    "avatarLabel": "Фото",
+    "changePhoto": "Выбрать фото",
+    "newPasswordLabel": "Новый пароль",
+    "resetPasswordButton": "Обновить пароль",
+    "passwordUpdated": "Пароль обновлён"
   },
-  "financePin": {
-    "enterTitle": "Finance PIN",
-    "enterPrompt": "Введите личный PIN-код, чтобы продолжить",
-    "placeholder": "PIN-код",
+  "financeAccess": {
+    "pickPrompt": "Найдите себя в списке",
+    "passwordPrompt": "Введите свой пароль",
+    "passwordPlaceholder": "Пароль",
     "submit": "Войти",
     "verifying": "Проверка...",
-    "incorrect": "Неверный PIN-код",
-    "notSetTitle": "PIN-код не установлен",
-    "notSetMessage": "Прежде чем войти в Finance, установите свой личный PIN-код в настройках.",
-    "goToSettings": "Перейти в настройки"
-  },
-  "settingsFinancePin": {
-    "title": "Finance PIN",
-    "description": "Этот личный PIN-код принадлежит только вам — он запрашивается при входе в Finance, чтобы другие сотрудники не могли войти от вашего имени.",
-    "statusSet": "PIN установлен",
-    "statusNotSet": "PIN ещё не установлен",
-    "newLabel": "Новый PIN (4-8 цифр)",
-    "confirmLabel": "Подтвердите PIN",
-    "save": "Сохранить PIN",
-    "saved": "PIN сохранён",
-    "mismatch": "PIN-коды не совпадают",
-    "invalid": "PIN должен состоять из 4-8 цифр"
+    "incorrect": "Неверный пароль",
+    "empty": "Сотрудники не найдены"
   }
 }

@@ -168,18 +168,6 @@ export interface Database {
         Args: { target_org_id: string; name_to_remove: string };
         Returns: void;
       };
-      set_finance_pin: {
-        Args: { target_org_id: string; pin: string };
-        Returns: void;
-      };
-      verify_finance_pin: {
-        Args: { target_org_id: string; pin: string };
-        Returns: boolean;
-      };
-      has_finance_pin: {
-        Args: { target_org_id: string };
-        Returns: boolean;
-      };
       create_employee: {
         Args: {
           target_org_id: string;
@@ -198,8 +186,32 @@ export interface Database {
           email: string | null;
           full_name: string | null;
           phone: string | null;
+          avatar_url: string | null;
           role: 'owner' | 'admin' | 'staff';
           created_at: string;
+        }[];
+      };
+      update_employee: {
+        Args: {
+          target_org_id: string;
+          target_user_id: string;
+          p_full_name?: string | null;
+          p_phone?: string | null;
+          p_avatar_url?: string | null;
+        };
+        Returns: void;
+      };
+      reset_employee_password: {
+        Args: { target_org_id: string; target_user_id: string; p_password: string };
+        Returns: void;
+      };
+      list_org_roster: {
+        Args: { target_org_id: string };
+        Returns: {
+          user_id: string;
+          full_name: string | null;
+          email: string | null;
+          avatar_url: string | null;
         }[];
       };
     };
