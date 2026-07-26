@@ -183,14 +183,6 @@ function InlineEntryRow({
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => set('source', draft.source === 'fabrika' ? 'shaxsiy' : 'fabrika')}
-              title={draft.source === 'fabrika' ? t('ledger.fabrika') : t('ledger.shaxsiy')}
-              className="rounded border border-slate-300 px-1 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-100"
-            >
-              {draft.source === 'fabrika' ? 'F' : 'Sh'}
-            </button>
-            <button
-              type="button"
               onClick={handleSave}
               disabled={createTransaction.isPending}
               title={t('common.save')}
