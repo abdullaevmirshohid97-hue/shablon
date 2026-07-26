@@ -147,3 +147,41 @@ export function getDueSoonAndOverdue(
 
   return { overdue, dueSoon };
 }
+
+export interface OverdueDebt {
+  /** Sum of overdue "chiqim" amounts for this counterparty (not netted against the running balance). */
+  overdueAmount: number;
+  /** Earliest (oldest, most urgent) overdue due date. */
+  overdueDate: string;
+}
+
+/**
+ * Overdue "chiqim" total + earliest due date, grouped by counterparty —
+ * mirrors LedgerTable's per-row overdue convention (isChiqim =
+ * creditAccountType === 'receivable', overdue = dueDate < today), aggregated
+ * per counterparty instead of netted against the running balance. Used both
+ * for client-card badges and the analytics overdue-by-client breakdown.
+ */
+export function getOverdueByCounterparty(
+  transactions: LedgerTransaction[],
+  today: Date,
+): Record<string, OverdueDebt> {
+  const todayIso = toIsoDate(today);
+  const result: Record<string, OverdueDebt> = {};
+
+  for (const t of transactions) {
+    if (t.creditAccountType !== 'receivable' || !t.dueDate || t.dueDate >= todayIso) continue;
+
+    const existing = result[t.counterpartyId];
+    result[t.counterpartyId] = {
+      overdueAmount: (existing?.overdueAmount ?? 0) + t.creditAmount,
+      overdueDate: existing
+        ? t.dueDate < existing.overdueDate
+          ? t.dueDate
+          : existing.overdueDate
+        : t.dueDate,
+    };
+  }
+
+  return result;
+}

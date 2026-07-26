@@ -61,7 +61,10 @@ export function OverviewAnalytics({
     <div className="mb-6 flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <LedgerAnalytics transactions={scoped.transactions} />
+          <LedgerAnalytics
+            transactions={scoped.transactions}
+            counterparties={scoped.counterparties}
+          />
         </div>
         <TopDebtors counterparties={scoped.counterparties} transactions={scoped.transactions} />
       </div>

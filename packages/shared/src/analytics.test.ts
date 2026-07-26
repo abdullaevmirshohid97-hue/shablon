@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { computePeriodStats, getDueSoonAndOverdue, getPeriodRange } from './analytics';
+import {
+  computePeriodStats,
+  getDueSoonAndOverdue,
+  getOverdueByCounterparty,
+  getPeriodRange,
+} from './analytics';
 import type { LedgerTransaction } from './types';
 
 function tx(
@@ -113,5 +118,63 @@ describe('getDueSoonAndOverdue', () => {
 
     expect(overdue.map((t) => t.id)).toEqual(['past']);
     expect(dueSoon.map((t) => t.id)).toEqual(['soon']);
+  });
+});
+
+describe('getOverdueByCounterparty', () => {
+  const today = new Date('2026-07-26T00:00:00Z');
+
+  it('sums overdue "chiqim" amounts per counterparty and keeps the earliest due date', () => {
+    const result = getOverdueByCounterparty(
+      [
+        // cp-1: two overdue chiqim legs — amounts sum, earliest date wins.
+        tx({
+          id: 't1',
+          counterpartyId: 'cp-1',
+          occurredAt: '2026-07-01T00:00:00Z',
+          creditAccountType: 'receivable',
+          creditAmount: 3600,
+          dueDate: '2026-07-25',
+        }),
+        tx({
+          id: 't2',
+          counterpartyId: 'cp-1',
+          occurredAt: '2026-07-10T00:00:00Z',
+          creditAccountType: 'receivable',
+          creditAmount: 1500,
+          dueDate: '2026-07-20',
+        }),
+        // cp-2: due today — not yet overdue (dueDate < today, not <=).
+        tx({
+          id: 't3',
+          counterpartyId: 'cp-2',
+          occurredAt: '2026-07-01T00:00:00Z',
+          creditAccountType: 'receivable',
+          creditAmount: 5000,
+          dueDate: '2026-07-26',
+        }),
+        // cp-3: overdue date, but debitAccountType is the receivable side (a
+        // "kirim" leg, new debt created) — must not count as overdue chiqim.
+        tx({
+          id: 't4',
+          counterpartyId: 'cp-3',
+          occurredAt: '2026-07-01T00:00:00Z',
+          debitAccountType: 'receivable',
+          debitAmount: 2000,
+          dueDate: '2026-07-01',
+        }),
+      ],
+      today,
+    );
+
+    expect(result['cp-1']).toEqual({ overdueAmount: 5100, overdueDate: '2026-07-20' });
+    expect(result['cp-2']).toBeUndefined();
+    expect(result['cp-3']).toBeUndefined();
+  });
+
+  it('returns an empty map when nothing is overdue', () => {
+    expect(
+      getOverdueByCounterparty([tx({ id: 't1', occurredAt: '2026-07-01T00:00:00Z' })], today),
+    ).toEqual({});
   });
 });

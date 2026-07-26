@@ -139,6 +139,7 @@
     "unit": "Birlik",
     "amount": "Summa",
     "overdueTitle": "Muddati o'tgan",
+    "overdueTotal": "Jami muddati o'tgan qarz",
     "dueSoonTitle": "Muddati yaqinlashgan (7 kun)",
     "noDueItems": "Muddati yaqinlashgan yoki o'tgan yozuvlar yo'q",
     "noData": "Bu davrda ma'lumot yo'q"

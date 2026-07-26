@@ -30,7 +30,11 @@ export function CounterpartyLedgerClient({
 
   return (
     <div className="flex flex-col gap-6">
-      <LedgerAnalytics transactions={transactions ?? []} forcePrintVisible={printWithAnalytics} />
+      <LedgerAnalytics
+        transactions={transactions ?? []}
+        counterparties={[{ id: counterpartyId, name: counterpartyName }]}
+        forcePrintVisible={printWithAnalytics}
+      />
 
       <LedgerTable
         supabase={supabase}
