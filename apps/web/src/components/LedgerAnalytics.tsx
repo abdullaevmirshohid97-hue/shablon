@@ -108,6 +108,67 @@ export function LedgerAnalytics({
         </div>
       )}
 
+      {(overdueRows.length > 0 || dueSoon.length > 0) && (
+        <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="rounded-lg bg-rose-50 p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-rose-700">
+              {t('analytics.overdueTitle')} ({overdueRows.length})
+            </p>
+            {overdueTotal > 0 && (
+              <div className="mb-3">
+                <p className="text-[11px] font-medium text-rose-600">
+                  {t('analytics.overdueTotal')}
+                </p>
+                <p className="text-2xl font-bold tabular-nums text-rose-700">
+                  {currencyFormatter.format(overdueTotal)}
+                </p>
+              </div>
+            )}
+            <ul className="space-y-1">
+              {overdueRows.map((row) => (
+                <li key={row.id}>
+                  <Link
+                    href={`/counterparty/${row.id}`}
+                    className="flex items-center justify-between gap-2 text-sm hover:underline"
+                  >
+                    <span className="truncate font-medium text-rose-700">{row.name}</span>
+                    <span className="ml-2 shrink-0 text-right">
+                      <span className="block tabular-nums font-semibold text-rose-700">
+                        {currencyFormatter.format(row.overdueAmount)}
+                      </span>
+                      <span className="block text-xs text-rose-500">
+                        {new Date(row.overdueDate).toLocaleDateString(dateLocale)}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+              {!overdueRows.length && (
+                <li className="text-sm text-slate-400">{t('analytics.noDueItems')}</li>
+              )}
+            </ul>
+          </div>
+          <div className="rounded-lg bg-amber-50 p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
+              {t('analytics.dueSoonTitle')} ({dueSoon.length})
+            </p>
+            <ul className="space-y-1">
+              {dueSoon.map((tx) => (
+                <li key={tx.id} className="flex items-center justify-between text-sm">
+                  <span className="truncate text-slate-700">{tx.description}</span>
+                  <span className="ml-2 shrink-0 tabular-nums text-amber-700">
+                    {tx.dueDate && new Date(tx.dueDate).toLocaleDateString(dateLocale)}
+                  </span>
+                </li>
+              ))}
+              {!dueSoon.length && (
+                <li className="text-sm text-slate-400">{t('analytics.noDueItems')}</li>
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {stats ? (
         <>
           <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -177,64 +238,6 @@ export function LedgerAnalytics({
         </>
       ) : (
         <p className="mb-4 text-sm text-slate-500">{t('analytics.noData')}</p>
-      )}
-
-      {(overdueRows.length > 0 || dueSoon.length > 0) && (
-        <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2">
-          <div>
-            <div className="mb-1.5 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-rose-600">
-                {t('analytics.overdueTitle')} ({overdueRows.length})
-              </p>
-              {overdueTotal > 0 && (
-                <p className="shrink-0 text-xs font-semibold tabular-nums text-rose-600">
-                  {t('analytics.overdueTotal')}: {currencyFormatter.format(overdueTotal)}
-                </p>
-              )}
-            </div>
-            <ul className="space-y-1">
-              {overdueRows.map((row) => (
-                <li key={row.id}>
-                  <Link
-                    href={`/counterparty/${row.id}`}
-                    className="flex items-center justify-between gap-2 text-sm hover:underline"
-                  >
-                    <span className="truncate font-medium text-rose-600">{row.name}</span>
-                    <span className="ml-2 shrink-0 text-right">
-                      <span className="block tabular-nums font-semibold text-rose-600">
-                        {currencyFormatter.format(row.overdueAmount)}
-                      </span>
-                      <span className="block text-xs text-rose-400">
-                        {new Date(row.overdueDate).toLocaleDateString(dateLocale)}
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-              {!overdueRows.length && (
-                <li className="text-sm text-slate-400">{t('analytics.noDueItems')}</li>
-              )}
-            </ul>
-          </div>
-          <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-amber-600">
-              {t('analytics.dueSoonTitle')} ({dueSoon.length})
-            </p>
-            <ul className="space-y-1">
-              {dueSoon.map((tx) => (
-                <li key={tx.id} className="flex items-center justify-between text-sm">
-                  <span className="truncate text-slate-700">{tx.description}</span>
-                  <span className="ml-2 shrink-0 tabular-nums text-amber-600">
-                    {tx.dueDate && new Date(tx.dueDate).toLocaleDateString(dateLocale)}
-                  </span>
-                </li>
-              ))}
-              {!dueSoon.length && (
-                <li className="text-sm text-slate-400">{t('analytics.noDueItems')}</li>
-              )}
-            </ul>
-          </div>
-        </div>
       )}
 
       {stats && (
