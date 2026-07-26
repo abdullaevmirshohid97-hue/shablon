@@ -38,7 +38,27 @@ function SignOutIcon({ className }: { className?: string }) {
   );
 }
 
-export function HubSidebar({ orgName, userEmail }: { orgName: string | null; userEmail: string }) {
+function SettingsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
+      <path
+        fillRule="evenodd"
+        d="M11.078 2.25c.917 0 1.699.663 1.85 1.567l.091.549a.798.798 0 00.517.608 7.45 7.45 0 01.478.2.798.798 0 00.796-.064l.453-.324a1.875 1.875 0 012.416.2l.577.577a1.875 1.875 0 01.2 2.416l-.324.453a.798.798 0 00-.064.796c.078.156.148.316.2.478a.798.798 0 00.608.517l.549.09a1.875 1.875 0 011.567 1.851v.815c0 .917-.663 1.699-1.567 1.85l-.549.091a.798.798 0 00-.608.517 7.45 7.45 0 01-.2.478.798.798 0 00.064.796l.324.453a1.875 1.875 0 01-.2 2.416l-.577.577a1.875 1.875 0 01-2.416.2l-.453-.324a.798.798 0 00-.796-.064 7.45 7.45 0 01-.478.2.798.798 0 00-.517.608l-.09.549a1.875 1.875 0 01-1.851 1.567h-.815a1.875 1.875 0 01-1.85-1.567l-.091-.549a.798.798 0 00-.517-.608 7.45 7.45 0 01-.478-.2.798.798 0 00-.796.064l-.453.324a1.875 1.875 0 01-2.416-.2l-.577-.577a1.875 1.875 0 01-.2-2.416l.324-.453a.798.798 0 00.064-.796 7.45 7.45 0 01-.2-.478.798.798 0 00-.608-.517l-.549-.09A1.875 1.875 0 012.25 11.893v-.815c0-.917.663-1.699 1.567-1.85l.549-.091a.798.798 0 00.608-.517c.052-.162.122-.322.2-.478a.798.798 0 00-.064-.796l-.324-.453a1.875 1.875 0 01.2-2.416l.577-.577a1.875 1.875 0 012.416-.2l.453.324a.798.798 0 00.796.064c.156-.078.316-.148.478-.2a.798.798 0 00.517-.608l.09-.549a1.875 1.875 0 011.851-1.567h.815zM10 13.25a3.25 3.25 0 100-6.5 3.25 3.25 0 000 6.5z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+export function HubSidebar({
+  orgName,
+  userEmail,
+  isOrgAdmin,
+}: {
+  orgName: string | null;
+  userEmail: string;
+  isOrgAdmin: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLocale();
@@ -46,6 +66,9 @@ export function HubSidebar({ orgName, userEmail }: { orgName: string | null; use
   const items = [
     { href: '/dashboard', label: t('hub.finance'), Icon: FinanceIcon },
     { href: '/hub/sklad', label: t('hub.sklad'), Icon: SkladIcon },
+    ...(isOrgAdmin
+      ? [{ href: '/hub/settings', label: t('hub.settings'), Icon: SettingsIcon }]
+      : []),
   ];
 
   async function handleSignOut() {

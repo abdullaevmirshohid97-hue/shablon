@@ -12,13 +12,15 @@ export default async function HubLayout({ children }: { children: React.ReactNod
 
   const { data: memberships } = await supabase
     .from('memberships')
-    .select('organizations(name)')
+    .select('role, organizations(name)')
     .eq('user_id', user.id);
 
   const orgName = memberships?.[0]?.organizations?.[0]?.name ?? null;
+  const role = memberships?.[0]?.role ?? null;
+  const isOrgAdmin = role === 'owner' || role === 'admin';
 
   return (
-    <HubShell orgName={orgName} userEmail={user.email ?? ''}>
+    <HubShell orgName={orgName} userEmail={user.email ?? ''} isOrgAdmin={isOrgAdmin}>
       {children}
     </HubShell>
   );

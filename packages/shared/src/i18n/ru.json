@@ -159,7 +159,29 @@
     "sklad": "Склад",
     "skladDescription": "Складской учёт",
     "comingSoonTitle": "Скоро",
-    "comingSoonMessage": "Этот модуль пока в разработке."
+    "comingSoonMessage": "Этот модуль пока в разработке.",
+    "settings": "Настройки"
+  },
+  "employees": {
+    "title": "Сотрудники",
+    "description": "Добавляйте здесь сотрудников, которые входят в Finance (и другие модули), и выдавайте им логин-пароль.",
+    "listEmpty": "Пока нет сотрудников",
+    "fullNameLabel": "Имя и фамилия",
+    "emailLabel": "Email",
+    "phoneLabel": "Телефон (необязательно)",
+    "passwordLabel": "Пароль",
+    "roleLabel": "Роль",
+    "roleOwner": "Владелец",
+    "roleAdmin": "Администратор",
+    "roleStaff": "Сотрудник",
+    "createButton": "Добавить сотрудника",
+    "creating": "Добавление...",
+    "created": "Сотрудник добавлен",
+    "columnName": "Имя",
+    "columnEmail": "Email",
+    "columnRole": "Роль",
+    "columnCreatedAt": "Дата добавления",
+    "noAccessMessage": "Эта страница доступна только владельцу или администратору организации."
   },
   "financePin": {
     "enterTitle": "Finance PIN",

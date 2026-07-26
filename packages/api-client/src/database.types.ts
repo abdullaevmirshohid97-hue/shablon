@@ -180,6 +180,28 @@ export interface Database {
         Args: { target_org_id: string };
         Returns: boolean;
       };
+      create_employee: {
+        Args: {
+          target_org_id: string;
+          p_email: string;
+          p_password: string;
+          p_full_name?: string | null;
+          p_phone?: string | null;
+          p_role?: 'admin' | 'staff';
+        };
+        Returns: string;
+      };
+      list_org_members: {
+        Args: { target_org_id: string };
+        Returns: {
+          user_id: string;
+          email: string | null;
+          full_name: string | null;
+          phone: string | null;
+          role: 'owner' | 'admin' | 'staff';
+          created_at: string;
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

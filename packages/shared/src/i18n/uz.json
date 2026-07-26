@@ -159,7 +159,29 @@
     "sklad": "Sklad",
     "skladDescription": "Ombor hisobi",
     "comingSoonTitle": "Tez orada",
-    "comingSoonMessage": "Bu modul hali ishlab chiqilmoqda."
+    "comingSoonMessage": "Bu modul hali ishlab chiqilmoqda.",
+    "settings": "Sozlamalar"
+  },
+  "employees": {
+    "title": "Xodimlar",
+    "description": "Finance (va boshqa modullar)ga kiradigan xodimlarni shu yerdan qo'shing va ularga login-parol bering.",
+    "listEmpty": "Hozircha xodim yo'q",
+    "fullNameLabel": "Ism familiya",
+    "emailLabel": "Email",
+    "phoneLabel": "Telefon (ixtiyoriy)",
+    "passwordLabel": "Parol",
+    "roleLabel": "Roli",
+    "roleOwner": "Ega",
+    "roleAdmin": "Administrator",
+    "roleStaff": "Xodim",
+    "createButton": "Xodim qo'shish",
+    "creating": "Qo'shilmoqda...",
+    "created": "Xodim qo'shildi",
+    "columnName": "Ism",
+    "columnEmail": "Email",
+    "columnRole": "Roli",
+    "columnCreatedAt": "Qo'shilgan sana",
+    "noAccessMessage": "Bu sahifaga faqat tashkilot egasi yoki administratori kira oladi."
   },
   "financePin": {
     "enterTitle": "Finance PIN",
