@@ -2,14 +2,16 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  // admin.idaa.uz ildizini super-admin paneliga yo'naltiramiz.
-  // (Uchala subdomen bitta Next jarayoniga kelgani uchun host bo'yicha ajratamiz;
-  //  /admin ichida platform_admin roli baribir server tomonda tekshiriladi.)
+  // Har qanday admin.<domen> ildizini super-admin paneliga yo'naltiramiz —
+  // domendan mustaqil (idaa.uz, merycollection.uz, ...). Uchala subdomen bitta
+  // Next jarayoniga kelgani uchun host bo'yicha ajratamiz; /admin ichida
+  // platform_admin roli baribir server tomonda tekshiriladi.
   const hostHeader = request.headers.get('host') ?? '';
   const hostname = hostHeader.split(':')[0] ?? '';
   if (hostname.startsWith('admin.') && request.nextUrl.pathname === '/') {
     // Absolute Location'ni Host header'dan quramiz — Caddy ichki hostini (localhost)
-    // emas, public domenni (admin.idaa.uz) ishlatishi uchun.
+    // emas, so'ralgan public domenni (masalan admin.idaa.uz yoki
+    // admin.merycollection.uz) ishlatishi uchun.
     const proto = request.headers.get('x-forwarded-proto') ?? 'https';
     return NextResponse.redirect(`${proto}://${hostHeader}/admin`);
   }

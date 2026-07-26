@@ -1,11 +1,16 @@
 ---
 name: deploy
-description: Deploy the Mubosher web app (idaa.uz) to the shared Hostinger VPS — Caddy + pm2 + Supabase. Covers first-time setup, redeploys, DNS, TLS, and the gotchas that actually bit us.
+description: Deploy the Mubosher web app (idaa.uz and/or merycollection.uz) to the shared Hostinger VPS — Caddy + pm2 + Supabase. Covers first-time setup, redeploys, DNS, TLS, and the gotchas that actually bit us.
 ---
 
-# Deploying Mubosher web → idaa.uz
+# Deploying Mubosher web → idaa.uz / merycollection.uz
 
 Next.js **standalone** app, run under **pm2**, reverse-proxied by **Caddy**, backend on **Supabase** (managed). The VPS is **shared** with the owner's other production apps — never touch their files.
+
+Two domains are both owned by the user and both wired up to the **same** pm2 process (`mery-web`, port 3100) — they can run simultaneously, no conflict:
+
+- **idaa.uz** — primary choice, but has an unresolved **`.uz` registry delegation problem** (see Troubleshooting) — `dig`/`nslookup` against the `.uz` TLD server itself returns NXDOMAIN even though `whois` shows `Status: ACTIVE`. Likely a registrar-side provisioning issue at aHost; a support ticket was filed.
+- **merycollection.uz** — prepared as a **standby/fallback** while idaa.uz's registry issue is pending. Caddy blocks ready in `infra/Caddyfile.merycollection.snippet`; not yet added to the live Caddyfile (add it if/when you want this domain live — safe to add alongside idaa.uz's blocks, or instead of them).
 
 > 🔐 **Secrets are NOT in this repo.** Supabase keys, DB password, admin email/ids, and VPS details live in `1997/supabase-credentials.md`, which is gitignored (`/1997/`). The repo is **public** — never commit service_role/secret keys or `.env*` (only `.env*.example`).
 
@@ -38,13 +43,16 @@ pm2 save
 
 `first-setup.sh` auto-creates `.env.production` with the prod URL + anon key. `infra/deploy.sh` fails loudly if `.env.production` is missing.
 
-## Caddy (once)
+## Caddy (once per domain)
 
-Append the 4 blocks from `infra/Caddyfile.snippet` (idaa.uz / www / app / admin) to the **shared** `/etc/caddy/Caddyfile`. Do NOT edit other projects' blocks.
+Append the 4 blocks (apex / www / app / admin) from **one or both** snippet files to the **shared** `/etc/caddy/Caddyfile`. Do NOT edit other projects' blocks.
+
+- `infra/Caddyfile.snippet` → idaa.uz
+- `infra/Caddyfile.merycollection.snippet` → merycollection.uz (standby)
 
 ```bash
 sudo cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak-$(date +%F)
-sudo nano /etc/caddy/Caddyfile          # paste the blocks at the end
+sudo nano /etc/caddy/Caddyfile          # paste the blocks at the end (either or both files)
 caddy validate --config /etc/caddy/Caddyfile
 sudo systemctl restart caddy            # ⚠️ RESTART, not reload — admin API is off
 ```
@@ -55,9 +63,9 @@ sudo systemctl restart caddy            # ⚠️ RESTART, not reload — admin A
 cd /opt/mery && bash infra/deploy.sh    # git pull → npm ci → standalone build → pm2 restart mery-web
 ```
 
-## DNS (registrar = aHost, clients.ahost.uz)
+## DNS (both domains, same pattern)
 
-A records, all → `72.61.88.214`:
+A records, all → `72.61.88.214`, for **each** domain you're activating (idaa.uz was set up via aHost's DNS-менеджер; merycollection.uz — check its own registrar's DNS panel):
 
 | Host    | Type | Value        |
 | ------- | ---- | ------------ |
@@ -69,7 +77,7 @@ A records, all → `72.61.88.214`:
 - **Delete any duplicate `@` A record** (aHost auto-adds `@ → 185.196.212.52`, its own host) — apex must point only to the VPS.
 - Leave `mail`/`ftp` CNAME, `MX`, `SPF/DKIM/DMARC` TXT alone (email).
 - `www` may already have a CNAME → delete it before adding the A record (can't mix CNAME + A).
-- New `.uz` domains take a few hours (up to 24h) for the registry delegation to propagate globally, even when `whois` shows `Status: ACTIVE`.
+- New domains take a few hours (up to 24h) for the registry delegation to propagate globally, even when `whois` shows `Status: ACTIVE` — but see the idaa.uz gotcha below, which is a _different_ (non-propagation) problem.
 
 ## Super-admin bootstrap (local, once)
 
@@ -84,11 +92,12 @@ Login page supports password (default tab) + magic link. Admin panel is at `/adm
 
 ## Troubleshooting (real issues we hit)
 
+- **idaa.uz never resolves, even after 12h+** → NOT a propagation issue. Diagnosis: aHost's own nameserver (`nslookup app.idaa.uz 185.196.212.52`) answers correctly with `72.61.88.214`, but the **`.uz` TLD server itself** (`ns.uz`, 91.212.89.8) returns **NXDOMAIN** for `idaa.uz` while resolving other `.uz` domains fine (e.g. `nslookup cctld.uz ns.uz` works). This means `.uz` registry has NOT delegated the domain at all — no amount of waiting fixes this; it's a registrar-side provisioning problem. `whois idaa.uz` showing identical Creation/Expiration dates was the first red flag. **Action:** file a support ticket with aHost asking them to confirm registration completed at the UZINFOCOM registry and push/sync the delegation; also flagged a stray `not.defined.` 4th nameserver entry in whois to be cleaned up. **Workaround while waiting:** use merycollection.uz instead (see above) — its Caddy blocks are ready in `infra/Caddyfile.merycollection.snippet`, just needs its A records set and the blocks appended.
 - **`systemctl reload caddy` → "Job failed"** but `caddy validate` says Valid → admin API is off on this box. Use `sudo systemctl restart caddy`.
-- **Site not loading, `dig NS idaa.uz +short` empty** → `.uz` delegation not propagated yet. Confirm the authoritative NS already serves it: `dig @185.196.212.52 app.idaa.uz +short` should return `72.61.88.214`. Then just wait; re-run `dig NS idaa.uz +short` until it lists `rdns*.ahost.uz`.
 - **Caddy cert `challenge failed ... NXDOMAIN` for `*.clary.uz`** → Clary's own subdomains without DNS; harmless noise, not ours.
 - **`node` misbehaves in the VS Code terminal (local)** → `Remove-Item Env:ELECTRON_RUN_AS_NODE` (PowerShell) or use an external terminal.
 - Verify the app itself independent of DNS/TLS: `curl -I http://127.0.0.1:3100` → expect `307 → /login`.
+- To distinguish "still propagating" from "registry never delegated it" for any domain: query the TLD's own authoritative NS directly (find it via `whois <domain>` or a known sibling domain on the same TLD), not just the registrar's nameserver.
 
 ## Security checklist
 
