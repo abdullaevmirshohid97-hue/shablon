@@ -24,6 +24,16 @@ body {
   .no-print {
     display: none !important;
   }
+  /* Without this, Chrome/Firefox drop all background-color (and box-shadow)
+     unless the user manually enables "Background graphics" in the print
+     dialog — most don't, so the analytics cards' colored backgrounds (the
+     only thing separating one section from another) silently vanish in the
+     saved PDF. Forcing exact color rendering here makes it print reliably. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
   body {
     background: white;
   }

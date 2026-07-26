@@ -110,7 +110,7 @@ export function LedgerAnalytics({
 
       {(overdueRows.length > 0 || dueSoon.length > 0) && (
         <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-lg bg-rose-50 p-4">
+          <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-rose-700">
               {t('analytics.overdueTitle')} ({overdueRows.length})
             </p>
@@ -148,7 +148,7 @@ export function LedgerAnalytics({
               )}
             </ul>
           </div>
-          <div className="rounded-lg bg-amber-50 p-4">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
               {t('analytics.dueSoonTitle')} ({dueSoon.length})
             </p>
@@ -172,19 +172,19 @@ export function LedgerAnalytics({
       {stats ? (
         <>
           <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-lg bg-emerald-50 p-3">
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
               <p className="text-xs font-medium text-emerald-700">{t('analytics.totalKirim')}</p>
               <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-700">
                 {currencyFormatter.format(stats.totalKirim)}
               </p>
             </div>
-            <div className="rounded-lg bg-rose-50 p-3">
+            <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
               <p className="text-xs font-medium text-rose-700">{t('analytics.totalChiqim')}</p>
               <p className="mt-1 text-lg font-semibold tabular-nums text-rose-700">
                 {currencyFormatter.format(stats.totalChiqim)}
               </p>
             </div>
-            <div className="rounded-lg bg-slate-100 p-3">
+            <div className="rounded-lg border border-slate-300 bg-slate-100 p-3">
               <p className="text-xs font-medium text-slate-600">{t('analytics.net')}</p>
               <p className="mt-1 text-lg font-semibold tabular-nums text-slate-900">
                 {currencyFormatter.format(stats.net)}
