@@ -14,7 +14,7 @@ export function AppShell({
   moduleCategories: string[];
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-[1680px]">
+    <div className="flex w-full">
       <Sidebar orgName={orgName} userEmail={userEmail} moduleCategories={moduleCategories} />
       <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">{children}</main>
     </div>
