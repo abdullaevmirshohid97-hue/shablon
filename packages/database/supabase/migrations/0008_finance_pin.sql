@@ -6,14 +6,19 @@
 -- lock plain 'staff' members out of setting/checking their own PIN, so both
 -- operations run as SECURITY DEFINER, hard-scoped to auth.uid()'s own row —
 -- nobody can set or verify another member's PIN through these functions.
+--
+-- Supabase installs pgcrypto into the `extensions` schema, not `public`, so
+-- crypt()/gen_salt() are only resolvable if that schema is on the search
+-- path — hence `set search_path = public, extensions` below (plain
+-- `= public` 42883-errors on crypt() not existing).
 
-alter table memberships add column finance_pin_hash text;
+alter table memberships add column if not exists finance_pin_hash text;
 
-create function set_finance_pin(target_org_id uuid, pin text)
+create or replace function set_finance_pin(target_org_id uuid, pin text)
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   if pin !~ '^[0-9]{4,8}$' then
@@ -30,12 +35,12 @@ begin
 end;
 $$;
 
-create function verify_finance_pin(target_org_id uuid, pin text)
+create or replace function verify_finance_pin(target_org_id uuid, pin text)
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select coalesce(
     (select finance_pin_hash = crypt(pin, finance_pin_hash)
@@ -45,12 +50,12 @@ as $$
   );
 $$;
 
-create function has_finance_pin(target_org_id uuid)
+create or replace function has_finance_pin(target_org_id uuid)
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select coalesce(
     (select finance_pin_hash is not null
