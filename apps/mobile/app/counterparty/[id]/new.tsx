@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { enqueueTransaction } from '../../../src/lib/db/sync';
@@ -159,10 +168,22 @@ export default function TransactionEntryScreen() {
     }
   }
 
+  // Hold the screen until the role is known. Rendering the form first and
+  // swapping it out a moment later would flash an entry form at a manager —
+  // and invite them to start typing something that will never be accepted.
+  if (roleLoading) {
+    return (
+      <View style={[styles.container, styles.deniedBox]}>
+        <Stack.Screen options={{ title: name || 'Yozuv kiritish' }} />
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
   // The ledger screen already hides the entry button for managers; this
   // closes the route itself, which a deep link or a stale back-stack could
   // still reach. Nothing is queued that the server would only refuse later.
-  if (!roleLoading && !canWrite) {
+  if (!canWrite) {
     return (
       <View style={[styles.container, styles.deniedBox]}>
         <Stack.Screen options={{ title: name || 'Yozuv kiritish' }} />

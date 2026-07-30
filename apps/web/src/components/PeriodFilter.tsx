@@ -61,8 +61,11 @@ export function PeriodFilter({
   const { t } = useLocale();
 
   return (
-    <div className={`no-print flex flex-wrap items-center gap-2 ${className}`}>
+    <div className={`no-print flex max-w-full flex-wrap items-center gap-2 ${className}`}>
+      {/* Five options don't fit a phone's width — let the strip scroll on its
+          own rather than pushing the page into a horizontal scroll. */}
       <Segmented
+        className="max-w-full shrink-0 overflow-x-auto"
         value={state.kind}
         onChange={state.setKind}
         options={[
