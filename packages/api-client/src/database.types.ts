@@ -105,6 +105,9 @@ export interface Database {
           reversed_by_id: string | null;
           reversal_reason: string | null;
           posted_at: string | null;
+          exchange_rate: number | null;
+          base_debit_amount: number | null;
+          base_credit_amount: number | null;
           client_local_id: string | null;
           synced_at: string;
           created_at: string;
@@ -146,6 +149,36 @@ export interface Database {
         };
         Insert: Partial<Database['public']['Tables']['profiles']['Row']> & { id: string };
         Update: Partial<Database['public']['Tables']['profiles']['Row']>;
+        Relationships: [];
+      };
+      currencies: {
+        Row: { code: string; symbol: string; precision: number; created_at: string };
+        Insert: Partial<Database['public']['Tables']['currencies']['Row']> & {
+          code: string;
+          symbol: string;
+        };
+        Update: Partial<Database['public']['Tables']['currencies']['Row']>;
+        Relationships: [];
+      };
+      exchange_rates: {
+        Row: {
+          id: string;
+          org_id: string;
+          from_code: string;
+          to_code: string;
+          rate: number;
+          effective_date: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['exchange_rates']['Row']> & {
+          org_id: string;
+          from_code: string;
+          to_code: string;
+          rate: number;
+          effective_date: string;
+        };
+        Update: Partial<Database['public']['Tables']['exchange_rates']['Row']>;
         Relationships: [];
       };
       accounting_periods: {
@@ -376,6 +409,23 @@ export interface Database {
           old_description: string | null;
           new_description: string | null;
         }[];
+      };
+      get_exchange_rate: {
+        Args: { target_org_id: string; p_from: string; p_to: string; target_date: string };
+        Returns: number | null;
+      };
+      counterparty_balances: {
+        Args: { target_org_id: string; p_as_of?: string | null };
+        Returns: {
+          counterparty_id: string;
+          counterparty_name: string;
+          balance: number;
+          base_balance: number;
+        }[];
+      };
+      org_period_totals: {
+        Args: { target_org_id: string; p_from?: string | null; p_to?: string | null };
+        Returns: { total_kirim: number; total_chiqim: number; net: number }[];
       };
       reverse_transaction: {
         Args: {

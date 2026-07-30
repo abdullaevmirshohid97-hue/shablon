@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation';
+import { one } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { ModulesSettings } from './modules-settings';
 import { AccountingPeriods } from './accounting-periods';
+import { ExchangeRates } from './exchange-rates';
 import { AuditLog } from './audit-log';
 
 export default async function SettingsPage() {
@@ -16,7 +18,7 @@ export default async function SettingsPage() {
 
   const { data: memberships } = await supabase
     .from('memberships')
-    .select('org_id, role')
+    .select('org_id, role, organizations(base_currency)')
     .eq('user_id', user.id);
 
   const org = memberships?.[0];
@@ -36,6 +38,8 @@ export default async function SettingsPage() {
   // link, this closes the direct-URL route too.
   if (org.role !== 'owner' && org.role !== 'admin') redirect('/dashboard');
 
+  const baseCurrency = one(org.organizations)?.base_currency ?? 'UZS';
+
   return (
     <div className="max-w-4xl">
       <h1 className="mb-6 text-2xl font-semibold tracking-tight text-slate-900">
@@ -44,6 +48,7 @@ export default async function SettingsPage() {
       <div className="flex flex-col gap-6">
         <ModulesSettings orgId={org.org_id} />
         <AccountingPeriods orgId={org.org_id} />
+        <ExchangeRates orgId={org.org_id} baseCurrency={baseCurrency} />
         <AuditLog orgId={org.org_id} />
       </div>
     </div>

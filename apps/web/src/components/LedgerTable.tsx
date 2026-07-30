@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useCategoriesWithKind, useCreateTransaction } from '@mubosher/api-client';
 import { computeRunningBalance } from '@mubosher/shared';
 import type { FundSource, LedgerTransaction } from '@mubosher/shared';
@@ -52,6 +52,7 @@ function emptyDraft() {
     kirimSumma: '',
     dueDate: '',
     source: 'fabrika' as FundSource,
+    currency: 'UZS',
   };
 }
 
@@ -59,10 +60,12 @@ function InlineEntryRow({
   supabase,
   orgId,
   counterpartyId,
+  currencies,
 }: {
   supabase: SupabaseClient<Database>;
   orgId: string;
   counterpartyId: string;
+  currencies: string[];
 }) {
   const { t } = useLocale();
   const { data: categories } = useCategoriesWithKind(supabase, orgId);
@@ -115,7 +118,7 @@ function InlineEntryRow({
         quantityKg,
         quantityDona,
         amount: leg.amount,
-        currency: 'UZS',
+        currency: draft.currency,
         source: draft.source,
         clientLocalId: crypto.randomUUID(),
       });
@@ -210,13 +213,29 @@ function InlineEntryRow({
       {/* Izoh — alohida to'liq kenglikdagi qator, tor ustunda emas, bemalol yoziladi */}
       <tr className="border-b-2 border-brand-100 bg-brand-50/30 no-print">
         <td colSpan={10} className="px-2 pb-2">
-          <input
-            type="text"
-            value={draft.description}
-            onChange={(e) => set('description', e.target.value)}
-            placeholder={`${t('transaction.description')} (izoh)`}
-            className={`${inlineInput} w-full`}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={draft.description}
+              onChange={(e) => set('description', e.target.value)}
+              placeholder={`${t('transaction.description')} (izoh)`}
+              className={`${inlineInput} flex-1`}
+            />
+            {/* Anything other than the base currency is converted at the rate
+                in force on the entry's own date — see Settings > Kurslar. */}
+            <select
+              value={draft.currency}
+              onChange={(e) => set('currency', e.target.value)}
+              aria-label={t('rates.currency')}
+              className={`${inlineInput} w-24 shrink-0`}
+            >
+              {currencies.map((code) => (
+                <option key={code} value={code}>
+                  {code}
+                </option>
+              ))}
+            </select>
+          </div>
         </td>
       </tr>
     </>
@@ -245,12 +264,24 @@ export function LedgerTable({
   /** Owned by the page so the same period drives the table, the print header and the export. */
   period: PeriodFilterState;
 }) {
+  const [currencies, setCurrencies] = useState<string[]>(['UZS']);
   const [editing, setEditing] = useState<LedgerTransaction | null>(null);
   const [reversing, setReversing] = useState<LedgerTransaction | null>(null);
   const { locale, t } = useLocale();
   const { canWrite } = useOrgRole();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
   const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  useEffect(() => {
+    if (!canWrite) return;
+    supabase
+      .from('currencies')
+      .select('code')
+      .order('code')
+      .then(({ data }) => {
+        if (data?.length) setCurrencies(data.map((c) => c.code));
+      });
+  }, [supabase, canWrite]);
 
   // Managers get the ledger without the entry row and without the edit
   // column, so the table is one column narrower for them.
@@ -355,7 +386,12 @@ export function LedgerTable({
           </thead>
           <tbody>
             {canWrite && (
-              <InlineEntryRow supabase={supabase} orgId={orgId} counterpartyId={counterpartyId} />
+              <InlineEntryRow
+                supabase={supabase}
+                orgId={orgId}
+                counterpartyId={counterpartyId}
+                currencies={currencies}
+              />
             )}
             {displayRows.map((tx) => {
               const isChiqim = tx.creditAccountType === 'receivable';

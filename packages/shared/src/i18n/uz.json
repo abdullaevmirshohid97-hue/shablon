@@ -365,5 +365,16 @@
     "reopen": "Qayta ochish",
     "drafts": "qoralama",
     "empty": "Bu yil uchun davrlar yaratilmagan"
+  },
+  "rates": {
+    "title": "Valyuta kurslari",
+    "description": "Har bir yozuv o'z sanasidagi kurs bo'yicha bazaviy valyutaga o'giriladi — o'tgan yilgi hisobot bugungi kursdan o'zgarmaydi.",
+    "baseCurrency": "bazaviy valyuta",
+    "currency": "Valyuta",
+    "effectiveDate": "Amal qilish sanasi",
+    "pair": "Juftlik",
+    "rate": "Kurs",
+    "save": "Saqlash",
+    "empty": "Hozircha kurs kiritilmagan"
   }
 }
