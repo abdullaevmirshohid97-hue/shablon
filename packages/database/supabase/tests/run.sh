@@ -4,9 +4,12 @@
 # Supabase — where a broken migration is a production incident, not a
 # failing test.
 #
-#   ./packages/database/supabase/tests/run.sh
+#   npm run test:db -w @mubosher/database
 #
-# Needs Docker. Nothing else; no Supabase project, no network.
+# Needs Docker. Nothing else — no Supabase project, no network.
+#
+# Kept out of `turbo run test` (and therefore CI) on purpose: the Docker
+# requirement would make every unrelated CI run depend on pulling an image.
 set -euo pipefail
 
 # Git Bash on Windows rewrites /tmp/... arguments into Windows paths.
