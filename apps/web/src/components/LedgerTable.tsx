@@ -5,6 +5,7 @@ import { useCategoriesWithKind, useCreateTransaction } from '@mubosher/api-clien
 import { computeRunningBalance } from '@mubosher/shared';
 import type { FundSource, LedgerTransaction } from '@mubosher/shared';
 import { EditTransactionModal } from './EditTransactionModal';
+import { ReverseTransactionModal } from './ReverseTransactionModal';
 import { PeriodFilter, type PeriodFilterState } from './PeriodFilter';
 import { exportLedgerToExcel } from '@/lib/export/ledgerExcel';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
@@ -245,6 +246,7 @@ export function LedgerTable({
   period: PeriodFilterState;
 }) {
   const [editing, setEditing] = useState<LedgerTransaction | null>(null);
+  const [reversing, setReversing] = useState<LedgerTransaction | null>(null);
   const { locale, t } = useLocale();
   const { canWrite } = useOrgRole();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
@@ -360,10 +362,14 @@ export function LedgerTable({
               const tone = isChiqim ? dueDateTone(tx.dueDate, todayIso) : null;
               const kg = tx.quantityKg ?? (tx.unit === 'kg' ? tx.quantity : null);
               const dona = tx.quantityDona ?? (tx.unit === 'dona' ? tx.quantity : null);
+              const isReversed = tx.status === 'reversed';
+              const isReversal = tx.status === 'reversal';
               return (
                 <tr
                   key={tx.id}
-                  className="border-b-2 border-slate-200 even:bg-slate-50/60 hover:bg-brand-50/40"
+                  className={`border-b-2 border-slate-200 even:bg-slate-50/60 hover:bg-brand-50/40 ${
+                    isReversed ? 'text-slate-400 line-through' : ''
+                  } ${isReversal ? 'bg-amber-50/50' : ''}`}
                 >
                   <td className="px-3 py-2.5 text-slate-600 tabular-nums">
                     <div>{new Date(tx.occurredAt).toLocaleDateString(dateLocale)}</div>
@@ -378,7 +384,15 @@ export function LedgerTable({
                     {tx.documentNo}
                   </td>
                   <td className="truncate px-3 py-2.5" title={tx.description ?? undefined}>
-                    <span className="text-slate-900">{tx.description}</span>
+                    <span className={isReversed ? '' : 'text-slate-900'}>{tx.description}</span>
+                    {(isReversed || isReversal) && (
+                      <Badge
+                        tone={isReversal ? 'warning' : 'neutral'}
+                        className="ml-1.5 no-underline"
+                      >
+                        {t(isReversal ? 'ledger.statusReversal' : 'ledger.statusReversed')}
+                      </Badge>
+                    )}
                   </td>
                   <td className="px-3 py-2.5 text-right tabular-nums">{kg ?? ''}</td>
                   <td className="px-3 py-2.5 text-right tabular-nums">{dona ?? ''}</td>
@@ -417,16 +431,38 @@ export function LedgerTable({
                   </td>
                   {canWrite && (
                     <td className="px-2 py-2.5 text-right print:hidden">
-                      <button
-                        type="button"
-                        onClick={() => setEditing(tx)}
-                        className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                        title={t('common.edit')}
-                      >
-                        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-8.5 8.5a1 1 0 01-.464.263l-3 .75a.5.5 0 01-.606-.606l.75-3a1 1 0 01.263-.464l8.5-8.5z" />
-                        </svg>
-                      </button>
+                      {/* A reversed entry and its mirror are both history now —
+                          neither can be edited or reversed again. */}
+                      {!isReversed && !isReversal && (
+                        <div className="flex items-center justify-end gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setEditing(tx)}
+                            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                            title={t('common.edit')}
+                            aria-label={t('common.edit')}
+                          >
+                            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-8.5 8.5a1 1 0 01-.464.263l-3 .75a.5.5 0 01-.606-.606l.75-3a1 1 0 01.263-.464l8.5-8.5z" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setReversing(tx)}
+                            className="rounded-md p-1.5 text-slate-400 hover:bg-amber-50 hover:text-amber-700"
+                            title={t('ledger.reverseTitle')}
+                            aria-label={t('ledger.reverseTitle')}
+                          >
+                            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                              <path
+                                fillRule="evenodd"
+                                d="M7.793 2.293a1 1 0 011.414 1.414L6.914 6H12a5 5 0 010 10h-1a1 1 0 110-2h1a3 3 0 100-6H6.914l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
                     </td>
                   )}
                 </tr>
@@ -442,6 +478,16 @@ export function LedgerTable({
           </tbody>
         </table>
       </div>
+
+      {reversing && canWrite && (
+        <ReverseTransactionModal
+          supabase={supabase}
+          orgId={orgId}
+          counterpartyId={counterpartyId}
+          transaction={reversing}
+          onClose={() => setReversing(null)}
+        />
+      )}
 
       {editing && canWrite && (
         <EditTransactionModal

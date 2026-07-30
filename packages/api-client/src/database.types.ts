@@ -100,6 +100,11 @@ export interface Database {
           currency: string;
           source: 'fabrika' | 'shaxsiy';
           created_by: string | null;
+          status: 'draft' | 'posted' | 'reversed' | 'reversal';
+          reversal_of_id: string | null;
+          reversed_by_id: string | null;
+          reversal_reason: string | null;
+          posted_at: string | null;
           client_local_id: string | null;
           synced_at: string;
           created_at: string;
@@ -141,6 +146,27 @@ export interface Database {
         };
         Insert: Partial<Database['public']['Tables']['profiles']['Row']> & { id: string };
         Update: Partial<Database['public']['Tables']['profiles']['Row']>;
+        Relationships: [];
+      };
+      accounting_periods: {
+        Row: {
+          id: string;
+          org_id: string;
+          name: string;
+          start_date: string;
+          end_date: string;
+          status: 'open' | 'closed';
+          closed_at: string | null;
+          closed_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['accounting_periods']['Row']> & {
+          org_id: string;
+          name: string;
+          start_date: string;
+          end_date: string;
+        };
+        Update: Partial<Database['public']['Tables']['accounting_periods']['Row']>;
         Relationships: [];
       };
       modules: {
@@ -349,6 +375,46 @@ export interface Database {
           new_amount: number | null;
           old_description: string | null;
           new_description: string | null;
+        }[];
+      };
+      reverse_transaction: {
+        Args: {
+          p_transaction_id: string;
+          p_reversal_date?: string | null;
+          p_reason?: string | null;
+        };
+        Returns: string;
+      };
+      post_transaction: {
+        Args: { p_transaction_id: string };
+        Returns: void;
+      };
+      generate_accounting_periods: {
+        Args: { target_org_id: string; p_year: number };
+        Returns: number;
+      };
+      close_accounting_period: {
+        Args: { p_period_id: string };
+        Returns: void;
+      };
+      reopen_accounting_period: {
+        Args: { p_period_id: string };
+        Returns: void;
+      };
+      list_accounting_periods: {
+        Args: { target_org_id: string; p_year?: number | null };
+        Returns: {
+          id: string;
+          name: string;
+          start_date: string;
+          end_date: string;
+          status: 'open' | 'closed';
+          closed_at: string | null;
+          closed_by_name: string | null;
+          entry_count: number;
+          draft_count: number;
+          total_kirim: number;
+          total_chiqim: number;
         }[];
       };
     };

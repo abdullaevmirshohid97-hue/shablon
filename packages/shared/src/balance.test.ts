@@ -14,6 +14,7 @@ function tx(
     creditAmount: 0,
     currency: 'UZS',
     source: 'fabrika',
+    status: 'posted',
     ...partial,
   };
 }

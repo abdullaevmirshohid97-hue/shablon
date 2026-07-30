@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { ModulesSettings } from './modules-settings';
+import { AccountingPeriods } from './accounting-periods';
 import { AuditLog } from './audit-log';
 
 export default async function SettingsPage() {
@@ -42,6 +43,7 @@ export default async function SettingsPage() {
       </h1>
       <div className="flex flex-col gap-6">
         <ModulesSettings orgId={org.org_id} />
+        <AccountingPeriods orgId={org.org_id} />
         <AuditLog orgId={org.org_id} />
       </div>
     </div>

@@ -109,7 +109,15 @@
     "kirimSumma": "Kirim summa",
     "chiqimMuddati": "Chiqim muddati",
     "auto": "avtomatik",
-    "inlineNoCategoryError": "Bu turdagi kategoriya topilmadi"
+    "inlineNoCategoryError": "Bu turdagi kategoriya topilmadi",
+    "statusReversed": "Storno qilingan",
+    "statusReversal": "Storno",
+    "reverseTitle": "Storno qilish",
+    "reverseDescription": "Yozuv o'chirilmaydi — uni bekor qiluvchi teskari yozuv qo'shiladi. Ikkalasi ham jurnalda qoladi.",
+    "reverseDate": "Storno sanasi",
+    "reverseReason": "Sababi",
+    "reverseReasonPlaceholder": "masalan: summa noto'g'ri kiritilgan",
+    "reverseSubmit": "Storno qilish"
   },
   "transaction": {
     "counterparty": "Kontragent",
@@ -343,5 +351,19 @@
     "action_delete": "O'chirildi",
     "empty": "Hozircha o'zgarishlar yo'q",
     "loadMore": "Ko'proq ko'rsatish"
+  },
+  "periods": {
+    "title": "Hisobot davrlari",
+    "description": "Yopilgan oyga yozuv kirita olmaysiz va undagi yozuvlar sanasini o'zgartira olmaysiz — o'tgan oy hisoboti qotib qoladi.",
+    "year": "Yil",
+    "generate": "Yil davrlarini yaratish",
+    "period": "Davr",
+    "status": "Holati",
+    "open": "Ochiq",
+    "closed": "Yopiq",
+    "close": "Yopish",
+    "reopen": "Qayta ochish",
+    "drafts": "qoralama",
+    "empty": "Bu yil uchun davrlar yaratilmagan"
   }
 }

@@ -77,7 +77,18 @@ export interface LedgerTransaction {
   currency: string;
   source: FundSource;
   clientLocalId?: string | null;
+  status: TransactionStatus;
+  /** Set on a reversing entry: the entry it cancels. */
+  reversalOfId?: string | null;
+  /** Set on a reversed entry: the entry that cancelled it. */
+  reversedById?: string | null;
+  reversalReason?: string | null;
 }
+
+/** Lifecycle of a ledger entry — see 0014_transaction_reversal.sql. */
+export type TransactionStatus = 'draft' | 'posted' | 'reversed' | 'reversal';
+
+export type AccountingPeriodStatus = 'open' | 'closed';
 
 export type BalanceSide = 'debit' | 'credit';
 

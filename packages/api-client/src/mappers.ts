@@ -112,9 +112,9 @@ export function toSkladBatchPrice(row: SkladBatchPriceRow): SkladBatchPrice {
 }
 
 /** Row shape from useSkladBatches' embedded select (item/order/counterparty/price joined in
- * one query) — nested relations come back as arrays since this hand-maintained type file has
- * no Relationships metadata to tell supabase-js their real cardinality (same convention as
- * the existing `organizations(name)` embed elsewhere in this codebase). */
+ * one query). The nested relations are *declared* as arrays because this hand-maintained type
+ * file carries no Relationships metadata for supabase-js to infer cardinality from; PostgREST
+ * actually sends an object for each of them, which is why they are read through `one()`. */
 export type SkladBatchEmbeddedRow = SkladBatchRow & {
   sklad_items: { name: string; artikul: string | null }[] | null;
   sklad_orders:
@@ -199,5 +199,9 @@ export function toLedgerTransaction(
     currency: row.currency,
     source: row.source,
     clientLocalId: row.client_local_id,
+    status: row.status ?? 'posted',
+    reversalOfId: row.reversal_of_id ?? null,
+    reversedById: row.reversed_by_id ?? null,
+    reversalReason: row.reversal_reason ?? null,
   };
 }
