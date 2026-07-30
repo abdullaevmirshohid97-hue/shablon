@@ -10,6 +10,7 @@ import { getPendingCount, syncPendingTransactions } from '../lib/db/sync';
 export function useSyncQueue() {
   const [pendingCount, setPendingCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
+  const [rejectedCount, setRejectedCount] = useState(0);
   const [lastError, setLastError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const syncingRef = useRef(false);
@@ -25,6 +26,7 @@ export function useSyncQueue() {
     try {
       const result = await syncPendingTransactions();
       setFailedCount(result.failed);
+      setRejectedCount(result.rejected);
       setLastError(result.lastError);
     } catch (err) {
       setLastError(err instanceof Error ? err.message : String(err));
@@ -47,5 +49,13 @@ export function useSyncQueue() {
     return () => unsubscribe();
   }, [refreshPendingCount, runSync]);
 
-  return { pendingCount, failedCount, lastError, isSyncing, runSync, refreshPendingCount };
+  return {
+    pendingCount,
+    failedCount,
+    rejectedCount,
+    lastError,
+    isSyncing,
+    runSync,
+    refreshPendingCount,
+  };
 }

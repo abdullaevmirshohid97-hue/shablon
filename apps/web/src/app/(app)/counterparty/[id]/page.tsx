@@ -16,11 +16,13 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
 
   const { data: counterparty } = await supabase
     .from('counterparties')
-    .select('id, org_id, name')
+    .select('id, org_id, name, organizations(name)')
     .eq('id', id)
     .single();
 
   if (!counterparty) notFound();
+
+  const orgName = counterparty.organizations?.[0]?.name ?? null;
 
   return (
     <div>
@@ -37,11 +39,14 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
         </svg>
         {t('nav.allClients')}
       </Link>
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-slate-900">
+      {/* On paper this heading is replaced by PrintHeader, which also carries
+          the org, the period and the print timestamp. */}
+      <h1 className="no-print mb-6 text-2xl font-semibold tracking-tight text-slate-900">
         {counterparty.name}
       </h1>
       <CounterpartyLedgerClient
         orgId={counterparty.org_id}
+        orgName={orgName}
         counterpartyId={counterparty.id}
         counterpartyName={counterparty.name}
       />

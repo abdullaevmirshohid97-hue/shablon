@@ -334,6 +334,23 @@ export interface Database {
           avatar_url: string | null;
         }[];
       };
+      list_transaction_audit: {
+        Args: { target_org_id: string; p_limit?: number };
+        Returns: {
+          id: number;
+          transaction_id: string;
+          action: 'update' | 'delete';
+          changed_at: string;
+          changed_by_name: string | null;
+          counterparty_name: string | null;
+          document_no: string | null;
+          occurred_at: string | null;
+          old_amount: number | null;
+          new_amount: number | null;
+          old_description: string | null;
+          new_description: string | null;
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

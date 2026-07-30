@@ -16,6 +16,13 @@ body {
   @apply outline-none ring-2 ring-brand-500 ring-offset-1 ring-offset-white;
 }
 
+/* Report header — hidden on screen, printed at the top of every PDF so the
+   saved file still says which client, which period and when, once it has
+   left the app and is sitting in someone's inbox. */
+.print-only {
+  display: none;
+}
+
 @media print {
   @page {
     size: A4 landscape;
@@ -23,6 +30,9 @@ body {
   }
   .no-print {
     display: none !important;
+  }
+  .print-only {
+    display: block !important;
   }
   /* Without this, Chrome/Firefox drop all background-color (and box-shadow)
      unless the user manually enables "Background graphics" in the print

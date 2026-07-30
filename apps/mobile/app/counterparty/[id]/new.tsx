@@ -5,6 +5,7 @@ import * as Crypto from 'expo-crypto';
 import { enqueueTransaction } from '../../../src/lib/db/sync';
 import { loadCategoriesWithKind, type MobileCategory } from '../../../src/lib/data/categories';
 import { useSyncQueue } from '../../../src/hooks/useSyncQueue';
+import { useOrgRole } from '../../../src/hooks/useOrgRole';
 import { todayIso } from '../../../src/lib/format';
 
 type EntryKind = 'kirim' | 'chiqim';
@@ -40,6 +41,7 @@ export default function TransactionEntryScreen() {
   }>();
   const router = useRouter();
   const { runSync } = useSyncQueue();
+  const { canWrite, isLoading: roleLoading } = useOrgRole();
 
   const [categories, setCategories] = useState<MobileCategory[]>([]);
   const [kind, setKind] = useState<EntryKind>('kirim');
@@ -155,6 +157,25 @@ export default function TransactionEntryScreen() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // The ledger screen already hides the entry button for managers; this
+  // closes the route itself, which a deep link or a stale back-stack could
+  // still reach. Nothing is queued that the server would only refuse later.
+  if (!roleLoading && !canWrite) {
+    return (
+      <View style={[styles.container, styles.deniedBox]}>
+        <Stack.Screen options={{ title: name || 'Yozuv kiritish' }} />
+        <Text style={styles.deniedTitle}>Faqat ko&apos;rish huquqi</Text>
+        <Text style={styles.deniedText}>
+          Yozuv kiritish administrator huquqini talab qiladi. Siz jurnalni ko&apos;rishingiz va
+          eksport qilishingiz mumkin.
+        </Text>
+        <Pressable style={styles.deniedButton} onPress={() => router.back()}>
+          <Text style={styles.deniedButtonText}>Orqaga</Text>
+        </Pressable>
+      </View>
+    );
   }
 
   return (
@@ -313,6 +334,17 @@ export default function TransactionEntryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
+  deniedBox: { padding: 24, justifyContent: 'center', alignItems: 'center', gap: 10 },
+  deniedTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a' },
+  deniedText: { color: '#64748b', textAlign: 'center', fontSize: 14, lineHeight: 20 },
+  deniedButton: {
+    marginTop: 8,
+    backgroundColor: '#0f172a',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
+  deniedButtonText: { color: '#fff', fontWeight: '700' },
   kindRow: { flexDirection: 'row', gap: 8 },
   kindButton: {
     flex: 1,

@@ -3,8 +3,13 @@ import { View, Text, FlatList, Pressable, StyleSheet, RefreshControl, Alert } fr
 import { Stack, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { computeRunningBalance, type LedgerTransaction } from '@mubosher/shared';
 import { loadLedger } from '../../../src/lib/data/ledger';
-import { getPendingForCounterparty, type PendingRow } from '../../../src/lib/db/sync';
+import {
+  discardPendingTransaction,
+  getPendingForCounterparty,
+  type PendingRow,
+} from '../../../src/lib/db/sync';
 import { useSyncQueue } from '../../../src/hooks/useSyncQueue';
+import { useOrgRole } from '../../../src/hooks/useOrgRole';
 import { formatDate, formatMoney, todayIso } from '../../../src/lib/format';
 import {
   exportPdf,
@@ -44,6 +49,7 @@ export default function CounterpartyLedgerScreen() {
   }>();
   const router = useRouter();
   const { pendingCount, failedCount, lastError, isSyncing, runSync } = useSyncQueue();
+  const { canWrite } = useOrgRole();
 
   const [transactions, setTransactions] = useState<LedgerTransaction[]>([]);
   const [pendingRows, setPendingRows] = useState<PendingRow[]>([]);
@@ -127,9 +133,19 @@ export default function CounterpartyLedgerScreen() {
     setRefreshing(false);
   }
 
+  async function handleDiscard(clientLocalId: string) {
+    await discardPendingTransaction(clientLocalId);
+    await load();
+  }
+
   const balances = useMemo(() => computeRunningBalance(transactions), [transactions]);
   const currentBalance = balances[balances.length - 1];
   const today = todayIso();
+
+  // A rejected row will never go through (the server refused it outright), so
+  // it is shown apart from the queue rather than as "still sending".
+  const queuedRows = useMemo(() => pendingRows.filter((p) => !p.rejected_at), [pendingRows]);
+  const rejectedRows = useMemo(() => pendingRows.filter((p) => p.rejected_at), [pendingRows]);
 
   // Newest first for the list; computeRunningBalance needed them oldest-first.
   const listData = useMemo(() => [...transactions].reverse(), [transactions]);
@@ -204,13 +220,13 @@ export default function CounterpartyLedgerScreen() {
               </Pressable>
             </View>
 
-            {pendingRows.length > 0 && (
+            {queuedRows.length > 0 && (
               <View style={styles.pendingBlock}>
                 <View style={styles.pendingHeader}>
                   <Text style={styles.pendingTitle}>
                     {isSyncing
                       ? 'Sinxronlanmoqda...'
-                      : `Yuborilishi kutilmoqda: ${pendingRows.length} ta`}
+                      : `Yuborilishi kutilmoqda: ${queuedRows.length} ta`}
                   </Text>
                   <Pressable onPress={() => void handleRefresh()} disabled={isSyncing}>
                     <Text style={styles.retryLink}>Qayta yuborish</Text>
@@ -219,7 +235,7 @@ export default function CounterpartyLedgerScreen() {
                 {failedCount > 0 && lastError && (
                   <Text style={styles.pendingError}>Xatolik: {lastError}</Text>
                 )}
-                {pendingRows.map((p) => (
+                {queuedRows.map((p) => (
                   <View key={p.client_local_id} style={styles.pendingRow}>
                     <View style={styles.rowLeft}>
                       <Text style={styles.rowDate}>{formatDate(p.occurred_at)}</Text>
@@ -231,6 +247,27 @@ export default function CounterpartyLedgerScreen() {
                       )}
                     </View>
                     <Text style={styles.pendingAmount}>{formatMoney(p.amount)}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {rejectedRows.length > 0 && (
+              <View style={styles.rejectedBlock}>
+                <Text style={styles.rejectedTitle}>Qabul qilinmadi: {rejectedRows.length} ta</Text>
+                {rejectedRows.map((p) => (
+                  <View key={p.client_local_id} style={styles.rejectedRow}>
+                    <View style={styles.rowLeft}>
+                      <Text style={styles.rowDate}>{formatDate(p.occurred_at)}</Text>
+                      {!!p.description && <Text style={styles.rowDesc}>{p.description}</Text>}
+                      {!!p.last_error && <Text style={styles.pendingRowError}>{p.last_error}</Text>}
+                    </View>
+                    <View style={styles.rowRight}>
+                      <Text style={styles.rejectedAmount}>{formatMoney(p.amount)}</Text>
+                      <Pressable onPress={() => void handleDiscard(p.client_local_id)}>
+                        <Text style={styles.discardLink}>O'chirish</Text>
+                      </Pressable>
+                    </View>
                   </View>
                 ))}
               </View>
@@ -301,17 +338,20 @@ export default function CounterpartyLedgerScreen() {
         }
       />
 
-      <Pressable
-        style={styles.fab}
-        onPress={() =>
-          router.push({
-            pathname: '/counterparty/[id]/new',
-            params: { id: counterpartyId, orgId, name },
-          })
-        }
-      >
-        <Text style={styles.fabText}>+ Yangi yozuv</Text>
-      </Pressable>
+      {/* Managers read and export; only owner/admin may add an entry. */}
+      {canWrite && (
+        <Pressable
+          style={styles.fab}
+          onPress={() =>
+            router.push({
+              pathname: '/counterparty/[id]/new',
+              params: { id: counterpartyId, orgId, name },
+            })
+          }
+        >
+          <Text style={styles.fabText}>+ Yangi yozuv</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -381,6 +421,25 @@ const styles = StyleSheet.create({
   },
   pendingRowError: { color: '#be123c', fontSize: 11, marginTop: 2 },
   pendingAmount: { fontWeight: '700', color: '#92400e' },
+  rejectedBlock: {
+    backgroundColor: '#fff1f2',
+    borderColor: '#fecdd3',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  rejectedTitle: { fontWeight: '700', color: '#be123c', fontSize: 13 },
+  rejectedRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#fecdd3',
+  },
+  rejectedAmount: { fontWeight: '700', color: '#be123c' },
+  discardLink: { color: '#1d4ed8', fontWeight: '600', fontSize: 12, marginTop: 2 },
   sectionTitle: { fontWeight: '700', color: '#334155', marginBottom: 6, fontSize: 15 },
   txRow: {
     flexDirection: 'row',

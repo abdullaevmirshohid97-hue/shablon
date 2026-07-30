@@ -24,10 +24,11 @@ export default async function CategoryModulePage({
 
   const { data: memberships } = await supabase
     .from('memberships')
-    .select('org_id')
+    .select('org_id, role, organizations(name)')
     .eq('user_id', user.id);
 
   const org = memberships?.[0];
+  const canWrite = org?.role === 'owner' || org?.role === 'admin';
 
   if (!org) {
     return (
@@ -57,11 +58,19 @@ export default async function CategoryModulePage({
         </div>
       </div>
 
-      <OverviewAnalytics orgId={org.org_id} categoryFilter={category} />
+      <OverviewAnalytics
+        orgId={org.org_id}
+        orgName={org.organizations?.[0]?.name ?? null}
+        categoryFilter={category}
+      />
 
-      <div className="mb-6 max-w-2xl">
-        <AddCounterpartyForm orgId={org.org_id} presetCategory={category} />
-      </div>
+      {/* Adding a client is a write — managers get the directory read-only.
+          RLS enforces it; this just doesn't offer a form that would fail. */}
+      {canWrite && (
+        <div className="mb-6 max-w-2xl">
+          <AddCounterpartyForm orgId={org.org_id} presetCategory={category} />
+        </div>
+      )}
 
       <CounterpartyList
         counterparties={counterparties ?? []}

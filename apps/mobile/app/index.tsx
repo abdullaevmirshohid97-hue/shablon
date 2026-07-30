@@ -14,6 +14,8 @@ import { getLocalDb } from '../src/lib/db/localDb';
 import { useSyncQueue } from '../src/hooks/useSyncQueue';
 import { Sidebar, ALL_MODULES } from '../src/components/Sidebar';
 import { loadModules, type MobileModule } from '../src/lib/data/modules';
+import { clearCachedOrgRole } from '../src/lib/data/orgRole';
+import { useOrgRole } from '../src/hooks/useOrgRole';
 
 interface CounterpartyRow {
   id: string;
@@ -35,6 +37,7 @@ function initials(name: string): string {
 export default function CounterpartyListScreen() {
   const router = useRouter();
   const { pendingCount, failedCount, lastError, isSyncing, runSync } = useSyncQueue();
+  const { canWrite, isLoading: roleLoading } = useOrgRole();
   const [counterparties, setCounterparties] = useState<CounterpartyRow[]>([]);
   const [modules, setModules] = useState<MobileModule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,9 +141,17 @@ export default function CounterpartyListScreen() {
         userEmail={userEmail}
         onSignOut={() => {
           setSidebarOpen(false);
-          void supabase.auth.signOut();
+          // Drop the cached role first: on a shared phone the next person to
+          // sign in must not inherit the previous user's write permission.
+          void clearCachedOrgRole().then(() => supabase.auth.signOut());
         }}
       />
+
+      {!roleLoading && !canWrite && (
+        <Text style={styles.readOnlyBanner}>
+          Faqat ko&apos;rish rejimi — jurnallarni ko&apos;rish va eksport qilish mumkin
+        </Text>
+      )}
 
       {offline && (
         <Text style={styles.offlineBanner}>Oflayn rejim — saqlangan ro'yxat ko'rsatilmoqda</Text>
@@ -234,6 +245,16 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     marginBottom: 10,
+  },
+  readOnlyBanner: {
+    color: '#475569',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+    fontSize: 13,
   },
   syncBadgeText: { color: '#92400e', fontSize: 13, fontWeight: '600' },
   syncErrorText: { color: '#be123c', fontSize: 12, marginTop: 4 },

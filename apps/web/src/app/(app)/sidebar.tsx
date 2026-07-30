@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
+import { useOrgRole } from '@/lib/auth/OrgRoleProvider';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 function ClientsIcon({ className }: { className?: string }) {
@@ -42,6 +43,19 @@ function SettingsIcon({ className }: { className?: string }) {
   );
 }
 
+function EyeIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
+      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+      <path
+        fillRule="evenodd"
+        d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 function SignOutIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
@@ -66,11 +80,14 @@ export function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const { t } = useLocale();
+  const { canWrite } = useOrgRole();
 
+  // Settings is admin-only (modules + the change log); the page itself
+  // redirects managers away, this just stops offering them a dead end.
   const items = [
     { href: '/dashboard', label: t('nav.clients'), Icon: ChartIcon },
     { href: '/clients', label: t('nav.allClients'), Icon: ClientsIcon },
-    { href: '/settings', label: t('nav.settings'), Icon: SettingsIcon },
+    ...(canWrite ? [{ href: '/settings', label: t('nav.settings'), Icon: SettingsIcon }] : []),
   ];
 
   async function handleSignOut() {
@@ -131,6 +148,12 @@ export function Sidebar({
       <div className="border-t border-slate-200 p-3">
         {orgName && <p className="truncate text-xs font-semibold text-slate-700">{orgName}</p>}
         <p className="truncate text-xs text-slate-400">{userEmail}</p>
+        {!canWrite && (
+          <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+            <EyeIcon className="h-3 w-3" />
+            {t('readOnly.badge')}
+          </span>
+        )}
         <button
           type="button"
           onClick={handleSignOut}

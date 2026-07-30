@@ -51,11 +51,15 @@ export interface PendingRow {
   created_at: string;
   last_error: string | null;
   attempts: number;
+  /** Set once the server refused the row for good — see markRowRejected. */
+  rejected_at: string | null;
 }
 
 export interface SyncResult {
   synced: number;
   failed: number;
+  /** Rows the server refused permanently — they left the retry queue. */
+  rejected: number;
   /** Human-readable reason of the most recent failure, null when everything went through. */
   lastError: string | null;
 }
@@ -67,6 +71,31 @@ async function markRowFailed(clientLocalId: string, message: string) {
     [message, clientLocalId],
   );
 }
+
+/**
+ * Takes a row out of the retry loop without deleting it — the entry stays
+ * visible so the person who typed it can see what happened and re-enter it
+ * elsewhere, instead of it vanishing or being retried forever.
+ */
+async function markRowRejected(clientLocalId: string, message: string) {
+  const db = await getLocalDb();
+  await db.runAsync(
+    "UPDATE pending_transactions SET rejected_at = datetime('now'), last_error = ? WHERE client_local_id = ?",
+    [message, clientLocalId],
+  );
+}
+
+/**
+ * Postgres "insufficient privilege" — with Finance write now limited to
+ * owner/admin (0012_finance_write_lock.sql), this is what a manager's queued
+ * row comes back as. Retrying cannot change the outcome, so it is terminal.
+ */
+function isPermissionDenied(error: { code?: string; message?: string }): boolean {
+  return error.code === '42501' || /row-level security/i.test(error.message ?? '');
+}
+
+const PERMISSION_MESSAGE =
+  "Sizda yozuv kiritish huquqi yo'q — bu yozuv yuborilmadi. Administratorga murojaat qiling.";
 
 let syncInFlight: Promise<SyncResult> | null = null;
 
@@ -89,10 +118,10 @@ export function syncPendingTransactions(): Promise<SyncResult> {
 async function doSyncPass(): Promise<SyncResult> {
   const db = await getLocalDb();
   const rows = await db.getAllAsync<PendingRow>(
-    'SELECT * FROM pending_transactions WHERE synced_at IS NULL ORDER BY created_at',
+    'SELECT * FROM pending_transactions WHERE synced_at IS NULL AND rejected_at IS NULL ORDER BY created_at',
   );
 
-  if (rows.length === 0) return { synced: 0, failed: 0, lastError: null };
+  if (rows.length === 0) return { synced: 0, failed: 0, rejected: 0, lastError: null };
 
   // Without a session every insert is rejected by RLS — surface that as one
   // clear message instead of a cryptic per-row policy error.
@@ -102,11 +131,12 @@ async function doSyncPass(): Promise<SyncResult> {
   if (!session) {
     const message = 'Tizimga kirilmagan — yozuvlar yuborilmaydi';
     for (const row of rows) await markRowFailed(row.client_local_id, message);
-    return { synced: 0, failed: rows.length, lastError: message };
+    return { synced: 0, failed: rows.length, rejected: 0, lastError: message };
   }
 
   let synced = 0;
   let failed = 0;
+  let rejected = 0;
   let lastError: string | null = null;
 
   for (const row of rows) {
@@ -154,6 +184,12 @@ async function doSyncPass(): Promise<SyncResult> {
     );
 
     if (error) {
+      if (isPermissionDenied(error)) {
+        await markRowRejected(row.client_local_id, PERMISSION_MESSAGE);
+        rejected += 1;
+        lastError = PERMISSION_MESSAGE;
+        continue;
+      }
       await markRowFailed(row.client_local_id, error.message);
       failed += 1;
       lastError = error.message;
@@ -166,22 +202,33 @@ async function doSyncPass(): Promise<SyncResult> {
     synced += 1;
   }
 
-  return { synced, failed, lastError };
+  return { synced, failed, rejected, lastError };
 }
 
+/** Rows still queued for retry — rejected ones are excluded, they will never go through. */
 export async function getPendingCount(): Promise<number> {
   const db = await getLocalDb();
   const result = await db.getFirstAsync<{ count: number }>(
-    'SELECT COUNT(*) as count FROM pending_transactions WHERE synced_at IS NULL',
+    'SELECT COUNT(*) as count FROM pending_transactions WHERE synced_at IS NULL AND rejected_at IS NULL',
   );
   return result?.count ?? 0;
 }
 
-/** Unsynced rows for one counterparty — shown in the ledger as "kutilmoqda". */
+/**
+ * Unsent rows for one counterparty — both the ones still queued ("kutilmoqda")
+ * and the permanently rejected ones, which the screen shows separately so a
+ * refused entry isn't mistaken for one that is still on its way.
+ */
 export async function getPendingForCounterparty(counterpartyId: string): Promise<PendingRow[]> {
   const db = await getLocalDb();
   return db.getAllAsync<PendingRow>(
     'SELECT * FROM pending_transactions WHERE synced_at IS NULL AND counterparty_id = ? ORDER BY created_at DESC',
     [counterpartyId],
   );
+}
+
+/** Removes a queued or rejected row for good — the only way a rejected entry leaves the device. */
+export async function discardPendingTransaction(clientLocalId: string): Promise<void> {
+  const db = await getLocalDb();
+  await db.runAsync('DELETE FROM pending_transactions WHERE client_local_id = ?', [clientLocalId]);
 }

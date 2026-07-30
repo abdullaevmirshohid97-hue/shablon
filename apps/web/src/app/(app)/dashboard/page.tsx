@@ -64,7 +64,7 @@ export default async function DashboardPage() {
         {t('nav.clients')}
       </h1>
 
-      <OverviewAnalytics orgId={org.org_id} />
+      <OverviewAnalytics orgId={org.org_id} orgName={org.organizations?.[0]?.name ?? null} />
     </div>
   );
 }

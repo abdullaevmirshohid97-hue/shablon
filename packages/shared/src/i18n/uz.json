@@ -173,7 +173,7 @@
     "roleLabel": "Roli",
     "roleOwner": "Ega",
     "roleAdmin": "Administrator",
-    "roleStaff": "Xodim",
+    "roleStaff": "Menejer (faqat ko'rish)",
     "createButton": "Xodim qo'shish",
     "creating": "Qo'shilmoqda...",
     "created": "Xodim qo'shildi",
@@ -313,5 +313,34 @@
       "saveTooltip": "Saqlash",
       "cancelTooltip": "Bekor qilish"
     }
+  },
+  "readOnly": {
+    "badge": "Faqat ko'rish"
+  },
+  "export": {
+    "period": "Davr",
+    "periodAll": "Butun davr",
+    "openingBalance": "Boshlangʻich saldo",
+    "closingBalance": "Yakuniy saldo",
+    "generatedAt": "Tayyorlandi",
+    "client": "Mijoz",
+    "clientCount": "Mijozlar soni",
+    "total": "Jami",
+    "entryCount": "Yozuvlar soni",
+    "summarySheet": "Xulosa",
+    "excelReport": "Excel hisobot",
+    "detailsOmitted": "Mijozlar juda ko'p — batafsil varaqlar qo'shilmadi"
+  },
+  "audit": {
+    "title": "O'zgarishlar tarixi",
+    "description": "Jurnal yozuvlari qachon, kim tomonidan tahrirlangan yoki o'chirilgan.",
+    "when": "Qachon",
+    "who": "Kim",
+    "what": "Amal",
+    "amountChange": "Summa o'zgarishi",
+    "action_update": "Tahrirlandi",
+    "action_delete": "O'chirildi",
+    "empty": "Hozircha o'zgarishlar yo'q",
+    "loadMore": "Ko'proq ko'rsatish"
   }
 }

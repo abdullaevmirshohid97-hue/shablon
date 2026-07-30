@@ -76,6 +76,11 @@ export async function initLocalDb() {
 
     CREATE INDEX IF NOT EXISTS cached_transactions_counterparty_idx
       ON cached_transactions (counterparty_id, occurred_at);
+
+    CREATE TABLE IF NOT EXISTS app_state (
+      key TEXT PRIMARY KEY NOT NULL,
+      value TEXT
+    );
   `);
 
   // Upgrade path for installs created before these columns existed.
@@ -84,6 +89,9 @@ export async function initLocalDb() {
   await ensureColumn(db, 'pending_transactions', 'quantity_dona', 'REAL');
   await ensureColumn(db, 'pending_transactions', 'last_error', 'TEXT');
   await ensureColumn(db, 'pending_transactions', 'attempts', 'INTEGER NOT NULL DEFAULT 0');
+  // Set when the server refused the row for good (e.g. RLS: the signed-in
+  // user is a manager and may not write) — such rows must stop being retried.
+  await ensureColumn(db, 'pending_transactions', 'rejected_at', 'TEXT');
   await ensureColumn(db, 'cached_categories', 'kind', "TEXT NOT NULL DEFAULT 'other'");
 
   return db;

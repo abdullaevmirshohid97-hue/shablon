@@ -22,10 +22,11 @@ export default async function ClientsPage() {
 
   const { data: memberships } = await supabase
     .from('memberships')
-    .select('org_id')
+    .select('org_id, role')
     .eq('user_id', user.id);
 
   const org = memberships?.[0];
+  const canWrite = org?.role === 'owner' || org?.role === 'admin';
 
   if (!org) {
     return (
@@ -56,9 +57,12 @@ export default async function ClientsPage() {
         </div>
       </div>
 
-      <div className="mb-6 max-w-2xl">
-        <AddCounterpartyForm orgId={org.org_id} />
-      </div>
+      {/* Managers read the directory; only owner/admin may add a client. */}
+      {canWrite && (
+        <div className="mb-6 max-w-2xl">
+          <AddCounterpartyForm orgId={org.org_id} />
+        </div>
+      )}
 
       <CounterpartyList
         counterparties={counterparties ?? []}

@@ -173,7 +173,7 @@
     "roleLabel": "Роль",
     "roleOwner": "Владелец",
     "roleAdmin": "Администратор",
-    "roleStaff": "Сотрудник",
+    "roleStaff": "Менеджер (только просмотр)",
     "createButton": "Добавить сотрудника",
     "creating": "Добавление...",
     "created": "Сотрудник добавлен",
@@ -313,5 +313,34 @@
       "saveTooltip": "Сохранить",
       "cancelTooltip": "Отмена"
     }
+  },
+  "readOnly": {
+    "badge": "Только просмотр"
+  },
+  "export": {
+    "period": "Период",
+    "periodAll": "Весь период",
+    "openingBalance": "Входящее сальдо",
+    "closingBalance": "Исходящее сальдо",
+    "generatedAt": "Сформировано",
+    "client": "Клиент",
+    "clientCount": "Количество клиентов",
+    "total": "Итого",
+    "entryCount": "Количество записей",
+    "summarySheet": "Сводка",
+    "excelReport": "Отчёт Excel",
+    "detailsOmitted": "Слишком много клиентов — подробные листы не добавлены"
+  },
+  "audit": {
+    "title": "История изменений",
+    "description": "Когда и кем записи журнала были изменены или удалены.",
+    "when": "Когда",
+    "who": "Кто",
+    "what": "Действие",
+    "amountChange": "Изменение суммы",
+    "action_update": "Изменено",
+    "action_delete": "Удалено",
+    "empty": "Изменений пока нет",
+    "loadMore": "Показать ещё"
   }
 }

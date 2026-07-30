@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
+import type { OrgRole } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { OrgRoleProvider } from '@/lib/auth/OrgRoleProvider';
 import { AppShell } from './app-shell';
 import { FinanceAccessGate } from './finance-access-gate';
 
@@ -13,11 +15,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const { data: memberships } = await supabase
     .from('memberships')
-    .select('org_id, organizations(name)')
+    .select('org_id, role, organizations(name)')
     .eq('user_id', user.id);
 
   const orgId = memberships?.[0]?.org_id ?? null;
   const orgName = memberships?.[0]?.organizations?.[0]?.name ?? null;
+  const role = (memberships?.[0]?.role as OrgRole | undefined) ?? null;
 
   let moduleCategories: string[] = [];
   if (orgId) {
@@ -29,11 +32,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     moduleCategories = (modules ?? []).map((m) => m.name);
   }
 
+  // The provider sits outside the gate so that after the gate's own
+  // signInWithPassword + router.refresh() the whole subtree re-renders with
+  // the role of whoever actually signed in, not whoever opened the browser.
   return (
-    <FinanceAccessGate orgId={orgId}>
-      <AppShell orgName={orgName} userEmail={user.email ?? ''} moduleCategories={moduleCategories}>
-        {children}
-      </AppShell>
-    </FinanceAccessGate>
+    <OrgRoleProvider role={role}>
+      <FinanceAccessGate orgId={orgId}>
+        <AppShell
+          orgName={orgName}
+          userEmail={user.email ?? ''}
+          moduleCategories={moduleCategories}
+        >
+          {children}
+        </AppShell>
+      </FinanceAccessGate>
+    </OrgRoleProvider>
   );
 }
