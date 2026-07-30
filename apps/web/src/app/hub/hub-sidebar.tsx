@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { MobileNav } from '@/components/ui/MobileNav';
 
 export function FinanceIcon({ className }: { className?: string }) {
   return (
@@ -78,40 +79,48 @@ export function HubSidebar({
     router.refresh();
   }
 
-  return (
-    <aside className="no-print sticky top-[57px] hidden h-[calc(100vh-57px)] w-60 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white lg:flex">
-      <nav className="flex-1 space-y-0.5 p-3">
-        {items.map(({ href, label, Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                active
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
+  const footer = (
+    <>
+      {orgName && <p className="truncate text-xs font-semibold text-slate-700">{orgName}</p>}
+      <p className="truncate text-xs text-slate-400">{userEmail}</p>
+      <button
+        type="button"
+        onClick={handleSignOut}
+        className="mt-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-rose-600"
+      >
+        <SignOutIcon className="h-3.5 w-3.5" />
+        {t('nav.signOut')}
+      </button>
+    </>
+  );
 
-      <div className="border-t border-slate-200 p-3">
-        {orgName && <p className="truncate text-xs font-semibold text-slate-700">{orgName}</p>}
-        <p className="truncate text-xs text-slate-400">{userEmail}</p>
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="mt-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-rose-600"
-        >
-          <SignOutIcon className="h-3.5 w-3.5" />
-          {t('nav.signOut')}
-        </button>
-      </div>
-    </aside>
+  return (
+    <>
+      <MobileNav title={t('nav.menu')} footer={footer} groups={[{ items }]} />
+
+      <aside className="no-print sticky top-[57px] hidden h-[calc(100vh-57px)] w-60 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white lg:flex">
+        <nav className="flex-1 space-y-0.5 p-3">
+          {items.map(({ href, label, Icon }) => {
+            const active = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="border-t border-slate-200 p-3">{footer}</div>
+      </aside>
+    </>
   );
 }

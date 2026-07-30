@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { one } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { CounterpartyLedgerClient } from './ledger-client';
@@ -22,7 +23,7 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
 
   if (!counterparty) notFound();
 
-  const orgName = counterparty.organizations?.[0]?.name ?? null;
+  const orgName = one(counterparty.organizations)?.name ?? null;
 
   return (
     <div>

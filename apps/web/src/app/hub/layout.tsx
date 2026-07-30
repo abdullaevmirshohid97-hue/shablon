@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { one } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { HubShell } from './hub-shell';
 
@@ -15,7 +16,7 @@ export default async function HubLayout({ children }: { children: React.ReactNod
     .select('role, organizations(name)')
     .eq('user_id', user.id);
 
-  const orgName = memberships?.[0]?.organizations?.[0]?.name ?? null;
+  const orgName = one(memberships?.[0]?.organizations)?.name ?? null;
   const role = memberships?.[0]?.role ?? null;
   const isOrgAdmin = role === 'owner' || role === 'admin';
 

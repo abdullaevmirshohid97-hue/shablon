@@ -1,3 +1,4 @@
+import { one } from '@mubosher/shared';
 import type {
   LedgerTransaction,
   Counterparty,
@@ -127,9 +128,9 @@ export type SkladBatchEmbeddedRow = SkladBatchRow & {
 };
 
 export function toSkladBatch(row: SkladBatchEmbeddedRow): SkladBatch {
-  const item = row.sklad_items?.[0];
-  const order = row.sklad_orders?.[0];
-  const price = row.sklad_batch_prices?.[0];
+  const item = one(row.sklad_items);
+  const order = one(row.sklad_orders);
+  const price = one(row.sklad_batch_prices);
 
   return {
     id: row.id,
@@ -161,7 +162,7 @@ export function toSkladBatch(row: SkladBatchEmbeddedRow): SkladBatch {
     itemArtikul: item?.artikul ?? null,
     orderNo: order?.order_no ?? null,
     orderName: order?.order_name ?? null,
-    counterpartyName: order?.counterparties?.[0]?.name ?? null,
+    counterpartyName: one(order?.counterparties)?.name ?? null,
     price: price ? toSkladBatchPrice(price) : null,
   };
 }

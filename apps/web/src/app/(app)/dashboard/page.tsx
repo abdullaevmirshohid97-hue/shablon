@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { one } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { OverviewAnalytics } from '@/components/OverviewAnalytics';
@@ -64,7 +65,7 @@ export default async function DashboardPage() {
         {t('nav.clients')}
       </h1>
 
-      <OverviewAnalytics orgId={org.org_id} orgName={org.organizations?.[0]?.name ?? null} />
+      <OverviewAnalytics orgId={org.org_id} orgName={one(org.organizations)?.name ?? null} />
     </div>
   );
 }

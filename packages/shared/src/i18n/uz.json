@@ -21,7 +21,8 @@
     "signOut": "Chiqish",
     "modules": "Modullar",
     "settings": "Sozlamalar",
-    "back": "Orqaga"
+    "back": "Orqaga",
+    "menu": "Menyu"
   },
   "login": {
     "title": "Tizimga kirish",

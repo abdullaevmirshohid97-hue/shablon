@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { one } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { getOverdueDebts } from '@/lib/counterpartyDebt';
@@ -60,7 +61,7 @@ export default async function CategoryModulePage({
 
       <OverviewAnalytics
         orgId={org.org_id}
-        orgName={org.organizations?.[0]?.name ?? null}
+        orgName={one(org.organizations)?.name ?? null}
         categoryFilter={category}
       />
 

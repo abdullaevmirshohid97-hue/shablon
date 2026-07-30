@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import type { OrgRole } from '@mubosher/shared';
+import { one, type OrgRole } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { OrgRoleProvider } from '@/lib/auth/OrgRoleProvider';
 import { AppShell } from './app-shell';
@@ -19,7 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .eq('user_id', user.id);
 
   const orgId = memberships?.[0]?.org_id ?? null;
-  const orgName = memberships?.[0]?.organizations?.[0]?.name ?? null;
+  const orgName = one(memberships?.[0]?.organizations)?.name ?? null;
   const role = (memberships?.[0]?.role as OrgRole | undefined) ?? null;
 
   let moduleCategories: string[] = [];

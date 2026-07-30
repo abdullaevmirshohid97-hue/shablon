@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { useOrgRole } from '@/lib/auth/OrgRoleProvider';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { MobileNav } from '@/components/ui/MobileNav';
 
 function ClientsIcon({ className }: { className?: string }) {
   return (
@@ -90,6 +91,12 @@ export function Sidebar({
     ...(canWrite ? [{ href: '/settings', label: t('nav.settings'), Icon: SettingsIcon }] : []),
   ];
 
+  const moduleItems = moduleCategories.map((category) => ({
+    href: `/dashboard/${encodeURIComponent(category)}`,
+    label: category,
+    Icon: ModuleIcon,
+  }));
+
   async function handleSignOut() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
@@ -97,72 +104,87 @@ export function Sidebar({
     router.refresh();
   }
 
+  const footer = (
+    <>
+      {orgName && <p className="truncate text-xs font-semibold text-slate-700">{orgName}</p>}
+      <p className="truncate text-xs text-slate-400">{userEmail}</p>
+      {!canWrite && (
+        <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+          <EyeIcon className="h-3 w-3" />
+          {t('readOnly.badge')}
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={handleSignOut}
+        className="mt-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-rose-600"
+      >
+        <SignOutIcon className="h-3.5 w-3.5" />
+        {t('nav.signOut')}
+      </button>
+    </>
+  );
+
   return (
-    <aside className="no-print sticky top-[57px] hidden h-[calc(100vh-57px)] w-60 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white lg:flex">
-      <nav className="flex-1 space-y-0.5 p-3">
-        {items.map(({ href, label, Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                active
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
-            </Link>
-          );
-        })}
+    <>
+      <MobileNav
+        title={t('nav.menu')}
+        footer={footer}
+        groups={[
+          { items },
+          ...(moduleItems.length ? [{ title: t('nav.modules'), items: moduleItems }] : []),
+        ]}
+      />
 
-        {moduleCategories.length > 0 && (
-          <div className="pt-4">
-            <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              {t('nav.modules')}
-            </p>
-            {moduleCategories.map((category) => {
-              const href = `/dashboard/${encodeURIComponent(category)}`;
-              const active = pathname === href;
-              return (
-                <Link
-                  key={category}
-                  href={href}
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                    active
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <ModuleIcon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{category}</span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </nav>
+      <aside className="no-print sticky top-[57px] hidden h-[calc(100vh-57px)] w-60 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white lg:flex">
+        <nav className="flex-1 space-y-0.5 p-3">
+          {items.map(({ href, label, Icon }) => {
+            const active = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {label}
+              </Link>
+            );
+          })}
 
-      <div className="border-t border-slate-200 p-3">
-        {orgName && <p className="truncate text-xs font-semibold text-slate-700">{orgName}</p>}
-        <p className="truncate text-xs text-slate-400">{userEmail}</p>
-        {!canWrite && (
-          <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
-            <EyeIcon className="h-3 w-3" />
-            {t('readOnly.badge')}
-          </span>
-        )}
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="mt-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 hover:text-rose-600"
-        >
-          <SignOutIcon className="h-3.5 w-3.5" />
-          {t('nav.signOut')}
-        </button>
-      </div>
-    </aside>
+          {moduleCategories.length > 0 && (
+            <div className="pt-4">
+              <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                {t('nav.modules')}
+              </p>
+              {moduleCategories.map((category) => {
+                const href = `/dashboard/${encodeURIComponent(category)}`;
+                const active = pathname === href;
+                return (
+                  <Link
+                    key={category}
+                    href={href}
+                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      active
+                        ? 'bg-brand-50 text-brand-700'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <ModuleIcon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{category}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </nav>
+
+        <div className="border-t border-slate-200 p-3">{footer}</div>
+      </aside>
+    </>
   );
 }
