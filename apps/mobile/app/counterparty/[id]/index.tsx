@@ -10,6 +10,8 @@ import {
 } from '../../../src/lib/db/sync';
 import { useSyncQueue } from '../../../src/hooks/useSyncQueue';
 import { useOrgRole } from '../../../src/hooks/useOrgRole';
+import { useResponsive } from '../../../src/theme';
+import { reverseTransaction } from '../../../src/lib/data/reversal';
 import { formatDate, formatMoney, todayIso } from '../../../src/lib/format';
 import {
   exportPdf,
@@ -50,6 +52,7 @@ export default function CounterpartyLedgerScreen() {
   const router = useRouter();
   const { pendingCount, failedCount, lastError, isSyncing, runSync } = useSyncQueue();
   const { canWrite } = useOrgRole();
+  const { isTablet, gutter, maxContentWidth } = useResponsive();
 
   const [transactions, setTransactions] = useState<LedgerTransaction[]>([]);
   const [pendingRows, setPendingRows] = useState<PendingRow[]>([]);
@@ -133,6 +136,30 @@ export default function CounterpartyLedgerScreen() {
     setRefreshing(false);
   }
 
+  // Reversing is the only way to undo a posted entry — the server refuses a
+  // delete outright. Mobile offers the same action the web ledger does, minus
+  // the date picker: from a phone it is always "today, into the open month".
+  function onRowPress(item: LedgerTransaction) {
+    if (!canWrite || item.status === 'reversed' || item.status === 'reversal') return;
+
+    Alert.alert(
+      'Storno qilish',
+      `${item.description || item.documentNo || 'Yozuv'} — ${formatMoney(item.debitAmount)}\n\nYozuv o'chirilmaydi: uni bekor qiluvchi teskari yozuv qo'shiladi.`,
+      [
+        { text: 'Bekor qilish', style: 'cancel' },
+        {
+          text: 'Storno qilish',
+          style: 'destructive',
+          onPress: () =>
+            void runAction(async () => {
+              await reverseTransaction(item.id);
+              await load();
+            }),
+        },
+      ],
+    );
+  }
+
   async function handleDiscard(clientLocalId: string) {
     await discardPendingTransaction(clientLocalId);
     await load();
@@ -158,7 +185,13 @@ export default function CounterpartyLedgerScreen() {
         data={listData}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { padding: gutter, paddingBottom: 96 },
+          maxContentWidth
+            ? { maxWidth: maxContentWidth, width: '100%', alignSelf: 'center' }
+            : null,
+        ]}
         ListHeaderComponent={
           <View>
             {fromCache && (
@@ -189,7 +222,7 @@ export default function CounterpartyLedgerScreen() {
               )}
             </View>
 
-            <View style={styles.actionsRow}>
+            <View style={[styles.actionsRow, isTablet && styles.actionsRowWide]}>
               <Pressable
                 style={[styles.actionBtn, busy && styles.actionBtnDisabled]}
                 onPress={onExportPress}
@@ -278,6 +311,11 @@ export default function CounterpartyLedgerScreen() {
         }
         renderItem={({ item }) => {
           const kind = txKind(item);
+          // A reversed entry is struck through and dimmed; the mirror that
+          // cancelled it is tinted. Without this the phone showed a cancelled
+          // entry as if it were still live — the balance said otherwise.
+          const isReversed = item.status === 'reversed';
+          const isReversal = item.status === 'reversal';
           const tone = dueTone(item.dueDate, today);
           const quantities = [
             item.quantityKg != null ? `${formatMoney(item.quantityKg)} kg` : null,
@@ -288,12 +326,28 @@ export default function CounterpartyLedgerScreen() {
           ].filter(Boolean);
 
           return (
-            <View style={styles.txRow}>
+            <Pressable
+              onPress={() => onRowPress(item)}
+              disabled={!canWrite || isReversed || isReversal}
+              style={[
+                styles.txRow,
+                isReversal && styles.txRowReversal,
+                isReversed && styles.txRowReversed,
+              ]}
+            >
               <View style={styles.rowLeft}>
                 <Text style={styles.rowDate}>{formatDate(item.occurredAt)}</Text>
-                <Text style={styles.rowDesc} numberOfLines={2}>
+                <Text
+                  style={[styles.rowDesc, isReversed && styles.rowDescReversed]}
+                  numberOfLines={2}
+                >
                   {item.description || item.categoryName || '—'}
                 </Text>
+                {(isReversed || isReversal) && (
+                  <Text style={isReversal ? styles.tagReversal : styles.tagReversed}>
+                    {isReversal ? 'Storno' : 'Storno qilingan'}
+                  </Text>
+                )}
                 <View style={styles.metaRow}>
                   {quantities.length > 0 && (
                     <Text style={styles.metaText}>{quantities.join(' · ')}</Text>
@@ -319,6 +373,7 @@ export default function CounterpartyLedgerScreen() {
                   style={[
                     styles.rowAmount,
                     kind === 'kirim' ? styles.kirimText : styles.chiqimText,
+                    isReversed && styles.amountReversed,
                   ]}
                 >
                   {kind === 'chiqim' ? '−' : '+'}
@@ -328,7 +383,7 @@ export default function CounterpartyLedgerScreen() {
                   {kind === 'kirim' ? 'Kirim' : kind === 'chiqim' ? 'Chiqim' : ''}
                 </Text>
               </View>
-            </View>
+            </Pressable>
           );
         }}
         ListEmptyComponent={
@@ -357,11 +412,11 @@ export default function CounterpartyLedgerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#FAFAFA' },
   listContent: { padding: 16, paddingBottom: 96 },
   offlineBanner: {
-    color: '#92400e',
-    backgroundColor: '#fef3c7',
+    color: '#7C5514',
+    backgroundColor: '#FBF7EF',
     padding: 10,
     borderRadius: 10,
     marginBottom: 12,
@@ -373,12 +428,12 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E9E9EB',
   },
-  balanceLabel: { color: '#64748b', fontSize: 13, fontWeight: '600' },
+  balanceLabel: { color: '#71717A', fontSize: 13, fontWeight: '600' },
   balanceValue: { fontSize: 26, fontWeight: '800', marginTop: 4 },
-  balanceSide: { marginTop: 2, color: '#64748b', fontSize: 13 },
-  balanceHint: { marginTop: 6, color: '#b45309', fontSize: 12 },
+  balanceSide: { marginTop: 2, color: '#71717A', fontSize: 13 },
+  balanceHint: { marginTop: 6, color: '#7C5514', fontSize: 12 },
   actionsRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   actionBtn: {
     flex: 1,
@@ -388,99 +443,130 @@ const styles = StyleSheet.create({
     gap: 5,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E9E9EB',
     borderRadius: 10,
     paddingVertical: 10,
   },
   actionBtnTelegram: { backgroundColor: '#e8f2fb', borderColor: '#bcdcf5' },
   actionBtnDisabled: { opacity: 0.5 },
-  actionIcon: { fontSize: 14, color: '#334155' },
-  actionText: { fontSize: 13, fontWeight: '600', color: '#334155' },
-  actionTextTelegram: { color: '#1d4ed8' },
-  kirimText: { color: '#047857' },
-  chiqimText: { color: '#be123c' },
+  actionIcon: { fontSize: 14, color: '#3F3F46' },
+  actionText: { fontSize: 13, fontWeight: '600', color: '#3F3F46' },
+  actionTextTelegram: { color: '#18181B' },
+  kirimText: { color: '#2E7D48' },
+  chiqimText: { color: '#A33A3A' },
   pendingBlock: {
-    backgroundColor: '#fffbeb',
-    borderColor: '#fde68a',
+    backgroundColor: '#FBF7EF',
+    borderColor: '#E6D6B2',
     borderWidth: 1,
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
   },
   pendingHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  pendingTitle: { fontWeight: '700', color: '#92400e', fontSize: 13 },
-  retryLink: { color: '#1d4ed8', fontWeight: '600', fontSize: 13 },
-  pendingError: { color: '#be123c', marginTop: 6, fontSize: 12 },
+  pendingTitle: { fontWeight: '700', color: '#7C5514', fontSize: 13 },
+  retryLink: { color: '#18181B', fontWeight: '600', fontSize: 13 },
+  pendingError: { color: '#A33A3A', marginTop: 6, fontSize: 12 },
   pendingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 8,
     marginTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#fde68a',
+    borderTopColor: '#E6D6B2',
   },
-  pendingRowError: { color: '#be123c', fontSize: 11, marginTop: 2 },
-  pendingAmount: { fontWeight: '700', color: '#92400e' },
+  pendingRowError: { color: '#A33A3A', fontSize: 11, marginTop: 2 },
+  pendingAmount: { fontWeight: '700', color: '#7C5514' },
   rejectedBlock: {
-    backgroundColor: '#fff1f2',
-    borderColor: '#fecdd3',
+    backgroundColor: '#FBF3F3',
+    borderColor: '#EACCCC',
     borderWidth: 1,
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
   },
-  rejectedTitle: { fontWeight: '700', color: '#be123c', fontSize: 13 },
+  rejectedTitle: { fontWeight: '700', color: '#A33A3A', fontSize: 13 },
   rejectedRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingTop: 8,
     marginTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#fecdd3',
+    borderTopColor: '#EACCCC',
   },
-  rejectedAmount: { fontWeight: '700', color: '#be123c' },
-  discardLink: { color: '#1d4ed8', fontWeight: '600', fontSize: 12, marginTop: 2 },
-  sectionTitle: { fontWeight: '700', color: '#334155', marginBottom: 6, fontSize: 15 },
+  rejectedAmount: { fontWeight: '700', color: '#A33A3A' },
+  discardLink: { color: '#18181B', fontWeight: '600', fontSize: 12, marginTop: 2 },
+  sectionTitle: { fontWeight: '700', color: '#3F3F46', marginBottom: 6, fontSize: 15 },
   txRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E9E9EB',
     padding: 12,
     marginBottom: 8,
   },
   rowLeft: { flex: 1, paddingRight: 10 },
   rowRight: { alignItems: 'flex-end', justifyContent: 'center' },
-  rowDate: { color: '#94a3b8', fontSize: 12 },
-  rowDesc: { color: '#0f172a', fontWeight: '600', marginTop: 2 },
+  rowDate: { color: '#A1A1A8', fontSize: 12 },
+  rowDesc: { color: '#18181B', fontWeight: '600', marginTop: 2 },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4, alignItems: 'center' },
-  metaText: { color: '#64748b', fontSize: 12 },
+  metaText: { color: '#71717A', fontSize: 12 },
   dueBadge: {
     fontSize: 11,
-    color: '#475569',
-    backgroundColor: '#f1f5f9',
+    color: '#3F3F46',
+    backgroundColor: '#F4F4F5',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
     overflow: 'hidden',
   },
-  dueDanger: { color: '#fff', backgroundColor: '#e11d48' },
-  dueWarning: { color: '#92400e', backgroundColor: '#fde68a' },
+  dueDanger: { color: '#fff', backgroundColor: '#A33A3A' },
+  dueWarning: { color: '#7C5514', backgroundColor: '#E6D6B2' },
   rowAmount: { fontWeight: '800', fontSize: 15 },
-  kindLabel: { color: '#94a3b8', fontSize: 11, marginTop: 2 },
-  empty: { textAlign: 'center', color: '#64748b', marginTop: 24 },
+  txRowReversal: { backgroundColor: '#FBF7EF', borderColor: '#E6D6B2' },
+  txRowReversed: { opacity: 0.55 },
+  rowDescReversed: { textDecorationLine: 'line-through' },
+  amountReversed: { textDecorationLine: 'line-through' },
+  tagReversed: {
+    marginTop: 4,
+    alignSelf: 'flex-start',
+    fontSize: 11,
+    color: '#71717A',
+    backgroundColor: '#F4F4F5',
+    borderWidth: 1,
+    borderColor: '#E9E9EB',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  tagReversal: {
+    marginTop: 4,
+    alignSelf: 'flex-start',
+    fontSize: 11,
+    color: '#7C5514',
+    backgroundColor: '#FBF7EF',
+    borderWidth: 1,
+    borderColor: '#E6D6B2',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  actionsRowWide: { maxWidth: 520, alignSelf: 'flex-start' },
+  kindLabel: { color: '#A1A1A8', fontSize: 11, marginTop: 2 },
+  empty: { textAlign: 'center', color: '#71717A', marginTop: 24 },
   fab: {
     position: 'absolute',
     left: 16,
     right: 16,
     bottom: 20,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#18181B',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#0f172a',
+    shadowColor: '#18181B',
     shadowOpacity: 0.25,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },

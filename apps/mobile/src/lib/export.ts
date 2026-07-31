@@ -141,13 +141,13 @@ function invoiceHtml(counterpartyName: string, transactions: LedgerTransaction[]
   return `<!doctype html><html><head><meta charset="utf-8" />
   <style>
     * { font-family: -apple-system, Roboto, Arial, sans-serif; }
-    body { padding: 24px; color: #0f172a; }
+    body { padding: 24px; color: #18181B; }
     h1 { font-size: 20px; margin: 0 0 2px; }
-    .muted { color: #64748b; font-size: 12px; }
+    .muted { color: #71717A; font-size: 12px; }
     .balance { margin: 14px 0; padding: 12px 14px; background: #f1f5f9; border-radius: 10px; font-weight: 700; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
     th, td { border-bottom: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
-    th { background: #f8fafc; font-size: 10px; text-transform: uppercase; color: #64748b; }
+    th { background: #FAFAFA; font-size: 10px; text-transform: uppercase; color: #71717A; }
     .num { text-align: right; font-variant-numeric: tabular-nums; }
     .chiqim { color: #be123c; }
     .kirim { color: #047857; }

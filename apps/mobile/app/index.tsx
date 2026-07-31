@@ -16,6 +16,7 @@ import { Sidebar, ALL_MODULES } from '../src/components/Sidebar';
 import { loadModules, type MobileModule } from '../src/lib/data/modules';
 import { clearCachedOrgRole } from '../src/lib/data/orgRole';
 import { useOrgRole } from '../src/hooks/useOrgRole';
+import { useResponsive } from '../src/theme';
 
 interface CounterpartyRow {
   id: string;
@@ -38,6 +39,7 @@ export default function CounterpartyListScreen() {
   const router = useRouter();
   const { pendingCount, failedCount, lastError, isSyncing, runSync } = useSyncQueue();
   const { canWrite, isLoading: roleLoading } = useOrgRole();
+  const { isTablet, listColumns, gutter, maxContentWidth } = useResponsive();
   const [counterparties, setCounterparties] = useState<CounterpartyRow[]>([]);
   const [modules, setModules] = useState<MobileModule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +119,7 @@ export default function CounterpartyListScreen() {
   const title = selectedModule === ALL_MODULES ? 'Mijozlar' : selectedModule;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { padding: gutter }]}>
       <Stack.Screen
         options={{
           title,
@@ -177,17 +179,25 @@ export default function CounterpartyListScreen() {
         value={search}
         onChangeText={setSearch}
         placeholder="Qidirish..."
-        placeholderTextColor="#94a3b8"
+        placeholderTextColor="#A1A1A8"
         autoCorrect={false}
       />
 
       <FlatList
         data={filtered}
+        key={`cols-${listColumns}`}
+        numColumns={listColumns}
+        columnWrapperStyle={listColumns > 1 ? styles.column : undefined}
+        style={
+          maxContentWidth
+            ? { maxWidth: maxContentWidth, width: '100%', alignSelf: 'center' }
+            : undefined
+        }
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
         renderItem={({ item }) => (
           <Pressable
-            style={styles.row}
+            style={[styles.row, isTablet && styles.rowTablet]}
             onPress={() =>
               router.push({
                 pathname: '/counterparty/[id]',
@@ -227,55 +237,57 @@ export default function CounterpartyListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#f8fafc' },
+  container: { flex: 1, padding: 16, backgroundColor: '#FAFAFA' },
   hamburger: { paddingHorizontal: 4, paddingVertical: 6, gap: 3 },
-  bar: { width: 20, height: 2, borderRadius: 2, backgroundColor: '#0f172a' },
+  bar: { width: 20, height: 2, borderRadius: 2, backgroundColor: '#18181B' },
   offlineBanner: {
-    color: '#92400e',
-    backgroundColor: '#fef3c7',
+    color: '#7C5514',
+    backgroundColor: '#FBF7EF',
     padding: 10,
     borderRadius: 10,
     marginBottom: 10,
     fontSize: 13,
   },
   syncBadge: {
-    backgroundColor: '#fffbeb',
-    borderColor: '#fde68a',
+    backgroundColor: '#FBF7EF',
+    borderColor: '#E6D6B2',
     borderWidth: 1,
     padding: 10,
     borderRadius: 10,
     marginBottom: 10,
   },
   readOnlyBanner: {
-    color: '#475569',
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    color: '#3F3F46',
+    backgroundColor: '#F4F4F5',
+    borderColor: '#E9E9EB',
     borderWidth: 1,
     padding: 10,
     borderRadius: 10,
     marginBottom: 10,
     fontSize: 13,
   },
-  syncBadgeText: { color: '#92400e', fontSize: 13, fontWeight: '600' },
-  syncErrorText: { color: '#be123c', fontSize: 12, marginTop: 4 },
+  syncBadgeText: { color: '#7C5514', fontSize: 13, fontWeight: '600' },
+  syncErrorText: { color: '#A33A3A', fontSize: 12, marginTop: 4 },
   search: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#D8D8DC',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 9,
     backgroundColor: '#fff',
     marginBottom: 10,
     fontSize: 15,
-    color: '#0f172a',
+    color: '#18181B',
   },
+  column: { gap: 8 },
+  rowTablet: { flex: 1 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#E9E9EB',
     padding: 12,
     marginBottom: 8,
   },
@@ -283,15 +295,15 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#e0e7ff',
+    backgroundColor: '#F4F4F5',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
-  avatarText: { color: '#3730a3', fontWeight: '700' },
+  avatarText: { color: '#3F3F46', fontWeight: '700' },
   rowBody: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: '600', color: '#0f172a' },
-  muted: { color: '#64748b', marginTop: 2, fontSize: 13 },
-  chevron: { color: '#cbd5e1', fontSize: 22, marginLeft: 6 },
-  empty: { textAlign: 'center', color: '#64748b', marginTop: 24 },
+  rowTitle: { fontSize: 16, fontWeight: '600', color: '#18181B' },
+  muted: { color: '#71717A', marginTop: 2, fontSize: 13 },
+  chevron: { color: '#D8D8DC', fontSize: 22, marginLeft: 6 },
+  empty: { textAlign: 'center', color: '#71717A', marginTop: 24 },
 });

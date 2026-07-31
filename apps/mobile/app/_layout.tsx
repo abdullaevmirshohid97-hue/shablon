@@ -39,10 +39,10 @@ export default function RootLayout() {
           flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#f8fafc',
+          backgroundColor: '#FAFAFA',
         }}
       >
-        <ActivityIndicator size="large" color="#0f172a" />
+        <ActivityIndicator size="large" color="#18181B" />
       </View>
     );
   }

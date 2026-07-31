@@ -15,6 +15,7 @@ import { enqueueTransaction } from '../../../src/lib/db/sync';
 import { loadCategoriesWithKind, type MobileCategory } from '../../../src/lib/data/categories';
 import { useSyncQueue } from '../../../src/hooks/useSyncQueue';
 import { useOrgRole } from '../../../src/hooks/useOrgRole';
+import { useResponsive } from '../../../src/theme';
 import { todayIso } from '../../../src/lib/format';
 
 type EntryKind = 'kirim' | 'chiqim';
@@ -51,6 +52,7 @@ export default function TransactionEntryScreen() {
   const router = useRouter();
   const { runSync } = useSyncQueue();
   const { canWrite, isLoading: roleLoading } = useOrgRole();
+  const { gutter, maxContentWidth } = useResponsive();
 
   const [categories, setCategories] = useState<MobileCategory[]>([]);
   const [kind, setKind] = useState<EntryKind>('kirim');
@@ -200,7 +202,13 @@ export default function TransactionEntryScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[
+        { padding: gutter, paddingBottom: 40 },
+        maxContentWidth ? { maxWidth: 640, width: '100%', alignSelf: 'center' } : null,
+      ]}
+    >
       <Stack.Screen options={{ title: name ? `${name} — yozuv` : 'Yozuv kiritish' }} />
 
       <View style={styles.kindRow}>
@@ -270,7 +278,7 @@ export default function TransactionEntryScreen() {
             value={kg}
             onChangeText={setKg}
             placeholder="0"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor="#A1A1A8"
           />
         </View>
         <View style={styles.col}>
@@ -281,7 +289,7 @@ export default function TransactionEntryScreen() {
             value={dona}
             onChangeText={setDona}
             placeholder="0"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor="#A1A1A8"
           />
         </View>
       </View>
@@ -293,7 +301,7 @@ export default function TransactionEntryScreen() {
         value={amount}
         onChangeText={setAmount}
         placeholder="0"
-        placeholderTextColor="#94a3b8"
+        placeholderTextColor="#A1A1A8"
       />
 
       {kind === 'chiqim' && (
@@ -326,7 +334,7 @@ export default function TransactionEntryScreen() {
               value={customDue}
               onChangeText={setCustomDue}
               placeholder={`${todayIso()} (YYYY-MM-DD)`}
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor="#A1A1A8"
               autoCapitalize="none"
             />
           )}
@@ -339,7 +347,7 @@ export default function TransactionEntryScreen() {
         value={description}
         onChangeText={setDescription}
         placeholder="Ixtiyoriy"
-        placeholderTextColor="#94a3b8"
+        placeholderTextColor="#A1A1A8"
       />
 
       <Pressable
@@ -354,13 +362,13 @@ export default function TransactionEntryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#FAFAFA' },
   deniedBox: { padding: 24, justifyContent: 'center', alignItems: 'center', gap: 10 },
-  deniedTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a' },
-  deniedText: { color: '#64748b', textAlign: 'center', fontSize: 14, lineHeight: 20 },
+  deniedTitle: { fontSize: 18, fontWeight: '700', color: '#18181B' },
+  deniedText: { color: '#71717A', textAlign: 'center', fontSize: 14, lineHeight: 20 },
   deniedButton: {
     marginTop: 8,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#18181B',
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -370,51 +378,51 @@ const styles = StyleSheet.create({
   kindButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#D8D8DC',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
     backgroundColor: '#fff',
   },
-  kindKirimActive: { backgroundColor: '#047857', borderColor: '#047857' },
-  kindChiqimActive: { backgroundColor: '#be123c', borderColor: '#be123c' },
-  kindText: { color: '#334155', fontWeight: '600' },
+  kindKirimActive: { backgroundColor: '#2E7D48', borderColor: '#2E7D48' },
+  kindChiqimActive: { backgroundColor: '#A33A3A', borderColor: '#A33A3A' },
+  kindText: { color: '#3F3F46', fontWeight: '600' },
   kindTextActive: { color: '#fff', fontWeight: '700' },
-  label: { marginTop: 14, marginBottom: 4, fontWeight: '600', color: '#334155' },
+  label: { marginTop: 14, marginBottom: 4, fontWeight: '600', color: '#3F3F46' },
   hint: {
-    color: '#92400e',
-    backgroundColor: '#fef3c7',
+    color: '#7C5514',
+    backgroundColor: '#FBF7EF',
     padding: 10,
     borderRadius: 8,
     fontSize: 13,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#D8D8DC',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: '#fff',
     fontSize: 16,
-    color: '#0f172a',
+    color: '#18181B',
   },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#D8D8DC',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: '#fff',
   },
-  chipSelected: { backgroundColor: '#0f172a', borderColor: '#0f172a' },
-  chipText: { color: '#334155' },
+  chipSelected: { backgroundColor: '#18181B', borderColor: '#18181B' },
+  chipText: { color: '#3F3F46' },
   chipTextSelected: { color: '#fff' },
   twoCol: { flexDirection: 'row', gap: 12 },
   col: { flex: 1 },
   submitButton: {
     marginTop: 24,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#18181B',
     borderRadius: 10,
     padding: 14,
     alignItems: 'center',

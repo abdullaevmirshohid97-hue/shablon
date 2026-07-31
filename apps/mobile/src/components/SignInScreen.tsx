@@ -69,7 +69,7 @@ export function SignInScreen() {
           value={email}
           onChangeText={setEmail}
           placeholder="email@company.uz"
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor="#A1A1A8"
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
@@ -83,7 +83,7 @@ export function SignInScreen() {
           value={password}
           onChangeText={setPassword}
           placeholder="Parol"
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor="#A1A1A8"
           secureTextEntry
           textContentType="password"
           editable={!submitting}
@@ -105,12 +105,12 @@ export function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#f8fafc' },
+  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#FAFAFA' },
   card: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 24,
-    shadowColor: '#0f172a',
+    shadowColor: '#18181B',
     shadowOpacity: 0.06,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -121,27 +121,27 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#18181B',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoText: { color: '#fff', fontSize: 22, fontWeight: '800' },
-  title: { marginTop: 10, textAlign: 'center', fontSize: 22, fontWeight: '700', color: '#0f172a' },
-  subtitle: { marginTop: 2, marginBottom: 16, textAlign: 'center', color: '#64748b' },
-  label: { marginTop: 10, marginBottom: 4, fontWeight: '600', color: '#334155' },
+  title: { marginTop: 10, textAlign: 'center', fontSize: 22, fontWeight: '700', color: '#18181B' },
+  subtitle: { marginTop: 2, marginBottom: 16, textAlign: 'center', color: '#71717A' },
+  label: { marginTop: 10, marginBottom: 4, fontWeight: '600', color: '#3F3F46' },
   input: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#D8D8DC',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
-    color: '#0f172a',
+    color: '#18181B',
   },
-  error: { marginTop: 10, color: '#e11d48' },
+  error: { marginTop: 10, color: '#A33A3A' },
   button: {
     marginTop: 16,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#18181B',
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',
