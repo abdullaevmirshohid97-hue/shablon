@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { computeRunningBalance, type LedgerTransaction } from '@mubosher/shared';
+import type { CounterpartyBalance } from '@mubosher/api-client';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
 
@@ -15,40 +15,23 @@ interface DebtorRow {
 }
 
 export function TopDebtors({
-  counterparties,
-  transactions,
+  balances,
   limit = 6,
 }: {
-  counterparties: { id: string; name: string }[];
-  transactions: LedgerTransaction[];
+  /** Already ordered by balance, straight from counterparty_balances(). */
+  balances: CounterpartyBalance[];
   limit?: number;
 }) {
   const { t } = useLocale();
 
-  const rows = useMemo<DebtorRow[]>(() => {
-    const nameById = new Map(counterparties.map((c) => [c.id, c.name]));
-    const byCounterparty = new Map<string, LedgerTransaction[]>();
-    for (const tx of transactions) {
-      const list = byCounterparty.get(tx.counterpartyId);
-      if (list) list.push(tx);
-      else byCounterparty.set(tx.counterpartyId, [tx]);
-    }
-
-    const result: DebtorRow[] = [];
-    for (const [counterpartyId, txs] of byCounterparty) {
-      const balances = computeRunningBalance(txs);
-      const last = balances[balances.length - 1];
-      if (last && last.side === 'debit' && last.balance > 0) {
-        result.push({
-          id: counterpartyId,
-          name: nameById.get(counterpartyId) ?? '—',
-          balance: last.balance,
-        });
-      }
-    }
-
-    return result.sort((a, b) => b.balance - a.balance).slice(0, limit);
-  }, [counterparties, transactions, limit]);
+  const rows = useMemo<DebtorRow[]>(
+    () =>
+      balances
+        .filter((b) => b.balance > 0)
+        .slice(0, limit)
+        .map((b) => ({ id: b.counterpartyId, name: b.name, balance: b.balance })),
+    [balances, limit],
+  );
 
   const maxBalance = rows[0]?.balance ?? 0;
 

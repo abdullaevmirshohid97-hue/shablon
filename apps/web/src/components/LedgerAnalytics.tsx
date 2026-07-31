@@ -2,32 +2,25 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import {
-  computePeriodStats,
-  getDueSoonAndOverdue,
-  getOverdueByCounterparty,
-  type LedgerTransaction,
-} from '@mubosher/shared';
+import type { AnalyticsData } from '@/lib/analyticsData';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card, StatCard } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import {
-  ALL_TIME_RANGE,
-  formatPeriodLabel,
-  type PeriodFilterState,
-} from '@/components/PeriodFilter';
+import { formatPeriodLabel, type PeriodFilterState } from '@/components/PeriodFilter';
 
 const currencyFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2 });
 const qtyFormatter = new Intl.NumberFormat('ru-RU');
 
 export function LedgerAnalytics({
-  transactions,
-  counterparties,
+  data,
   period,
   forcePrintVisible = false,
 }: {
-  transactions: LedgerTransaction[];
-  counterparties: { id: string; name: string }[];
+  /**
+   * Already aggregated — in Postgres for the dashboard, in the browser for a
+   * single client's ledger. This card only draws it.
+   */
+  data: AnalyticsData;
   /**
    * Owned by the page, not by this card: one control in the toolbar drives
    * the figures here, the rows in the table, the print header and the Excel
@@ -40,25 +33,9 @@ export function LedgerAnalytics({
   const { t, locale } = useLocale();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
 
-  const today = useMemo(() => new Date(), []);
-  const range = period.range ?? ALL_TIME_RANGE;
-
-  const stats = useMemo(() => computePeriodStats(transactions, range), [transactions, range]);
-
-  // Muddati o'tgan qarz — davr filtridan mustaqil (joriy holat, tarixiy davr emas),
-  // mijoz bo'yicha yig'ilgan (LedgerTable'dagi har-qatorli konvensiyaning davomi).
-  const { dueSoon } = useMemo(
-    () => getDueSoonAndOverdue(transactions, today, 7),
-    [transactions, today],
-  );
-
-  const overdueRows = useMemo(() => {
-    const byCounterparty = getOverdueByCounterparty(transactions, today);
-    const nameById = new Map(counterparties.map((c) => [c.id, c.name]));
-    return Object.entries(byCounterparty)
-      .map(([id, debt]) => ({ id, name: nameById.get(id) ?? '—', ...debt }))
-      .sort((a, b) => b.overdueAmount - a.overdueAmount);
-  }, [transactions, today, counterparties]);
+  const stats = data;
+  const overdueRows = data.overdue;
+  const dueSoon = data.dueSoon;
 
   const overdueTotal = useMemo(
     () => overdueRows.reduce((sum, row) => sum + row.overdueAmount, 0),
@@ -119,11 +96,11 @@ export function LedgerAnalytics({
               {t('analytics.dueSoonTitle')} ({dueSoon.length})
             </p>
             <ul className="space-y-1">
-              {dueSoon.map((tx) => (
-                <li key={tx.id} className="flex items-center justify-between text-sm">
-                  <span className="truncate text-slate-700">{tx.description}</span>
+              {dueSoon.map((row) => (
+                <li key={row.id} className="flex items-center justify-between text-sm">
+                  <span className="truncate text-slate-700">{row.label}</span>
                   <span className="ml-2 shrink-0 tabular-nums text-amber-700">
-                    {tx.dueDate && new Date(tx.dueDate).toLocaleDateString(dateLocale)}
+                    {new Date(row.dueDate).toLocaleDateString(dateLocale)}
                   </span>
                 </li>
               ))}

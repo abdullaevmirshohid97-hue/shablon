@@ -2,17 +2,12 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { computeRunningBalance, type LedgerTransaction } from '@mubosher/shared';
+import type { ModuleRow as ReportModuleRow } from '@mubosher/api-client';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 
 const currencyFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 0 });
-
-interface ModuleCounterparty {
-  id: string;
-  categories: string[];
-}
 
 interface ModuleRow {
   name: string;
@@ -22,58 +17,21 @@ interface ModuleRow {
   qarz: number;
 }
 
-function outstandingDebt(counterpartyIds: Set<string>, transactions: LedgerTransaction[]): number {
-  const byCounterparty = new Map<string, LedgerTransaction[]>();
-  for (const tx of transactions) {
-    if (!counterpartyIds.has(tx.counterpartyId)) continue;
-    const list = byCounterparty.get(tx.counterpartyId);
-    if (list) list.push(tx);
-    else byCounterparty.set(tx.counterpartyId, [tx]);
-  }
-
-  let total = 0;
-  for (const txs of byCounterparty.values()) {
-    const balances = computeRunningBalance(txs);
-    const last = balances[balances.length - 1];
-    if (last && last.side === 'debit') total += last.balance;
-  }
-  return total;
-}
-
-export function ModuleBreakdownTable({
-  modules,
-  counterparties,
-  transactions,
-}: {
-  modules: { id: string; name: string }[];
-  counterparties: ModuleCounterparty[];
-  transactions: LedgerTransaction[];
-}) {
+export function ModuleBreakdownTable({ modules }: { modules: ReportModuleRow[] }) {
   const { t } = useLocale();
 
-  const rows = useMemo<ModuleRow[]>(() => {
-    return modules.map((m) => {
-      const ids = new Set(
-        counterparties.filter((c) => c.categories?.includes(m.name)).map((c) => c.id),
-      );
-      const moduleTx = transactions.filter((t) => ids.has(t.counterpartyId));
-
-      let kirim = 0;
-      let chiqim = 0;
-      for (const tx of moduleTx) {
-        if (tx.debitAccountType === 'receivable') kirim += tx.debitAmount;
-        if (tx.creditAccountType === 'receivable') chiqim += tx.creditAmount;
-      }
-
-      return {
-        name: m.name,
-        clientCount: ids.size,
-        kirim,
-        chiqim,
-        qarz: outstandingDebt(ids, transactions),
-      };
-    });
-  }, [modules, counterparties, transactions]);
+  // Aggregated by org_module_breakdown(); nothing is recomputed here.
+  const rows = useMemo<ModuleRow[]>(
+    () =>
+      modules.map((m) => ({
+        name: m.moduleName,
+        clientCount: m.counterpartyCount,
+        kirim: m.totalKirim,
+        chiqim: m.totalChiqim,
+        qarz: Math.max(m.balance, 0),
+      })),
+    [modules],
+  );
 
   if (!rows.length) return null;
 

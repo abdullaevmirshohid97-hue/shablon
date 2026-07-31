@@ -423,6 +423,83 @@ export interface Database {
           base_balance: number;
         }[];
       };
+      org_category_breakdown: {
+        Args: {
+          target_org_id: string;
+          p_from?: string | null;
+          p_to?: string | null;
+          p_category?: string | null;
+        };
+        Returns: {
+          category_name: string;
+          unit: string | null;
+          kind: 'kirim' | 'chiqim';
+          total_quantity: number;
+          total_amount: number;
+          entry_count: number;
+        }[];
+      };
+      org_overdue_by_counterparty: {
+        Args: { target_org_id: string; p_as_of?: string | null; p_category?: string | null };
+        Returns: {
+          counterparty_id: string;
+          counterparty_name: string;
+          overdue_amount: number;
+          overdue_date: string;
+        }[];
+      };
+      org_due_soon: {
+        Args: { target_org_id: string; p_within_days?: number | null; p_category?: string | null };
+        Returns: {
+          transaction_id: string;
+          counterparty_name: string;
+          description: string | null;
+          amount: number;
+          due_date: string;
+        }[];
+      };
+      org_module_breakdown: {
+        Args: { target_org_id: string; p_from?: string | null; p_to?: string | null };
+        Returns: {
+          module_name: string;
+          counterparty_count: number;
+          total_kirim: number;
+          total_chiqim: number;
+          balance: number;
+        }[];
+      };
+      counterparty_ledger_page: {
+        Args: {
+          p_counterparty_id: string;
+          p_limit?: number | null;
+          p_before_occurred_at?: string | null;
+          p_before_created_at?: string | null;
+        };
+        Returns: {
+          id: string;
+          document_no: string | null;
+          occurred_at: string;
+          created_at: string;
+          due_date: string | null;
+          description: string | null;
+          quantity: number | null;
+          unit: string | null;
+          quantity_kg: number | null;
+          quantity_dona: number | null;
+          debit_account_type: 'receivable' | 'cash' | 'sales' | 'inventory' | 'other';
+          debit_amount: number;
+          credit_account_type: 'receivable' | 'cash' | 'sales' | 'inventory' | 'other';
+          credit_amount: number;
+          currency: string;
+          source: 'fabrika' | 'shaxsiy';
+          status: 'draft' | 'posted' | 'reversed' | 'reversal';
+          reversal_of_id: string | null;
+          reversed_by_id: string | null;
+          category_name: string | null;
+          running_balance: number;
+          balance_side: 'debit' | 'credit';
+        }[];
+      };
       org_period_totals: {
         Args: { target_org_id: string; p_from?: string | null; p_to?: string | null };
         Returns: { total_kirim: number; total_chiqim: number; net: number }[];

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTransactions } from '@mubosher/api-client';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { LedgerTable } from '@/components/LedgerTable';
 import { LedgerAnalytics } from '@/components/LedgerAnalytics';
 import { PrintHeader } from '@/components/PrintHeader';
-import { formatPeriodLabel, usePeriodFilter } from '@/components/PeriodFilter';
+import { ALL_TIME_RANGE, formatPeriodLabel, usePeriodFilter } from '@/components/PeriodFilter';
+import { analyticsFromTransactions } from '@/lib/analyticsData';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 
 export function CounterpartyLedgerClient({
@@ -25,6 +26,20 @@ export function CounterpartyLedgerClient({
   const { t, locale } = useLocale();
   const [printWithAnalytics, setPrintWithAnalytics] = useState(false);
   const period = usePeriodFilter('all');
+
+  // One client's rows are already loaded to draw the journal, so aggregating
+  // them here costs nothing and keeps the figures consistent with the running
+  // balance shown beside them.
+  const analytics = useMemo(
+    () =>
+      analyticsFromTransactions(
+        transactions ?? [],
+        [{ id: counterpartyId, name: counterpartyName }],
+        period.range ?? ALL_TIME_RANGE,
+        new Date(),
+      ),
+    [transactions, counterpartyId, counterpartyName, period.range],
+  );
 
   function handlePrintClick() {
     const includeAnalytics = window.confirm(t('ledger.includeAnalyticsInPdf'));
@@ -45,12 +60,7 @@ export function CounterpartyLedgerClient({
         )}
       />
 
-      <LedgerAnalytics
-        transactions={transactions ?? []}
-        counterparties={[{ id: counterpartyId, name: counterpartyName }]}
-        period={period}
-        forcePrintVisible={printWithAnalytics}
-      />
+      <LedgerAnalytics data={analytics} period={period} forcePrintVisible={printWithAnalytics} />
 
       <LedgerTable
         supabase={supabase}
