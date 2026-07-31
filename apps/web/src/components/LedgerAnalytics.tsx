@@ -9,7 +9,7 @@ import {
   type LedgerTransaction,
 } from '@mubosher/shared';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
-import { Card } from '@/components/ui/Card';
+import { Card, StatCard } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import {
   ALL_TIME_RANGE,
@@ -76,8 +76,8 @@ export function LedgerAnalytics({
 
       {(overdueRows.length > 0 || dueSoon.length > 0) && (
         <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-rose-700">
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-rose-700">
               {t('analytics.overdueTitle')} ({overdueRows.length})
             </p>
             {overdueTotal > 0 && (
@@ -114,8 +114,8 @@ export function LedgerAnalytics({
               )}
             </ul>
           </div>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-700">
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-amber-700">
               {t('analytics.dueSoonTitle')} ({dueSoon.length})
             </p>
             <ul className="space-y-1">
@@ -135,25 +135,21 @@ export function LedgerAnalytics({
         </div>
       )}
 
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-          <p className="text-xs font-medium text-emerald-700">{t('analytics.totalKirim')}</p>
-          <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-700">
-            {currencyFormatter.format(stats.totalKirim)}
-          </p>
-        </div>
-        <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
-          <p className="text-xs font-medium text-rose-700">{t('analytics.totalChiqim')}</p>
-          <p className="mt-1 text-lg font-semibold tabular-nums text-rose-700">
-            {currencyFormatter.format(stats.totalChiqim)}
-          </p>
-        </div>
-        <div className="rounded-lg border border-slate-300 bg-slate-100 p-3">
-          <p className="text-xs font-medium text-slate-600">{t('analytics.net')}</p>
-          <p className="mt-1 text-lg font-semibold tabular-nums text-slate-900">
-            {currencyFormatter.format(stats.net)}
-          </p>
-        </div>
+      {/* Three filled colour blocks side by side read as a traffic light and
+          drowned the figures they were meant to present. The tone now lives in
+          a 2px rule on the edge; the number itself carries the colour. */}
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard
+          label={t('analytics.totalKirim')}
+          value={currencyFormatter.format(stats.totalKirim)}
+          tone="success"
+        />
+        <StatCard
+          label={t('analytics.totalChiqim')}
+          value={currencyFormatter.format(stats.totalChiqim)}
+          tone="danger"
+        />
+        <StatCard label={t('analytics.net')} value={currencyFormatter.format(stats.net)} />
       </div>
 
       {stats.byCategory.length > 0 ? (

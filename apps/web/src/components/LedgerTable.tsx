@@ -18,9 +18,9 @@ import type { Database } from '@mubosher/api-client';
 
 const currencyFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2 });
 
-const th = 'px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500';
+const th = 'px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400';
 const inlineInput =
-  'w-full rounded border border-slate-300 bg-white px-1.5 py-1 text-xs focus:border-brand-500';
+  'h-7 w-full rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-900 transition-colors hover:border-slate-400';
 
 function dueDateTone(
   dueDate: string | null | undefined,
@@ -129,7 +129,7 @@ function InlineEntryRow({
 
   return (
     <>
-      <tr className="border-b border-brand-100 bg-brand-50/30 no-print">
+      <tr className="border-b border-slate-200 bg-slate-50 no-print">
         <td className="px-2 py-1.5">
           <input
             type="datetime-local"
@@ -192,7 +192,7 @@ function InlineEntryRow({
               onClick={handleSave}
               disabled={createTransaction.isPending}
               title={t('common.save')}
-              className="rounded-md bg-brand-600 p-1.5 text-white hover:bg-brand-700 disabled:opacity-50"
+              className="rounded-md bg-slate-900 p-1.5 text-white transition-colors hover:bg-slate-800 disabled:opacity-45"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                 <path
@@ -211,7 +211,7 @@ function InlineEntryRow({
         </td>
       </tr>
       {/* Izoh — alohida to'liq kenglikdagi qator, tor ustunda emas, bemalol yoziladi */}
-      <tr className="border-b-2 border-brand-100 bg-brand-50/30 no-print">
+      <tr className="border-b border-slate-200 bg-slate-50 no-print">
         <td colSpan={10} className="px-2 pb-2">
           <div className="flex items-center gap-2">
             <input
@@ -370,8 +370,8 @@ export function LedgerTable({
             <col className="w-[10%]" />
             {canWrite && <col className="w-[8%] print:hidden" />}
           </colgroup>
-          <thead className="sticky top-0 z-10 bg-slate-50">
-            <tr className="border-b border-slate-200 text-left">
+          <thead className="sticky top-0 z-10 bg-white">
+            <tr className="border-b border-slate-300 text-left">
               <th className={th}>{t('ledger.date')}</th>
               <th className={th}>{t('ledger.documentNo')}</th>
               <th className={th}>{t('ledger.process')}</th>
@@ -403,7 +403,7 @@ export function LedgerTable({
               return (
                 <tr
                   key={tx.id}
-                  className={`border-b-2 border-slate-200 even:bg-slate-50/60 hover:bg-brand-50/40 ${
+                  className={`border-b border-slate-200 transition-colors hover:bg-slate-50 ${
                     isReversed ? 'text-slate-400 line-through' : ''
                   } ${isReversal ? 'bg-amber-50/50' : ''}`}
                 >
@@ -449,7 +449,7 @@ export function LedgerTable({
                       ''
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-right tabular-nums font-semibold">
+                  <td className="bg-slate-50/60 px-3 py-2.5 text-right font-semibold tabular-nums">
                     {(() => {
                       const bal = balanceById.get(tx.id);
                       if (!bal) return '';

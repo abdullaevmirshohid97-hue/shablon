@@ -4,16 +4,36 @@
 
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
+  /* cv11 = single-storey 'a', ss01 = disambiguated 1/l/I — both help when the
+     eye is scanning columns of figures and codes. */
   font-feature-settings: 'cv11', 'ss01';
+  letter-spacing: -0.005em;
+}
+
+/* Headings read as one voice: tighter as they get larger, never bolder than
+   they need to be. Weight carries hierarchy badly at small sizes; size and
+   colour carry it better. */
+h1 {
+  @apply tracking-tightest;
+}
+h2,
+h3 {
+  letter-spacing: -0.01em;
 }
 
 /* Financial figures line up on a fixed-width grid — never proportional. */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+  font-feature-settings:
+    'tnum' 1,
+    'cv11',
+    'ss01';
 }
 
+/* One focus treatment everywhere, on the ink colour rather than an accent —
+   visible against both white cards and the grey canvas. */
 *:focus-visible {
-  @apply outline-none ring-2 ring-brand-500 ring-offset-1 ring-offset-white;
+  @apply outline-none ring-2 ring-slate-900/70 ring-offset-2 ring-offset-slate-50;
 }
 
 /* Report header — hidden on screen, printed at the top of every PDF so the

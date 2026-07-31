@@ -1,7 +1,12 @@
 import { forwardRef } from 'react';
 
+// Same 40px height as a md Button, so a field and its action sit on one line
+// without either being nudged. Focus is handled by the global focus-visible
+// ring — a second border colour on top of it just doubled the outline.
 const baseInput =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-shadow focus:border-brand-500';
+  'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 ' +
+  'placeholder:text-slate-400 transition-colors hover:border-slate-400 ' +
+  'disabled:bg-slate-100 disabled:text-slate-400';
 
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className = '', ...props }, ref) {
@@ -27,7 +32,7 @@ export function Label({
   className?: string;
 }) {
   return (
-    <label className={`mb-1.5 block text-xs font-medium text-slate-500 ${className}`}>
+    <label className={`mb-1.5 block text-xs font-medium text-slate-600 ${className}`}>
       {children}
     </label>
   );
