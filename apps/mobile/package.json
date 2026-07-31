@@ -9,11 +9,13 @@
     "dev:lan": "expo start --lan --host lan",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "build": "echo 'use eas build for production binaries'",
     "lint": "eslint . --config ../../packages/config/eslint.base.js",
     "typecheck": "tsc --noEmit",
     "test": "echo 'no tests yet'",
-    "clean": "rimraf .expo node_modules/.cache .turbo"
+    "clean": "rimraf .expo node_modules/.cache .turbo",
+    "build:apk": "eas build --platform android --profile preview",
+    "build:apk:local": "eas build --platform android --profile preview --local",
+    "build": "echo 'use npm run build:apk (EAS) — see README'"
   },
   "dependencies": {
     "@mubosher/api-client": "*",

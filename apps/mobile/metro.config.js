@@ -8,7 +8,11 @@ const config = getDefaultConfig(projectRoot);
 
 // Monorepo support: watch the whole workspace and resolve modules from both
 // the app's own node_modules and the hoisted workspace root.
-config.watchFolders = [workspaceRoot];
+//
+// Appended, not assigned: replacing the array drops the entries Expo puts
+// there by default, which expo-doctor flags and which can surface as files
+// silently not being watched in a production bundle.
+config.watchFolders = [...(config.watchFolders ?? []), workspaceRoot];
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),

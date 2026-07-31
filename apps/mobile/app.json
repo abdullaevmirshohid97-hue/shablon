@@ -31,7 +31,11 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "81dbd672-193b-4fc0-9543-b12ff77a1ed3"
       }
-    }
+    },
+    "owner": "amirxon.ai4020"
   }
 }
