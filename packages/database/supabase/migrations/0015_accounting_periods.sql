@@ -9,10 +9,21 @@
 -- Deliberately permissive in one direction: an org that has never generated
 -- periods is not locked out of anything. The gate only engages once a period
 -- covering the date exists and is closed.
+--
+-- Re-runnable: every statement below guards against the object already
+-- existing. These are applied by hand in the Supabase SQL editor, where a
+-- half-finished run leaves committed statements behind and the retry then
+-- fails on the first line it already created.
 
-create type accounting_period_status as enum ('open', 'closed');
 
-create table accounting_periods (
+do $guard$
+begin
+  if not exists (select 1 from pg_type where typname = 'accounting_period_status') then
+    create type accounting_period_status as enum ('open', 'closed');
+  end if;
+end $guard$;
+
+create table if not exists accounting_periods (
   id uuid primary key default gen_random_uuid(),
   org_id uuid not null references organizations (id) on delete cascade,
   name text not null,
@@ -26,14 +37,14 @@ create table accounting_periods (
   check (end_date >= start_date)
 );
 
-create index accounting_periods_org_range_idx
+create index if not exists accounting_periods_org_range_idx
   on accounting_periods (org_id, start_date, end_date);
 
 -- Non-overlap is enforced with a trigger rather than an exclusion constraint:
 -- that would need btree_gist, and Supabase installs extensions into their own
 -- schema, which the gist operator class would then not resolve through
 -- (the same search_path trap documented in 0008).
-create function prevent_overlapping_periods()
+create or replace function prevent_overlapping_periods()
 returns trigger
 language plpgsql
 set search_path = public
@@ -57,16 +68,20 @@ begin
 end;
 $$;
 
+drop trigger if exists accounting_periods_no_overlap on accounting_periods;
 create trigger accounting_periods_no_overlap
   before insert or update on accounting_periods
   for each row execute function prevent_overlapping_periods();
 
 alter table accounting_periods enable row level security;
 
+drop policy if exists accounting_periods_select on accounting_periods;
 create policy accounting_periods_select on accounting_periods
   for select using (is_org_member(org_id));
+drop policy if exists accounting_periods_insert on accounting_periods;
 create policy accounting_periods_insert on accounting_periods
   for insert with check (is_org_admin(org_id));
+drop policy if exists accounting_periods_delete on accounting_periods;
 create policy accounting_periods_delete on accounting_periods
   for delete using (is_org_admin(org_id) and status = 'open');
 -- No UPDATE policy on purpose: open/closed moves only through the two RPCs
@@ -75,7 +90,7 @@ create policy accounting_periods_delete on accounting_periods
 -- ---------------------------------------------------------------------
 -- The lock
 -- ---------------------------------------------------------------------
-create function assert_period_open(target_org_id uuid, target_date date)
+create or replace function assert_period_open(target_org_id uuid, target_date date)
 returns void
 language plpgsql
 security definer
@@ -100,7 +115,7 @@ begin
 end;
 $$;
 
-create function assert_transaction_period_open()
+create or replace function assert_transaction_period_open()
 returns trigger
 language plpgsql
 set search_path = public
@@ -136,6 +151,7 @@ begin
 end;
 $$;
 
+drop trigger if exists transactions_assert_period_open on transactions;
 create trigger transactions_assert_period_open
   before insert or update or delete on transactions
   for each row execute function assert_transaction_period_open();
@@ -143,7 +159,7 @@ create trigger transactions_assert_period_open
 -- ---------------------------------------------------------------------
 -- Management RPCs
 -- ---------------------------------------------------------------------
-create function generate_accounting_periods(target_org_id uuid, p_year integer)
+create or replace function generate_accounting_periods(target_org_id uuid, p_year integer)
 returns integer
 language plpgsql
 security definer
@@ -181,7 +197,7 @@ begin
 end;
 $$;
 
-create function close_accounting_period(p_period_id uuid)
+create or replace function close_accounting_period(p_period_id uuid)
 returns void
 language plpgsql
 security definer
@@ -229,7 +245,7 @@ $$;
 
 -- Reopening is the owner's call, not an admin's: it makes finalised figures
 -- movable again, which is the one action here with no audit-safe undo.
-create function reopen_accounting_period(p_period_id uuid)
+create or replace function reopen_accounting_period(p_period_id uuid)
 returns void
 language plpgsql
 security definer
@@ -268,7 +284,7 @@ end;
 $$;
 
 -- Period list with the figures an admin checks before closing.
-create function list_accounting_periods(target_org_id uuid, p_year integer default null)
+create or replace function list_accounting_periods(target_org_id uuid, p_year integer default null)
 returns table (
   id uuid,
   name text,

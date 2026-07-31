@@ -9,17 +9,38 @@
 -- `transactions.currency` has existed since 0001 but every write hardcoded
 -- 'UZS', and nothing recorded a rate, so cross-currency reporting was
 -- impossible even though the column suggested otherwise.
+--
+-- Re-runnable: every statement below guards against the object already
+-- existing. These are applied by hand in the Supabase SQL editor, where a
+-- half-finished run leaves committed statements behind and the retry then
+-- fails on the first line it already created.
+
 
 -- ---------------------------------------------------------------------
 -- Precision. numeric(14,2) tops out just under a trillion, which UZS
 -- reaches sooner than is comfortable, and two decimals is not enough for
 -- a rate-converted figure to round-trip.
 -- ---------------------------------------------------------------------
-alter table transactions
-  alter column debit_amount type numeric(20, 4),
-  alter column credit_amount type numeric(20, 4);
+-- Guarded because a re-run would otherwise fail with "cannot alter type of a
+-- column used in a trigger definition" — the base-amount trigger created
+-- further down this same file depends on these two columns.
+do $guard$
+begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'transactions'
+      and column_name = 'debit_amount'
+      and numeric_precision = 20
+      and numeric_scale = 4
+  ) then
+    alter table transactions
+      alter column debit_amount type numeric(20, 4),
+      alter column credit_amount type numeric(20, 4);
+  end if;
+end $guard$;
 
-create table currencies (
+create table if not exists currencies (
   code text primary key,
   symbol text not null,
   /** Decimal places for display. UZS is quoted whole in practice. */
@@ -37,6 +58,7 @@ on conflict (code) do nothing;
 alter table currencies enable row level security;
 -- A shared reference list: readable by anyone signed in, writable by nobody
 -- through the API (adding a currency is a migration, not a user action).
+drop policy if exists currencies_select on currencies;
 create policy currencies_select on currencies
   for select using (auth.uid() is not null);
 
@@ -44,7 +66,7 @@ create policy currencies_select on currencies
 -- Rates are per-org: two tenants may legitimately book the same day at
 -- different rates (bank vs. central bank vs. contract rate).
 -- ---------------------------------------------------------------------
-create table exchange_rates (
+create table if not exists exchange_rates (
   id uuid primary key default gen_random_uuid(),
   org_id uuid not null references organizations (id) on delete cascade,
   from_code text not null references currencies (code),
@@ -57,12 +79,14 @@ create table exchange_rates (
   check (from_code <> to_code)
 );
 
-create index exchange_rates_lookup_idx
+create index if not exists exchange_rates_lookup_idx
   on exchange_rates (org_id, from_code, to_code, effective_date desc);
 
 alter table exchange_rates enable row level security;
+drop policy if exists exchange_rates_select on exchange_rates;
 create policy exchange_rates_select on exchange_rates
   for select using (is_org_member(org_id));
+drop policy if exists exchange_rates_write on exchange_rates;
 create policy exchange_rates_write on exchange_rates
   for all using (can_write_finance(org_id)) with check (can_write_finance(org_id));
 
@@ -72,7 +96,7 @@ create policy exchange_rates_write on exchange_rates
  * is enough to convert in both directions. Returns null when nothing is
  * quoted, which callers treat as "cannot convert" rather than "rate 1".
  */
-create function get_exchange_rate(
+create or replace function get_exchange_rate(
   target_org_id uuid,
   p_from text,
   p_to text,
@@ -103,9 +127,9 @@ $$;
 -- Base-currency amounts on every entry
 -- ---------------------------------------------------------------------
 alter table transactions
-  add column exchange_rate numeric(20, 8),
-  add column base_debit_amount numeric(20, 4),
-  add column base_credit_amount numeric(20, 4);
+  add column if not exists exchange_rate numeric(20, 8),
+  add column if not exists base_debit_amount numeric(20, 4),
+  add column if not exists base_credit_amount numeric(20, 4);
 
 /**
  * Fills the rate and the base amounts from the entry's own date. An explicit
@@ -116,7 +140,7 @@ alter table transactions
  * it would mean a single missing rate row blocks data entry, which is a
  * worse failure than a base figure that needs correcting later.
  */
-create function set_transaction_base_amounts()
+create or replace function set_transaction_base_amounts()
 returns trigger
 language plpgsql
 set search_path = public
@@ -141,6 +165,7 @@ begin
 end;
 $$;
 
+drop trigger if exists transactions_set_base_amounts on transactions;
 create trigger transactions_set_base_amounts
   before insert or update of debit_amount, credit_amount, currency, occurred_at, exchange_rate
   on transactions

@@ -18,18 +18,32 @@
 -- transaction_lines is derived from transactions by trigger today. That keeps
 -- every existing write path — web, mobile offline sync, the reversal RPC —
 -- working untouched while the reporting side moves onto the ledger shape.
+--
+-- Re-runnable: every statement below guards against the object already
+-- existing. These are applied by hand in the Supabase SQL editor, where a
+-- half-finished run leaves committed statements behind and the retry then
+-- fails on the first line it already created.
+
 
 -- ---------------------------------------------------------------------
 -- The balance rule
 -- ---------------------------------------------------------------------
-alter table transactions
-  add constraint transactions_balanced check (debit_amount = credit_amount),
-  add constraint transactions_distinct_accounts check (debit_account_id <> credit_account_id);
+do $guard$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'transactions_balanced') then
+    alter table transactions
+      add constraint transactions_balanced check (debit_amount = credit_amount);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'transactions_distinct_accounts') then
+    alter table transactions
+      add constraint transactions_distinct_accounts check (debit_account_id <> credit_account_id);
+  end if;
+end $guard$;
 
 -- ---------------------------------------------------------------------
 -- transaction_lines: the GL rows
 -- ---------------------------------------------------------------------
-create table transaction_lines (
+create table if not exists transaction_lines (
   id uuid primary key default gen_random_uuid(),
   transaction_id uuid not null references transactions (id) on delete cascade,
   org_id uuid not null references organizations (id) on delete cascade,
@@ -48,22 +62,23 @@ create table transaction_lines (
   check (not (debit > 0 and credit > 0))
 );
 
-create index transaction_lines_gl_idx
+create index if not exists transaction_lines_gl_idx
   on transaction_lines (org_id, account_id, occurred_at);
-create index transaction_lines_counterparty_idx
+create index if not exists transaction_lines_counterparty_idx
   on transaction_lines (org_id, counterparty_id, occurred_at);
 
 alter table transaction_lines enable row level security;
 
 -- Read-only to the API: lines are written by the trigger below, never
 -- directly, so there is deliberately no insert/update/delete policy.
+drop policy if exists transaction_lines_select on transaction_lines;
 create policy transaction_lines_select on transaction_lines
   for select using (is_org_member(org_id));
 
 -- SECURITY DEFINER because transaction_lines has no insert policy at all —
 -- that absence is what keeps the GL read-only to the API. Without it this
 -- trigger runs as the caller and every posting fails on its own side effect.
-create function sync_transaction_lines()
+create or replace function sync_transaction_lines()
 returns trigger
 language plpgsql
 security definer
@@ -94,6 +109,7 @@ begin
 end;
 $$;
 
+drop trigger if exists transactions_sync_lines on transactions;
 create trigger transactions_sync_lines
   after insert or update on transactions
   for each row execute function sync_transaction_lines();
@@ -101,7 +117,7 @@ create trigger transactions_sync_lines
 -- Defence in depth: even though the trigger above always writes a balanced
 -- pair, the ledger asserts it for itself. Deferred, so the two inserts of a
 -- pair are judged together at commit rather than mid-statement.
-create function assert_transaction_lines_balanced()
+create or replace function assert_transaction_lines_balanced()
 returns trigger
 language plpgsql
 set search_path = public
@@ -124,6 +140,7 @@ begin
 end;
 $$;
 
+drop trigger if exists transaction_lines_balanced on transaction_lines;
 create constraint trigger transaction_lines_balanced
   after insert or update or delete on transaction_lines
   deferrable initially deferred
@@ -136,7 +153,7 @@ create constraint trigger transaction_lines_balanced
 -- that has not generated periods still gets fast dashboards, and closing a
 -- month never has to rebuild anything.
 -- ---------------------------------------------------------------------
-create table account_month_balances (
+create table if not exists account_month_balances (
   org_id uuid not null references organizations (id) on delete cascade,
   month date not null,
   account_id uuid not null references accounts (id) on delete cascade,
@@ -148,15 +165,16 @@ create table account_month_balances (
   primary key (org_id, month, account_id, counterparty_id)
 );
 
-create index account_month_balances_org_month_idx on account_month_balances (org_id, month);
+create index if not exists account_month_balances_org_month_idx on account_month_balances (org_id, month);
 
 alter table account_month_balances enable row level security;
+drop policy if exists account_month_balances_select on account_month_balances;
 create policy account_month_balances_select on account_month_balances
   for select using (is_org_member(org_id));
 
 -- Same reason as sync_transaction_lines(): the summary table is read-only
 -- to the API, so the code that maintains it has to own the write.
-create function apply_line_to_balances(
+create or replace function apply_line_to_balances(
   p_org_id uuid,
   p_occurred_at timestamptz,
   p_account_id uuid,
@@ -185,7 +203,7 @@ as $$
     base_credit_total = b.base_credit_total + excluded.base_credit_total;
 $$;
 
-create function maintain_account_month_balances()
+create or replace function maintain_account_month_balances()
 returns trigger
 language plpgsql
 security definer
@@ -217,6 +235,7 @@ begin
 end;
 $$;
 
+drop trigger if exists transaction_lines_maintain_balances on transaction_lines;
 create trigger transaction_lines_maintain_balances
   after insert or update or delete on transaction_lines
   for each row execute function maintain_account_month_balances();
@@ -236,14 +255,15 @@ union all
 select t.id, t.org_id, 2, t.credit_account_id, t.counterparty_id,
        0, t.credit_amount, 0, coalesce(t.base_credit_amount, t.credit_amount),
        t.currency, t.occurred_at, t.description
-from transactions t where t.status <> 'draft';
+from transactions t where t.status <> 'draft'
+on conflict (transaction_id, line_no) do nothing;
 
 -- ---------------------------------------------------------------------
 -- Server-side aggregates — what the dashboard reads instead of every row
 -- ---------------------------------------------------------------------
 
 /** Closing balance per client, from the summary table. Positive = the client owes us. */
-create function counterparty_balances(target_org_id uuid, p_as_of date default null)
+create or replace function counterparty_balances(target_org_id uuid, p_as_of date default null)
 returns table (
   counterparty_id uuid,
   counterparty_name text,
@@ -273,7 +293,7 @@ as $$
 $$;
 
 /** Turnover for a date range, read from the monthly summary. */
-create function org_period_totals(
+create or replace function org_period_totals(
   target_org_id uuid,
   p_from date default null,
   p_to date default null

@@ -15,31 +15,42 @@
 -- 'draft' exists in the enum and in the policies, so a submit-for-approval
 -- flow needs no further migration, but no UI creates drafts yet: today every
 -- entry is born 'posted' and nothing in the ledger can be deleted.
+--
+-- Re-runnable: every statement below guards against the object already
+-- existing. These are applied by hand in the Supabase SQL editor, where a
+-- half-finished run leaves committed statements behind and the retry then
+-- fails on the first line it already created.
 
-create type transaction_status as enum ('draft', 'posted', 'reversed', 'reversal');
+
+do $guard$
+begin
+  if not exists (select 1 from pg_type where typname = 'transaction_status') then
+    create type transaction_status as enum ('draft', 'posted', 'reversed', 'reversal');
+  end if;
+end $guard$;
 
 alter table transactions
-  add column status transaction_status not null default 'posted',
+  add column if not exists status transaction_status not null default 'posted',
   -- On the reversing entry: which entry it cancels. On the original:
   -- which entry cancelled it. Kept on both sides so the ledger can link
   -- either direction without a scan.
-  add column reversal_of_id uuid references transactions (id),
-  add column reversed_by_id uuid references transactions (id),
-  add column reversal_reason text,
-  add column posted_at timestamptz;
+  add column if not exists reversal_of_id uuid references transactions (id),
+  add column if not exists reversed_by_id uuid references transactions (id),
+  add column if not exists reversal_reason text,
+  add column if not exists posted_at timestamptz;
 
 update transactions set posted_at = created_at where posted_at is null;
 
-create index transactions_reversal_of_idx
+create index if not exists transactions_reversal_of_idx
   on transactions (reversal_of_id) where reversal_of_id is not null;
-create index transactions_org_status_idx on transactions (org_id, status);
+create index if not exists transactions_org_status_idx on transactions (org_id, status);
 
 -- ---------------------------------------------------------------------
 -- Status may only move through the RPCs below, never through a plain
 -- UPDATE. Without this an admin could flip a posted row back to 'draft'
 -- and then delete it, walking straight around the rule above.
 -- ---------------------------------------------------------------------
-create function guard_transaction_status()
+create or replace function guard_transaction_status()
 returns trigger
 language plpgsql
 set search_path = public
@@ -53,11 +64,12 @@ begin
 end;
 $$;
 
+drop trigger if exists transactions_guard_status on transactions;
 create trigger transactions_guard_status
   before update on transactions
   for each row execute function guard_transaction_status();
 
-create function prevent_posted_delete()
+create or replace function prevent_posted_delete()
 returns trigger
 language plpgsql
 set search_path = public
@@ -81,6 +93,7 @@ begin
 end;
 $$;
 
+drop trigger if exists transactions_prevent_posted_delete on transactions;
 create trigger transactions_prevent_posted_delete
   before delete on transactions
   for each row execute function prevent_posted_delete();
@@ -105,7 +118,7 @@ create policy transactions_update on transactions
 -- turnover nets out the same way the money does. The reversal carries no
 -- due date — the obligation it cancelled is gone.
 -- ---------------------------------------------------------------------
-create function reverse_transaction(
+create or replace function reverse_transaction(
   p_transaction_id uuid,
   p_reversal_date date default null,
   p_reason text default null
@@ -166,7 +179,7 @@ $$;
 
 -- Draft -> posted. Unused by the UI today, but it is the other half of the
 -- lifecycle and belongs with the guard that makes status changes privileged.
-create function post_transaction(p_transaction_id uuid)
+create or replace function post_transaction(p_transaction_id uuid)
 returns void
 language plpgsql
 security definer
