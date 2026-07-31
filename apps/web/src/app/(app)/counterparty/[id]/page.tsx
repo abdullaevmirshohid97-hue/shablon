@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { one } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { CounterpartyLedgerClient } from './ledger-client';
@@ -15,15 +14,28 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
 
   if (!user) redirect('/login');
 
-  const { data: counterparty } = await supabase
+  const { data: counterparty, error } = await supabase
     .from('counterparties')
-    .select('id, org_id, name, organizations(name)')
+    .select('id, org_id, name')
     .eq('id', id)
     .single();
 
+  // A failed query is not a missing client. Collapsing both into notFound()
+  // turned any error here into a bare 404 with nothing in the logs to explain
+  // it — which is exactly what an embedded organizations(name) select did
+  // when it was folded into this query.
+  if (error) throw new Error(`counterparty ${id} could not be loaded: ${error.message}`);
   if (!counterparty) notFound();
 
-  const orgName = one(counterparty.organizations)?.name ?? null;
+  // Decoration for the print header only. Fetched separately and allowed to
+  // come back null, so it can never take the whole ledger page down with it.
+  const { data: org } = await supabase
+    .from('organizations')
+    .select('name')
+    .eq('id', counterparty.org_id)
+    .maybeSingle();
+
+  const orgName = org?.name ?? null;
 
   return (
     <div>
