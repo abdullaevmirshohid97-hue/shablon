@@ -12,6 +12,7 @@ import { useSyncQueue } from '../../../src/hooks/useSyncQueue';
 import { useOrgRole } from '../../../src/hooks/useOrgRole';
 import { useResponsive } from '../../../src/theme';
 import { reverseTransaction } from '../../../src/lib/data/reversal';
+import { loadCurrencies } from '../../../src/lib/data/currencies';
 import { formatDate, formatMoney, todayIso } from '../../../src/lib/format';
 import {
   exportPdf,
@@ -60,6 +61,7 @@ export default function CounterpartyLedgerScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [baseCurrency, setBaseCurrency] = useState('UZS');
 
   const hasPhone = !!phone && phone.trim().length > 0;
 
@@ -117,6 +119,10 @@ export default function CounterpartyLedgerScreen() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    void loadCurrencies(orgId).then(({ base }) => setBaseCurrency(base));
+  }, [orgId]);
+
   // Reload when returning from the entry screen (new pending row) and after
   // every sync pass (pending row became a server row).
   useFocusEffect(
@@ -144,7 +150,7 @@ export default function CounterpartyLedgerScreen() {
 
     Alert.alert(
       'Storno qilish',
-      `${item.description || item.documentNo || 'Yozuv'} — ${formatMoney(item.debitAmount)}\n\nYozuv o'chirilmaydi: uni bekor qiluvchi teskari yozuv qo'shiladi.`,
+      `${item.description || item.documentNo || 'Yozuv'} — ${formatMoney(item.debitAmount)} ${item.currency}\n\nYozuv o'chirilmaydi: uni bekor qiluvchi teskari yozuv qo'shiladi.`,
       [
         { text: 'Bekor qilish', style: 'cancel' },
         {
@@ -208,7 +214,7 @@ export default function CounterpartyLedgerScreen() {
                   currentBalance?.side === 'credit' ? styles.chiqimText : styles.kirimText,
                 ]}
               >
-                {currentBalance ? formatMoney(currentBalance.balance) : '0'} so'm
+                {currentBalance ? formatMoney(currentBalance.balance) : '0'} {baseCurrency}
               </Text>
               {currentBalance && currentBalance.balance > 0 && (
                 <Text style={styles.balanceSide}>
@@ -378,6 +384,7 @@ export default function CounterpartyLedgerScreen() {
                 >
                   {kind === 'chiqim' ? '−' : '+'}
                   {formatMoney(item.debitAmount)}
+                  {item.currency !== baseCurrency ? ` ${item.currency}` : ''}
                 </Text>
                 <Text style={styles.kindLabel}>
                   {kind === 'kirim' ? 'Kirim' : kind === 'chiqim' ? 'Chiqim' : ''}

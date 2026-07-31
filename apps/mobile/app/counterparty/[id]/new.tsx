@@ -13,6 +13,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { enqueueTransaction } from '../../../src/lib/db/sync';
 import { loadCategoriesWithKind, type MobileCategory } from '../../../src/lib/data/categories';
+import { loadCurrencies } from '../../../src/lib/data/currencies';
 import { useSyncQueue } from '../../../src/hooks/useSyncQueue';
 import { useOrgRole } from '../../../src/hooks/useOrgRole';
 import { useResponsive } from '../../../src/theme';
@@ -61,6 +62,8 @@ export default function TransactionEntryScreen() {
   const [kg, setKg] = useState('');
   const [dona, setDona] = useState('');
   const [amount, setAmount] = useState('');
+  const [currencies, setCurrencies] = useState<string[]>(['UZS']);
+  const [currency, setCurrency] = useState('UZS');
   const [dueChoice, setDueChoice] = useState<DueChoice>('none');
   const [customDue, setCustomDue] = useState('');
   const [description, setDescription] = useState('');
@@ -68,6 +71,10 @@ export default function TransactionEntryScreen() {
 
   useEffect(() => {
     void loadCategoriesWithKind(orgId).then(setCategories);
+    void loadCurrencies(orgId).then(({ codes, base }) => {
+      setCurrencies(codes);
+      setCurrency(base);
+    });
   }, [orgId]);
 
   const matchingCategories = useMemo(
@@ -155,7 +162,7 @@ export default function TransactionEntryScreen() {
         quantityKg: validated.kgValue,
         quantityDona: validated.donaValue,
         amount: validated.amountValue,
-        currency: 'UZS',
+        currency,
         source,
         clientLocalId: Crypto.randomUUID(),
       });
@@ -231,6 +238,23 @@ export default function TransactionEntryScreen() {
         ))}
       </View>
 
+      {currencies.length > 1 && (
+        <>
+          <Text style={styles.label}>Valyuta</Text>
+          <View style={styles.chipRow}>
+            {currencies.map((c) => (
+              <Pressable
+                key={c}
+                style={[styles.chip, currency === c && styles.chipSelected]}
+                onPress={() => setCurrency(c)}
+              >
+                <Text style={currency === c ? styles.chipTextSelected : styles.chipText}>{c}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      )}
+
       <Text style={styles.label}>Kategoriya</Text>
       {matchingCategories.length === 0 ? (
         <Text style={styles.hint}>
@@ -294,15 +318,31 @@ export default function TransactionEntryScreen() {
         </View>
       </View>
 
-      <Text style={styles.label}>Summa (so'm) *</Text>
-      <TextInput
-        style={styles.input}
-        keyboardType="decimal-pad"
-        value={amount}
-        onChangeText={setAmount}
-        placeholder="0"
-        placeholderTextColor="#A1A1A8"
-      />
+      {/* The amount is the one field that must never be entered in the wrong
+          currency, so the code sits inside the field rather than only in a
+          picker further up — and stays tappable there. */}
+      <Text style={styles.label}>Summa *</Text>
+      <View style={styles.amountRow}>
+        <TextInput
+          style={[styles.input, styles.amountInput]}
+          keyboardType="decimal-pad"
+          value={amount}
+          onChangeText={setAmount}
+          placeholder="0"
+          placeholderTextColor="#A1A1A8"
+        />
+        <Pressable
+          style={styles.amountCurrency}
+          disabled={currencies.length < 2}
+          onPress={() => {
+            const next = currencies[(currencies.indexOf(currency) + 1) % currencies.length];
+            if (next) setCurrency(next);
+          }}
+        >
+          <Text style={styles.amountCurrencyText}>{currency}</Text>
+          {currencies.length > 1 && <Text style={styles.amountCurrencyHint}>almashtirish</Text>}
+        </Pressable>
+      </View>
 
       {kind === 'chiqim' && (
         <>
@@ -375,6 +415,20 @@ const styles = StyleSheet.create({
   },
   deniedButtonText: { color: '#fff', fontWeight: '700' },
   kindRow: { flexDirection: 'row', gap: 8 },
+  amountRow: { flexDirection: 'row', alignItems: 'stretch', gap: 8 },
+  amountInput: { flex: 1, fontSize: 20, fontWeight: '700' },
+  amountCurrency: {
+    minWidth: 92,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#D8D8DC',
+    backgroundColor: '#F4F4F5',
+    borderRadius: 10,
+  },
+  amountCurrencyText: { fontSize: 15, fontWeight: '700', color: '#18181B' },
+  amountCurrencyHint: { fontSize: 10, color: '#71717A', marginTop: 1 },
   kindButton: {
     flex: 1,
     borderWidth: 1,
