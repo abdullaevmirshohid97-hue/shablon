@@ -9,13 +9,14 @@
     "dev:lan": "expo start --lan --host lan",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "lint": "eslint . --config ../../packages/config/eslint.base.js",
+    "lint": "eslint . --config ../../packages/config/eslint.base.js && npm run lint:deps",
     "typecheck": "tsc --noEmit",
     "test": "echo 'no tests yet'",
     "clean": "rimraf .expo node_modules/.cache .turbo",
     "build:apk": "eas build --platform android --profile preview",
     "build:apk:local": "eas build --platform android --profile preview --local",
-    "build": "echo 'use npm run build:apk (EAS) — see README'"
+    "build": "echo 'use npm run build:apk (EAS) — see README'",
+    "lint:deps": "node ../../scripts/check-phantom-deps.mjs"
   },
   "dependencies": {
     "@mubosher/api-client": "*",
@@ -35,7 +36,8 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.16.0"
+    "react-native-screens": "~4.16.0",
+    "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
     "@mubosher/config": "*",

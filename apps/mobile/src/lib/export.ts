@@ -2,7 +2,7 @@ import { Alert, Linking, Share } from 'react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import { computeRunningBalance, type LedgerTransaction } from '@mubosher/shared';
 import { formatDate, formatMoney } from './format';
 
@@ -144,13 +144,13 @@ function invoiceHtml(counterpartyName: string, transactions: LedgerTransaction[]
     body { padding: 24px; color: #18181B; }
     h1 { font-size: 20px; margin: 0 0 2px; }
     .muted { color: #71717A; font-size: 12px; }
-    .balance { margin: 14px 0; padding: 12px 14px; background: #f1f5f9; border-radius: 10px; font-weight: 700; }
+    .balance { margin: 14px 0; padding: 12px 14px; background: #F4F4F5; border-radius: 10px; font-weight: 700; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
-    th, td { border-bottom: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
+    th, td { border-bottom: 1px solid #E9E9EB; padding: 6px 8px; text-align: left; }
     th { background: #FAFAFA; font-size: 10px; text-transform: uppercase; color: #71717A; }
     .num { text-align: right; font-variant-numeric: tabular-nums; }
-    .chiqim { color: #be123c; }
-    .kirim { color: #047857; }
+    .chiqim { color: #A33A3A; }
+    .kirim { color: #2E7D48; }
   </style></head><body>
     <h1>Mubosher — Hisob-faktura</h1>
     <div class="muted">Mijoz: <b>${escapeHtml(counterpartyName)}</b> · Sana: ${today}</div>
