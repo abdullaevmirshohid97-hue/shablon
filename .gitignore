@@ -13,6 +13,9 @@ coverage/
 .env.*.local
 !.env.example
 
+# local editor/agent config, not part of the project
+.mcp.json
+
 # local-only secrets, never pushed to GitHub
 /1997/
 
