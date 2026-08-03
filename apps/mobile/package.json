@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "clean": "rimraf .expo node_modules/.cache .turbo",
-    "build:apk": "eas build --platform android --profile preview",
-    "build:apk:local": "eas build --platform android --profile preview --local",
+    "build:apk": "npx --yes eas-cli@latest build --platform android --profile preview",
+    "build:apk:local": "npx --yes eas-cli@latest build --platform android --profile preview --local",
     "build": "echo 'use npm run build:apk (EAS) — see README'",
     "lint:deps": "node ../../scripts/check-phantom-deps.mjs"
   },
