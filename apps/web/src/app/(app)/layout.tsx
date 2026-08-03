@@ -37,7 +37,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // the role of whoever actually signed in, not whoever opened the browser.
   return (
     <OrgRoleProvider role={role}>
-      <FinanceAccessGate orgId={orgId}>
+      <FinanceAccessGate orgId={orgId} currentUserId={user.id}>
         <AppShell
           orgName={orgName}
           userEmail={user.email ?? ''}

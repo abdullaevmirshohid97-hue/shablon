@@ -12,6 +12,10 @@ export function Header() {
   // Super-admin panelining o'z sarlavhasi bor (AdminShell) — bu yerda ko'rsatmaymiz.
   if (pathname?.startsWith('/admin')) return null;
 
+  // Kirish sahifasi butun ekranni egallaydi (chapda brend paneli) va tilni
+  // o'zi almashtiradi — ustiga umumiy sarlavha qo'yilsa split buziladi.
+  if (pathname === '/login') return null;
+
   // Faqat Finance ilovasi (dashboard/clients/settings/counterparty) ichida
   // "Finance" nomi + orqaga tugmasi ko'rinadi; login va hub'da umumiy brend.
   const financePrefixes = ['/dashboard', '/clients', '/settings', '/counterparty'];

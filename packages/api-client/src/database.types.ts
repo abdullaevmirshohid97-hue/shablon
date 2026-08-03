@@ -367,6 +367,7 @@ export interface Database {
           phone: string | null;
           avatar_url: string | null;
           role: 'owner' | 'admin' | 'staff';
+          has_finance_pin: boolean;
           created_at: string;
         }[];
       };
@@ -383,6 +384,29 @@ export interface Database {
       reset_employee_password: {
         Args: { target_org_id: string; target_user_id: string; p_password: string };
         Returns: void;
+      };
+      // Finance PIN (0020). verify/has take no target_user_id on purpose —
+      // they read auth.uid()'s own membership row, so a PIN can only ever
+      // confirm the caller, never stand in for another employee.
+      admin_set_finance_pin: {
+        Args: { target_org_id: string; target_user_id: string; pin: string };
+        Returns: void;
+      };
+      admin_clear_finance_pin: {
+        Args: { target_org_id: string; target_user_id: string };
+        Returns: void;
+      };
+      set_finance_pin: {
+        Args: { target_org_id: string; pin: string };
+        Returns: void;
+      };
+      verify_finance_pin: {
+        Args: { target_org_id: string; pin: string };
+        Returns: boolean;
+      };
+      has_finance_pin: {
+        Args: { target_org_id: string };
+        Returns: boolean;
       };
       list_org_roster: {
         Args: { target_org_id: string };

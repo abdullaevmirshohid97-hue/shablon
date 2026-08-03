@@ -8,13 +8,6 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 
-const STORAGE_PREFIX = 'mubosher.financeUnlocked.';
-
-function isUnlocked(orgId: string): boolean {
-  if (typeof window === 'undefined') return false;
-  return sessionStorage.getItem(STORAGE_PREFIX + orgId) === '1';
-}
-
 type RosterEntry = {
   user_id: string;
   full_name: string | null;
@@ -39,55 +32,98 @@ function RosterAvatar({ entry, className }: { entry: RosterEntry; className: str
 }
 
 /**
- * Whoever is already signed into the browser (from /login, or a previous
- * pick here) isn't necessarily who's about to use Finance on a shared
- * device — this screen has each employee find their own photo+name tile and
- * re-confirm with their own password. That's a real signInWithPassword, not
- * a shared PIN, so the session — and everything logged afterward — is
- * genuinely theirs, not whoever last used the device.
+ * Finance sits behind a second lock, because whoever is signed into the
+ * browser is not necessarily who is about to type into the ledger on a shared
+ * screen. Each employee finds their own tile and confirms.
+ *
+ * What they confirm with depends on who they picked:
+ *
+ *   - themselves, with a PIN issued by the admin → the short code. It only
+ *     re-confirms the session they already hold, so it is allowed to be short.
+ *   - anyone else → that person's real login password, which switches the
+ *     Supabase session to them. A PIN cannot do this, and letting it appear
+ *     to would mean their entries get written to the audit log under the
+ *     previous person's name.
+ *
+ * The unlock is React state and nothing else — no sessionStorage — so the PIN
+ * is asked again on every fresh load of the app rather than once per tab.
  */
 export function FinanceAccessGate({
   orgId,
+  currentUserId,
   children,
 }: {
   orgId: string | null;
+  currentUserId: string | null;
   children: React.ReactNode;
 }) {
   const { t } = useLocale();
   const router = useRouter();
-  const [unlocked, setUnlocked] = useState(() => (orgId ? isUnlocked(orgId) : false));
+  const [unlocked, setUnlocked] = useState(false);
   const [roster, setRoster] = useState<RosterEntry[] | null>(null);
+  const [hasPin, setHasPin] = useState(false);
   const [selected, setSelected] = useState<RosterEntry | null>(null);
-  const [password, setPassword] = useState('');
+  const [secret, setSecret] = useState('');
   const [status, setStatus] = useState<'idle' | 'checking' | 'wrong'>('idle');
 
   useEffect(() => {
     if (!orgId || unlocked) return;
     const supabase = createSupabaseBrowserClient();
-    supabase.rpc('list_org_roster', { target_org_id: orgId }).then(({ data }) => {
-      setRoster(data ?? []);
+    void Promise.all([
+      supabase.rpc('list_org_roster', { target_org_id: orgId }),
+      supabase.rpc('has_finance_pin', { target_org_id: orgId }),
+    ]).then(([rosterResult, pinResult]) => {
+      setRoster(rosterResult.data ?? []);
+      setHasPin(pinResult.data === true);
     });
   }, [orgId, unlocked]);
 
+  // Only the signed-in user's own PIN can be checked — verify_finance_pin has
+  // no target_user_id, it reads auth.uid()'s membership row and nothing else.
+  const usePin = selected != null && selected.user_id === currentUserId && hasPin;
+
+  function reset() {
+    setSelected(null);
+    setSecret('');
+    setStatus('idle');
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!orgId || !selected?.email) return;
+    if (!orgId || !selected) return;
     setStatus('checking');
-
     const supabase = createSupabaseBrowserClient();
+
+    if (usePin) {
+      const { data, error } = await supabase.rpc('verify_finance_pin', {
+        target_org_id: orgId,
+        pin: secret,
+      });
+      setSecret('');
+      if (error || data !== true) {
+        setStatus('wrong');
+        return;
+      }
+      setUnlocked(true);
+      return;
+    }
+
+    if (!selected.email) {
+      setStatus('wrong');
+      return;
+    }
     const { error } = await supabase.auth.signInWithPassword({
       email: selected.email,
-      password,
+      password: secret,
     });
-    setPassword('');
-
+    setSecret('');
     if (error) {
       setStatus('wrong');
       return;
     }
-
-    sessionStorage.setItem(STORAGE_PREFIX + orgId, '1');
     setUnlocked(true);
+    // The session now belongs to whoever was picked; re-render the server
+    // tree so their role, name and permissions replace the previous user's.
     router.refresh();
   }
 
@@ -100,10 +136,7 @@ export function FinanceAccessGate({
           <>
             <button
               type="button"
-              onClick={() => {
-                setSelected(null);
-                setStatus('idle');
-              }}
+              onClick={reset}
               className="mb-3 text-sm text-slate-500 hover:text-slate-700"
             >
               ← {t('nav.back')}
@@ -118,23 +151,37 @@ export function FinanceAccessGate({
               </div>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-              <p className="text-sm text-slate-500">{t('financeAccess.passwordPrompt')}</p>
+              <p className="text-sm text-slate-500">
+                {t(usePin ? 'financeAccess.pinPrompt' : 'financeAccess.passwordPrompt')}
+              </p>
               <Input
                 type="password"
                 autoFocus
                 required
-                autoComplete="current-password"
-                value={password}
+                minLength={usePin ? 4 : undefined}
+                maxLength={usePin ? 10 : undefined}
+                autoComplete={usePin ? 'off' : 'current-password'}
+                className={usePin ? 'text-center text-lg tracking-[0.4em]' : undefined}
+                value={secret}
                 onChange={(e) => {
-                  setPassword(e.target.value);
+                  setSecret(e.target.value);
                   setStatus('idle');
                 }}
-                placeholder={t('financeAccess.passwordPlaceholder')}
+                placeholder={t(
+                  usePin ? 'financeAccess.pinPlaceholder' : 'financeAccess.passwordPlaceholder',
+                )}
               />
-              {status === 'wrong' && (
-                <p className="text-sm text-rose-600">{t('financeAccess.incorrect')}</p>
+              {/* Picking a colleague is a real sign-in, not a peek — say so
+                  before they wonder why the short code stopped working. */}
+              {!usePin && selected.user_id !== currentUserId && (
+                <p className="text-xs text-slate-400">{t('financeAccess.otherPersonHint')}</p>
               )}
-              <Button type="submit" disabled={status === 'checking' || !password}>
+              {status === 'wrong' && (
+                <p className="text-sm text-rose-600">
+                  {t(usePin ? 'financeAccess.pinIncorrect' : 'financeAccess.incorrect')}
+                </p>
+              )}
+              <Button type="submit" disabled={status === 'checking' || !secret}>
                 {status === 'checking' ? t('financeAccess.verifying') : t('financeAccess.submit')}
               </Button>
             </form>

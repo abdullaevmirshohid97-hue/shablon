@@ -24,8 +24,8 @@ IMAGE=postgres:16
 
 # 10_ carries its own fixture (it asserts on a virgin org); the later suites
 # share 01_fixture.sql.
-SUITES=(10_roles_audit.sql 20_reversal_periods.sql 30_ledger_currency.sql 40_reporting.sql)
-NEEDS_FIXTURE=(no yes yes yes)
+SUITES=(10_roles_audit.sql 20_reversal_periods.sql 30_ledger_currency.sql 40_reporting.sql 50_finance_pin.sql)
+NEEDS_FIXTURE=(no yes yes yes yes)
 
 cleanup() { docker rm -f "$CONTAINER" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
