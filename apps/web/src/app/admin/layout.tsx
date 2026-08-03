@@ -5,7 +5,7 @@ import { AdminShell } from './admin-shell';
 
 // Super-admin paneli hech qachon qidiruvga tushmasin (Caddy ham noindex qo'yadi).
 export const metadata: Metadata = {
-  title: 'Mubosher — Super Admin',
+  title: 'idaa finance — Super Admin',
   robots: { index: false, follow: false },
 };
 

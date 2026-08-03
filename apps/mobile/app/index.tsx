@@ -179,7 +179,7 @@ export default function CounterpartyListScreen() {
         value={search}
         onChangeText={setSearch}
         placeholder="Qidirish..."
-        placeholderTextColor="#A1A1A8"
+        placeholderTextColor="#8A8A93"
         autoCorrect={false}
       />
 
@@ -239,7 +239,7 @@ export default function CounterpartyListScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: '#FAFAFA' },
   hamburger: { paddingHorizontal: 4, paddingVertical: 6, gap: 3 },
-  bar: { width: 20, height: 2, borderRadius: 2, backgroundColor: '#18181B' },
+  bar: { width: 20, height: 2, borderRadius: 2, backgroundColor: '#000000' },
   offlineBanner: {
     color: '#7C5514',
     backgroundColor: '#FBF7EF',
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   readOnlyBanner: {
-    color: '#3F3F46',
+    color: '#2A2A30',
     backgroundColor: '#F4F4F5',
     borderColor: '#E9E9EB',
     borderWidth: 1,
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginBottom: 10,
     fontSize: 15,
-    color: '#18181B',
+    color: '#000000',
   },
   column: { gap: 8 },
   rowTablet: { flex: 1 },
@@ -300,10 +300,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 10,
   },
-  avatarText: { color: '#3F3F46', fontWeight: '700' },
+  avatarText: { color: '#2A2A30', fontWeight: '700' },
   rowBody: { flex: 1 },
-  rowTitle: { fontSize: 16, fontWeight: '600', color: '#18181B' },
-  muted: { color: '#71717A', marginTop: 2, fontSize: 13 },
+  rowTitle: { fontSize: 16, fontWeight: '600', color: '#000000' },
+  muted: { color: '#5C5C64', marginTop: 2, fontSize: 13 },
   chevron: { color: '#D8D8DC', fontSize: 22, marginLeft: 6 },
-  empty: { textAlign: 'center', color: '#71717A', marginTop: 24 },
+  empty: { textAlign: 'center', color: '#5C5C64', marginTop: 24 },
 });

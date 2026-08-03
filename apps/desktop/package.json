@@ -23,13 +23,21 @@
   },
   "build": {
     "appId": "uz.mubosher.desktop",
-    "productName": "Mubosher",
-    "files": ["dist/**/*"],
+    "productName": "idaa finance",
+    "files": [
+      "dist/**/*"
+    ],
     "directories": {
       "output": "out"
     },
-    "win": { "target": "nsis" },
-    "mac": { "target": "dmg" },
-    "linux": { "target": "AppImage" }
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   }
 }

@@ -13,7 +13,7 @@
   },
   "header": {
     "title": "Finance",
-    "brand": "Mubosher"
+    "brand": "idaa finance"
   },
   "nav": {
     "clients": "Общая аналитика",
@@ -52,7 +52,7 @@
     "noOrgMessage": "Вам ещё не назначена ни одна организация. Свяжитесь с супер-администратором.",
     "title": "Список клиентов",
     "empty": "Пока нет клиентов",
-    "onboardingTitle": "Добро пожаловать в Mubosher!",
+    "onboardingTitle": "Добро пожаловать в idaa finance!",
     "onboardingMessage": "Чтобы начать работу, добавьте первого клиента. Модули (категории) можно добавить позже, в любой момент.",
     "onboardingCta": "Добавить первого клиента",
     "overdue": "Просрочено"
@@ -72,7 +72,7 @@
     "orgTitle": "Название организации",
     "orgDescription": "Это название показывается в боковой панели, в заголовках отчётов, в экспортах PDF/Excel и в мобильном приложении.",
     "orgNameLabel": "Название",
-    "orgNamePlaceholder": "Например: Mubosher tekstil",
+    "orgNamePlaceholder": "Например: Idaa tekstil",
     "orgNameSaved": "Название обновлено",
     "orgNameDenied": "Нет прав на изменение названия — это может сделать только владелец или админ.",
     "modulesTitle": "Модули",

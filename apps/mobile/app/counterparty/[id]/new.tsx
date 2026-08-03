@@ -302,7 +302,7 @@ export default function TransactionEntryScreen() {
             value={kg}
             onChangeText={setKg}
             placeholder="0"
-            placeholderTextColor="#A1A1A8"
+            placeholderTextColor="#8A8A93"
           />
         </View>
         <View style={styles.col}>
@@ -313,7 +313,7 @@ export default function TransactionEntryScreen() {
             value={dona}
             onChangeText={setDona}
             placeholder="0"
-            placeholderTextColor="#A1A1A8"
+            placeholderTextColor="#8A8A93"
           />
         </View>
       </View>
@@ -329,7 +329,7 @@ export default function TransactionEntryScreen() {
           value={amount}
           onChangeText={setAmount}
           placeholder="0"
-          placeholderTextColor="#A1A1A8"
+          placeholderTextColor="#8A8A93"
         />
         <Pressable
           style={styles.amountCurrency}
@@ -374,7 +374,7 @@ export default function TransactionEntryScreen() {
               value={customDue}
               onChangeText={setCustomDue}
               placeholder={`${todayIso()} (YYYY-MM-DD)`}
-              placeholderTextColor="#A1A1A8"
+              placeholderTextColor="#8A8A93"
               autoCapitalize="none"
             />
           )}
@@ -387,7 +387,7 @@ export default function TransactionEntryScreen() {
         value={description}
         onChangeText={setDescription}
         placeholder="Ixtiyoriy"
-        placeholderTextColor="#A1A1A8"
+        placeholderTextColor="#8A8A93"
       />
 
       <Pressable
@@ -404,11 +404,11 @@ export default function TransactionEntryScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFA' },
   deniedBox: { padding: 24, justifyContent: 'center', alignItems: 'center', gap: 10 },
-  deniedTitle: { fontSize: 18, fontWeight: '700', color: '#18181B' },
-  deniedText: { color: '#71717A', textAlign: 'center', fontSize: 14, lineHeight: 20 },
+  deniedTitle: { fontSize: 18, fontWeight: '700', color: '#000000' },
+  deniedText: { color: '#5C5C64', textAlign: 'center', fontSize: 14, lineHeight: 20 },
   deniedButton: {
     marginTop: 8,
-    backgroundColor: '#18181B',
+    backgroundColor: '#000000',
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -427,8 +427,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F4F5',
     borderRadius: 10,
   },
-  amountCurrencyText: { fontSize: 15, fontWeight: '700', color: '#18181B' },
-  amountCurrencyHint: { fontSize: 10, color: '#71717A', marginTop: 1 },
+  amountCurrencyText: { fontSize: 15, fontWeight: '700', color: '#000000' },
+  amountCurrencyHint: { fontSize: 10, color: '#5C5C64', marginTop: 1 },
   kindButton: {
     flex: 1,
     borderWidth: 1,
@@ -440,9 +440,9 @@ const styles = StyleSheet.create({
   },
   kindKirimActive: { backgroundColor: '#2E7D48', borderColor: '#2E7D48' },
   kindChiqimActive: { backgroundColor: '#A33A3A', borderColor: '#A33A3A' },
-  kindText: { color: '#3F3F46', fontWeight: '600' },
+  kindText: { color: '#2A2A30', fontWeight: '600' },
   kindTextActive: { color: '#fff', fontWeight: '700' },
-  label: { marginTop: 14, marginBottom: 4, fontWeight: '600', color: '#3F3F46' },
+  label: { marginTop: 14, marginBottom: 4, fontWeight: '600', color: '#2A2A30' },
   hint: {
     color: '#7C5514',
     backgroundColor: '#FBF7EF',
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: '#fff',
     fontSize: 16,
-    color: '#18181B',
+    color: '#000000',
   },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
@@ -469,14 +469,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     backgroundColor: '#fff',
   },
-  chipSelected: { backgroundColor: '#18181B', borderColor: '#18181B' },
-  chipText: { color: '#3F3F46' },
+  chipSelected: { backgroundColor: '#000000', borderColor: '#000000' },
+  chipText: { color: '#2A2A30' },
   chipTextSelected: { color: '#fff' },
   twoCol: { flexDirection: 'row', gap: 12 },
   col: { flex: 1 },
   submitButton: {
     marginTop: 24,
-    backgroundColor: '#18181B',
+    backgroundColor: '#000000',
     borderRadius: 10,
     padding: 14,
     alignItems: 'center',

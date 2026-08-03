@@ -141,18 +141,18 @@ function invoiceHtml(counterpartyName: string, transactions: LedgerTransaction[]
   return `<!doctype html><html><head><meta charset="utf-8" />
   <style>
     * { font-family: -apple-system, Roboto, Arial, sans-serif; }
-    body { padding: 24px; color: #18181B; }
+    body { padding: 24px; color: #000000; }
     h1 { font-size: 20px; margin: 0 0 2px; }
-    .muted { color: #71717A; font-size: 12px; }
+    .muted { color: #5C5C64; font-size: 12px; }
     .balance { margin: 14px 0; padding: 12px 14px; background: #F4F4F5; border-radius: 10px; font-weight: 700; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
     th, td { border-bottom: 1px solid #E9E9EB; padding: 6px 8px; text-align: left; }
-    th { background: #FAFAFA; font-size: 10px; text-transform: uppercase; color: #71717A; }
+    th { background: #FAFAFA; font-size: 10px; text-transform: uppercase; color: #5C5C64; }
     .num { text-align: right; font-variant-numeric: tabular-nums; }
     .chiqim { color: #A33A3A; }
     .kirim { color: #2E7D48; }
   </style></head><body>
-    <h1>Mubosher — Hisob-faktura</h1>
+    <h1>idaa finance — Hisob-faktura</h1>
     <div class="muted">Mijoz: <b>${escapeHtml(counterpartyName)}</b> · Sana: ${today}</div>
     <div class="balance">Joriy saldo: ${balance}</div>
     <table>
@@ -194,7 +194,7 @@ export function invoiceText(counterpartyName: string, transactions: LedgerTransa
     return `${r.date}  ${r.description || ''} ${qty}  ${amount}`.replace(/\s+/g, ' ').trim();
   });
   return [
-    `Mubosher — ${counterpartyName}`,
+    `idaa finance — ${counterpartyName}`,
     `Joriy saldo: ${currentBalanceLabel(transactions)}`,
     '',
     ...lines,

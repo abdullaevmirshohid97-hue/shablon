@@ -60,7 +60,7 @@ export function SignInScreen() {
         <View style={styles.logo}>
           <Text style={styles.logoText}>M</Text>
         </View>
-        <Text style={styles.title}>Mubosher</Text>
+        <Text style={styles.title}>idaa finance</Text>
         <Text style={styles.subtitle}>Tizimga kirish</Text>
 
         <Text style={styles.label}>Email</Text>
@@ -69,7 +69,7 @@ export function SignInScreen() {
           value={email}
           onChangeText={setEmail}
           placeholder="email@company.uz"
-          placeholderTextColor="#A1A1A8"
+          placeholderTextColor="#8A8A93"
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
@@ -83,7 +83,7 @@ export function SignInScreen() {
           value={password}
           onChangeText={setPassword}
           placeholder="Parol"
-          placeholderTextColor="#A1A1A8"
+          placeholderTextColor="#8A8A93"
           secureTextEntry
           textContentType="password"
           editable={!submitting}
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 24,
-    shadowColor: '#18181B',
+    shadowColor: '#000000',
     shadowOpacity: 0.06,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
@@ -121,14 +121,14 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: '#18181B',
+    backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoText: { color: '#fff', fontSize: 22, fontWeight: '800' },
-  title: { marginTop: 10, textAlign: 'center', fontSize: 22, fontWeight: '700', color: '#18181B' },
-  subtitle: { marginTop: 2, marginBottom: 16, textAlign: 'center', color: '#71717A' },
-  label: { marginTop: 10, marginBottom: 4, fontWeight: '600', color: '#3F3F46' },
+  title: { marginTop: 10, textAlign: 'center', fontSize: 22, fontWeight: '700', color: '#000000' },
+  subtitle: { marginTop: 2, marginBottom: 16, textAlign: 'center', color: '#5C5C64' },
+  label: { marginTop: 10, marginBottom: 4, fontWeight: '600', color: '#2A2A30' },
   input: {
     borderWidth: 1,
     borderColor: '#D8D8DC',
@@ -136,12 +136,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
-    color: '#18181B',
+    color: '#000000',
   },
   error: { marginTop: 10, color: '#A33A3A' },
   button: {
     marginTop: 16,
-    backgroundColor: '#18181B',
+    backgroundColor: '#000000',
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: 'center',

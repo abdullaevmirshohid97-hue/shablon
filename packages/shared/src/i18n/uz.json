@@ -13,7 +13,7 @@
   },
   "header": {
     "title": "Finance",
-    "brand": "Mubosher"
+    "brand": "idaa finance"
   },
   "nav": {
     "clients": "Umumiy analitika",
@@ -52,7 +52,7 @@
     "noOrgMessage": "Sizga hali birorta tashkilotga a'zolik berilmagan. Super-admin bilan bog'laning.",
     "title": "Mijozlar ro'yxati",
     "empty": "Hozircha mijozlar yo'q",
-    "onboardingTitle": "Mubosher'ga xush kelibsiz!",
+    "onboardingTitle": "idaa finance'ga xush kelibsiz!",
     "onboardingMessage": "Ishni boshlash uchun birinchi mijozingizni qo'shing. Modullar (kategoriyalar) keyinroq, xohlagan paytingizda qo'shilishi mumkin.",
     "onboardingCta": "Birinchi mijozni qo'shish",
     "overdue": "Muddati o'tgan"
@@ -72,7 +72,7 @@
     "orgTitle": "Tashkilot nomi",
     "orgDescription": "Bu nom yon panelda, hisobot sarlavhalarida va PDF/Excel eksportlarida hamda mobil ilovada ko'rinadi.",
     "orgNameLabel": "Nomi",
-    "orgNamePlaceholder": "Masalan: Mubosher tekstil",
+    "orgNamePlaceholder": "Masalan: Idaa tekstil",
     "orgNameSaved": "Nom yangilandi",
     "orgNameDenied": "Nomni o'zgartirishga ruxsat yo'q — buni faqat egasi yoki admin qila oladi.",
     "modulesTitle": "Modullar",

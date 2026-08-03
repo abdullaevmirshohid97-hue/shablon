@@ -71,7 +71,7 @@ export function Sidebar({
           <View style={styles.logo}>
             <Text style={styles.logoText}>M</Text>
           </View>
-          <Text style={styles.brand}>Mubosher</Text>
+          <Text style={styles.brand}>idaa finance</Text>
         </View>
 
         <ScrollView style={styles.nav} contentContainerStyle={{ paddingBottom: 12 }}>
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: '#fff',
     paddingHorizontal: 12,
-    shadowColor: '#18181B',
+    shadowColor: '#000000',
     shadowOpacity: 0.2,
     shadowRadius: 16,
     shadowOffset: { width: 4, height: 0 },
@@ -150,12 +150,12 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 9,
-    backgroundColor: '#18181B',
+    backgroundColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoText: { color: '#fff', fontWeight: '800' },
-  brand: { fontSize: 17, fontWeight: '700', color: '#18181B' },
+  brand: { fontSize: 17, fontWeight: '700', color: '#000000' },
   nav: { flex: 1 },
   section: {
     marginTop: 14,
@@ -163,15 +163,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: 11,
     fontWeight: '700',
-    color: '#A1A1A8',
+    color: '#8A8A93',
   },
   item: { paddingVertical: 11, paddingHorizontal: 10, borderRadius: 9 },
   itemActive: { backgroundColor: '#F4F4F5' },
-  itemText: { fontSize: 15, color: '#3F3F46', fontWeight: '500' },
-  itemTextActive: { color: '#3F3F46', fontWeight: '700' },
+  itemText: { fontSize: 15, color: '#2A2A30', fontWeight: '500' },
+  itemTextActive: { color: '#2A2A30', fontWeight: '700' },
   footer: { borderTopWidth: 1, borderTopColor: '#E9E9EB', paddingTop: 12, paddingHorizontal: 6 },
-  orgName: { fontSize: 12, fontWeight: '700', color: '#3F3F46' },
-  email: { fontSize: 12, color: '#A1A1A8', marginTop: 1 },
+  orgName: { fontSize: 12, fontWeight: '700', color: '#2A2A30' },
+  email: { fontSize: 12, color: '#8A8A93', marginTop: 1 },
   signOut: { marginTop: 10, paddingVertical: 8 },
   signOutText: { color: '#A33A3A', fontWeight: '600' },
 });

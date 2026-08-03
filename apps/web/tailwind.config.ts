@@ -29,17 +29,24 @@ export default {
       colors: {
         // Neutral ramp. Tailwind's stock slate is blue-tinted and cold; this
         // is a true neutral that reads as ink on paper rather than as screen.
+        //
+        // The surface end (50-300) carries canvas, fills and hairlines and is
+        // left alone. The ink end (400-900) is where text lives, and it is
+        // pulled deliberately dark: the previous ramp topped out at #18181B
+        // with secondary text at #71717A, which read as grey on a screen full
+        // of figures. Primary text is now actually black and every muted step
+        // moved down with it, so "quiet" still means quiet but never washed.
         slate: {
           50: '#FAFAFA', // page canvas — never pure white, which glares
           100: '#F4F4F5', // hover fills, subtle bands
           200: '#E9E9EB', // hairlines
           300: '#D8D8DC', // input borders
-          400: '#A1A1A8', // placeholders, muted meta
-          500: '#71717A', // secondary text
-          600: '#52525B',
-          700: '#3F3F46',
-          800: '#27272A',
-          900: '#18181B', // primary ink
+          400: '#8A8A93', // placeholders, muted meta
+          500: '#5C5C64', // secondary text
+          600: '#3F3F46',
+          700: '#2A2A30',
+          800: '#141417',
+          900: '#000000', // primary ink — pure black
         },
         // Graphite, not indigo. A saturated brand hue on every button and
         // active nav item is the loudest thing on the page, and it is chrome.
@@ -47,12 +54,12 @@ export default {
           50: '#F4F4F5',
           100: '#E9E9EB',
           200: '#D8D8DC',
-          300: '#A1A1A8',
-          400: '#71717A',
-          500: '#52525B',
-          600: '#27272A',
-          700: '#18181B',
-          800: '#09090B',
+          300: '#8A8A93',
+          400: '#5C5C64',
+          500: '#3F3F46',
+          600: '#141417',
+          700: '#000000',
+          800: '#000000',
           900: '#000000',
         },
         // Kirim. Desaturated forest instead of Tailwind's electric emerald.

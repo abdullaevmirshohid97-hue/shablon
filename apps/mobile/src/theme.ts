@@ -15,10 +15,13 @@ export const color = {
   surfaceMuted: '#F4F4F5',
   line: '#E9E9EB',
   lineStrong: '#D8D8DC',
-  textMuted: '#A1A1A8',
-  textSecondary: '#71717A',
-  textBody: '#3F3F46',
-  ink: '#18181B',
+  // The ink end runs darker than a stock neutral ramp: primary text is pure
+  // black and each muted step moved down with it, so secondary text stays
+  // quiet without reading as grey. Kept in step with the web config.
+  textMuted: '#8A8A93',
+  textSecondary: '#5C5C64',
+  textBody: '#2A2A30',
+  ink: '#000000',
 
   kirim: '#2E7D48',
   kirimSoft: '#F2F7F3',

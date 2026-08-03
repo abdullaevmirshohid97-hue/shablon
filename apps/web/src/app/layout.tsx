@@ -6,7 +6,7 @@ import { getServerLocale } from '@/lib/i18n/server';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Mubosher — Joriy hisob-kitob',
+  title: 'idaa finance — Joriy hisob-kitob',
   description: 'Kontragentlar bilan joriy hisob-kitobni yuritish SaaS tizimi',
 };
 
