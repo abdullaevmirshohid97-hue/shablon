@@ -58,6 +58,12 @@
   },
   "settings": {
     "title": "Sozlamalar",
+    "orgTitle": "Tashkilot nomi",
+    "orgDescription": "Bu nom yon panelda, hisobot sarlavhalarida va PDF/Excel eksportlarida hamda mobil ilovada ko'rinadi.",
+    "orgNameLabel": "Nomi",
+    "orgNamePlaceholder": "Masalan: Mubosher tekstil",
+    "orgNameSaved": "Nom yangilandi",
+    "orgNameDenied": "Nomni o'zgartirishga ruxsat yo'q — buni faqat egasi yoki admin qila oladi.",
     "modulesTitle": "Modullar",
     "modulesDescription": "Har bir modul yon paneldagi alohida havolaga va o'zining mijozlar/hisobot sahifasiga aylanadi.",
     "namePlaceholder": "Yangi modul nomi",
