@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
@@ -26,6 +26,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // A session already in the browser no longer skips this screen (see
+  // app/page.tsx) — it is surfaced here instead, so it is a visible choice
+  // rather than an invisible one.
+  const [signedInAs, setSignedInAs] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    void supabase.auth.getUser().then(({ data }) => {
+      setSignedInAs(data.user?.email ?? null);
+    });
+  }, []);
+
+  async function handleSignOut() {
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    setSignedInAs(null);
+    router.refresh();
+  }
 
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -133,6 +152,23 @@ export default function LoginPage() {
               ]}
             />
           </div>
+
+          {signedInAs && (
+            <div className="mb-4 rounded-lg border border-slate-200 bg-white p-3">
+              <p className="text-sm text-slate-600">
+                {t('login.alreadySignedIn')}{' '}
+                <span className="font-medium text-slate-900">{signedInAs}</span>
+              </p>
+              <div className="mt-2.5 flex items-center gap-2">
+                <Button type="button" size="sm" onClick={() => router.push('/hub')}>
+                  {t('login.continueButton')}
+                </Button>
+                <Button type="button" variant="secondary" size="sm" onClick={handleSignOut}>
+                  {t('login.switchAccount')}
+                </Button>
+              </div>
+            </div>
+          )}
 
           <Segmented
             value={mode}
