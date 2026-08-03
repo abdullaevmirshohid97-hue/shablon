@@ -11,7 +11,7 @@
     "ios": "expo start --ios",
     "lint": "eslint . --config ../../packages/config/eslint.base.js && npm run lint:deps",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'no tests yet'",
+    "test": "vitest run",
     "clean": "rimraf .expo node_modules/.cache .turbo",
     "build:apk": "eas build --platform android --profile preview",
     "build:apk:local": "eas build --platform android --profile preview --local",
@@ -45,6 +45,7 @@
     "babel-preset-expo": "~54.0.10",
     "eslint": "^9.15.0",
     "rimraf": "^6.0.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
   }
 }
