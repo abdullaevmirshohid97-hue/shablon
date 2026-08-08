@@ -538,3 +538,71 @@ begin
 exception when others then
   perform test_report('another org cannot move this stock', true);
 end $$;
+
+-- ---------------------------------------------------------------------
+-- Receiving refuses rather than swallows (0030).
+--
+-- A row with weights and counts on it but no product named used to be skipped
+-- in silence: the call returned a count that did not include it, the screen
+-- reported success, and the typed invoice was cleared. These pin down that it
+-- now fails loudly and leaves nothing half-saved.
+-- ---------------------------------------------------------------------
+set app.current_user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+
+do $$
+declare v_before bigint; v_after bigint;
+begin
+  select count(*) into v_before from sklad_batches;
+
+  begin
+    perform sklad_receive_rows(
+      '11111111-1111-1111-1111-111111111111',
+      '[{"kod":"E-500","name":"Yaxshi qator","netto":"10","dona":"20"},
+        {"brutto":"38","netto":"37.18","dona":"125"}]'::jsonb);
+    perform test_report('a row with data but no product named is refused', false);
+  exception when others then
+    perform test_report('a row with data but no product named is refused', true);
+  end;
+
+  select count(*) into v_after from sklad_batches;
+  perform test_report('and the good row before it is rolled back with it',
+                      v_after = v_before);
+end $$;
+
+-- The spare rows the grid always sends are still not an error.
+do $$
+declare v_saved integer;
+begin
+  select sklad_receive_rows(
+    '11111111-1111-1111-1111-111111111111',
+    '[{},
+      {"kod":"E-500","name":"Yaxshi qator","netto":"10","dona":"20"},
+      {"productType":"   "},
+      {}]'::jsonb) into v_saved;
+  perform test_report('blank and whitespace-only rows are skipped, not refused',
+                      v_saved = 1);
+end $$;
+
+-- The refusal names the row, counted the way the grid numbers them.
+do $$
+declare v_message text;
+begin
+  begin
+    perform sklad_receive_rows(
+      '11111111-1111-1111-1111-111111111111',
+      '[{}, {}, {"netto":"5"}]'::jsonb);
+  exception when others then
+    get stacked diagnostics v_message = message_text;
+  end;
+  perform test_report('the refusal names the row the storekeeper is looking at',
+                      v_message like '3 -qatorda%');
+end $$;
+
+-- A save that lands nothing must not come back looking like a save.
+do $$
+begin
+  perform sklad_receive_rows('11111111-1111-1111-1111-111111111111', '[{},{}]'::jsonb);
+  perform test_report('an all-blank save reports failure, not zero success', false);
+exception when others then
+  perform test_report('an all-blank save reports failure, not zero success', true);
+end $$;

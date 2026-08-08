@@ -165,10 +165,24 @@ export function KirimGrid({ orgId }: { orgId: string }) {
         orgId,
         orderId: orderId || null,
         receivedAt,
-        rows: filledRows,
+        // The whole grid, blanks and all: the database skips untouched rows
+        // and names the position of any row it refuses, and that position has
+        // to match the № the storekeeper is looking at.
+        rows,
       });
       setSavedCount(saved);
-      setRows(Array.from({ length: INITIAL_ROWS }, () => ({ ...EMPTY_ROW })));
+
+      // Only when everything landed. Wiping the grid on a partial save is what
+      // turned a refused row into a lost invoice.
+      if (saved === filledRows.length) {
+        setRows(Array.from({ length: INITIAL_ROWS }, () => ({ ...EMPTY_ROW })));
+      } else {
+        setErrorMessage(
+          t('sklad.kirim.partialSave')
+            .replace('{saved}', String(saved))
+            .replace('{sent}', String(filledRows.length)),
+        );
+      }
     } catch (err) {
       setErrorMessage((err as Error).message);
     }

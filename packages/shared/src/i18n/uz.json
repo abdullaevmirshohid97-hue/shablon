@@ -464,7 +464,8 @@
       "addRow": "+ qator qo‘shish",
       "copyAbove": "Yuqoridagi qatordan nusxa",
       "newOrderNo": "Yangi buyurtma raqami",
-      "hint": "Oxirgi qatorga yozsangiz, yangi qator o‘zi qo‘shiladi"
+      "hint": "Oxirgi qatorga yozsangiz, yangi qator o‘zi qo‘shiladi",
+      "partialSave": "{sent} ta qatordan faqat {saved} tasi saqlandi — qolganini tekshiring."
     },
     "orderStatus": {
       "yangi": "Yangi",
