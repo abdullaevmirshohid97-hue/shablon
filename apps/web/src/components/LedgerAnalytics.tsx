@@ -115,7 +115,7 @@ export function LedgerAnalytics({
       {/* Three filled colour blocks side by side read as a traffic light and
           drowned the figures they were meant to present. The tone now lives in
           a 2px rule on the edge; the number itself carries the colour. */}
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label={t('analytics.totalKirim')}
           value={currencyFormatter.format(stats.totalKirim)}
@@ -126,7 +126,17 @@ export function LedgerAnalytics({
           value={currencyFormatter.format(stats.totalChiqim)}
           tone="danger"
         />
-        <StatCard label={t('analytics.net')} value={currencyFormatter.format(stats.net)} />
+        {/* Debt is a position and does not move with the period filter; revenue
+            is a flow and does. They sat under one label until 0029, and the
+            label was the wrong one for both. */}
+        <StatCard
+          label={t('analytics.totalDebt')}
+          value={currencyFormatter.format(stats.totalDebt)}
+        />
+        <StatCard
+          label={t('analytics.netRevenue')}
+          value={currencyFormatter.format(stats.netRevenue)}
+        />
       </div>
 
       {stats.byCategory.length > 0 ? (

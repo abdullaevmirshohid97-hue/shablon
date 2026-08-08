@@ -1,5 +1,6 @@
 import {
   computePeriodStats,
+  computeTotalDebt,
   getDueSoonAndOverdue,
   getOverdueByCounterparty,
   type LedgerTransaction,
@@ -16,7 +17,12 @@ import type { OrgReport } from '@mubosher/api-client';
 export interface AnalyticsData {
   totalKirim: number;
   totalChiqim: number;
-  net: number;
+  /** Everything owed as of the period end. A position: it does not restart
+   * when the period filter moves, which is what the card labelled 'sof
+   * aylanma' used to show. */
+  totalDebt: number;
+  /** Revenue for the period, off the sales accounts. */
+  netRevenue: number;
   transactionCount: number;
   byCategory: {
     categoryName: string;
@@ -34,7 +40,8 @@ export function analyticsFromReport(report: OrgReport): AnalyticsData {
   return {
     totalKirim: report.totals.totalKirim,
     totalChiqim: report.totals.totalChiqim,
-    net: report.totals.net,
+    totalDebt: report.totals.totalDebt,
+    netRevenue: report.totals.netRevenue,
     transactionCount: report.byCategory.reduce((n, c) => n + c.entryCount, 0),
     byCategory: report.byCategory,
     overdue: report.overdue.map((r) => ({
@@ -69,7 +76,10 @@ export function analyticsFromTransactions(
   return {
     totalKirim: stats.totalKirim,
     totalChiqim: stats.totalChiqim,
-    net: stats.net,
+    // The whole ledger, not just the rows in range: this client's debt is a
+    // position and does not restart with the period filter.
+    totalDebt: computeTotalDebt(transactions, range.end),
+    netRevenue: stats.netRevenue,
     transactionCount: stats.transactionCount,
     byCategory: stats.byCategory,
     overdue: Object.entries(getOverdueByCounterparty(transactions, today))

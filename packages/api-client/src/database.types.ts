@@ -741,7 +741,16 @@ export interface Database {
       };
       org_period_totals: {
         Args: { target_org_id: string; p_from?: string | null; p_to?: string | null };
-        Returns: { total_kirim: number; total_chiqim: number; net: number }[];
+        Returns: {
+          total_kirim: number;
+          total_chiqim: number;
+          /** Movement on the receivable over the period, not revenue (0029). */
+          net: number;
+          /** The receivable position as of p_to — ignores p_from by design. */
+          total_debt: number;
+          /** Revenue, from the sales accounts. */
+          net_revenue: number;
+        }[];
       };
       reverse_transaction: {
         Args: {

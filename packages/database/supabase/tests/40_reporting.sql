@@ -167,3 +167,72 @@ begin
   select count(*) into n from org_module_breakdown('11111111-1111-1111-1111-111111111111');
   perform test_report('a manager can read the module breakdown', n > 0);
 end $$;
+
+-- ---------------------------------------------------------------------
+-- The three figures on the dashboard (0029).
+--
+-- The third card used to be labelled turnover while computing debt movement.
+-- These assertions pin down what each of the three now actually means, which
+-- is the part a rename alone would not have fixed.
+-- ---------------------------------------------------------------------
+set app.current_user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+
+-- A revenue account, and a sale posted the way the source ledger posts one:
+-- Дебет Клиенты / Кредит Продажи продукции.
+insert into accounts (id, org_id, code, name, type)
+values ('cccccccc-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111',
+        '3', 'Sotuv', 'sales');
+
+do $$
+begin
+  insert into transactions (org_id, counterparty_id, occurred_at,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000001',
+    (current_date - 40)::timestamptz,
+    'cccccccc-0000-0000-0000-000000000001', 900,
+    'cccccccc-0000-0000-0000-000000000003', 900, 'UZS', 'eski sotuv');
+end $$;
+
+do $$
+declare r record;
+begin
+  select * into r from org_period_totals('11111111-1111-1111-1111-111111111111');
+  perform test_report('revenue is read off the sales account, not the receivable',
+                      r.net_revenue = 900);
+end $$;
+
+-- The distinction the rename alone would have missed: with a period that
+-- starts after the old sale, the movement figure excludes it and the debt
+-- figure does not.
+do $$
+declare r record;
+begin
+  select * into r from org_period_totals(
+    '11111111-1111-1111-1111-111111111111', current_date - 5, current_date + 1);
+
+  perform test_report('the period figure counts only the period''s movement',
+                      r.net < r.total_debt);
+  perform test_report('total debt ignores the period start — a position, not a flow',
+                      r.total_debt = (
+                        select coalesce(sum(base_balance), 0)
+                        from counterparty_balances('11111111-1111-1111-1111-111111111111')));
+  perform test_report('and revenue outside the window is excluded from it',
+                      r.net_revenue = 0);
+end $$;
+
+-- Nothing changed about the two figures that were already right.
+do $$
+declare r record;
+begin
+  select * into r from org_period_totals('11111111-1111-1111-1111-111111111111');
+  perform test_report('kirim and chiqim still net to the movement figure',
+                      r.net = r.total_kirim - r.total_chiqim);
+end $$;
+
+do $$
+declare n int;
+begin
+  perform set_config('app.current_user_id', 'bbbbbbbb-0000-0000-0000-000000000002', false);
+  select count(*) into n from org_period_totals('11111111-1111-1111-1111-111111111111');
+  perform test_report('a manager can read the dashboard totals', n = 1);
+end $$;

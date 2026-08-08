@@ -47,7 +47,16 @@ export interface ModuleRow {
 }
 
 export interface OrgReport {
-  totals: { totalKirim: number; totalChiqim: number; net: number };
+  totals: {
+    totalKirim: number;
+    totalChiqim: number;
+    /** Movement on the receivable over the period. */
+    net: number;
+    /** Everything owed as of the period end — a position, not a flow. */
+    totalDebt: number;
+    /** Revenue for the period, off the sales accounts. */
+    netRevenue: number;
+  };
   byCategory: CategoryRow[];
   balances: CounterpartyBalance[];
   overdue: OverdueRow[];
@@ -108,13 +117,21 @@ export function useOrgReport(
         if (r.error) throw r.error;
       }
 
-      const totalsRow = totals.data?.[0] ?? { total_kirim: 0, total_chiqim: 0, net: 0 };
+      const totalsRow = totals.data?.[0] ?? {
+        total_kirim: 0,
+        total_chiqim: 0,
+        net: 0,
+        total_debt: 0,
+        net_revenue: 0,
+      };
 
       return {
         totals: {
           totalKirim: Number(totalsRow.total_kirim),
           totalChiqim: Number(totalsRow.total_chiqim),
           net: Number(totalsRow.net),
+          totalDebt: Number(totalsRow.total_debt),
+          netRevenue: Number(totalsRow.net_revenue),
         },
         byCategory: (categories.data ?? []).map((r) => ({
           categoryName: r.category_name,

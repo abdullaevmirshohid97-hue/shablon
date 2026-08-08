@@ -163,7 +163,6 @@
     "to": "Gacha",
     "totalKirim": "Jami kirim",
     "totalChiqim": "Jami chiqim",
-    "net": "Sof aylanma",
     "transactionCount": "Amaliyotlar soni",
     "byCategory": "Tur bo'yicha",
     "category": "Turi",
@@ -173,7 +172,10 @@
     "overdueTotal": "Jami muddati o'tgan qarz",
     "dueSoonTitle": "Muddati yaqinlashgan (7 kun)",
     "noDueItems": "Muddati yaqinlashgan yoki o'tgan yozuvlar yo'q",
-    "noData": "Bu davrda ma'lumot yo'q"
+    "noData": "Bu davrda ma'lumot yo'q",
+    "totalDebt": "Umumiy qarzdorlik",
+    "netRevenue": "Sof aylanma",
+    "debtChange": "Qarzdorlik o‘zgarishi"
   },
   "overview": {
     "topDebtors": "Eng ko'p qarzdorlar",

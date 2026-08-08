@@ -4,6 +4,7 @@ import {
   getDueSoonAndOverdue,
   getOverdueByCounterparty,
   getPeriodRange,
+  computeTotalDebt,
 } from './analytics';
 import type { LedgerTransaction } from './types';
 
@@ -177,5 +178,96 @@ describe('getOverdueByCounterparty', () => {
     expect(
       getOverdueByCounterparty([tx({ id: 't1', occurredAt: '2026-07-01T00:00:00Z' })], today),
     ).toEqual({});
+  });
+});
+
+describe('the three dashboard figures', () => {
+  const sale = (id: string, when: string, amount: number) =>
+    tx({
+      id,
+      occurredAt: when,
+      debitAccountType: 'receivable',
+      debitAmount: amount,
+      creditAccountType: 'sales',
+      creditAmount: amount,
+    });
+
+  const payment = (id: string, when: string, amount: number) =>
+    tx({
+      id,
+      occurredAt: when,
+      debitAccountType: 'cash',
+      debitAmount: amount,
+      creditAccountType: 'receivable',
+      creditAmount: amount,
+    });
+
+  const ledger = [
+    sale('s1', '2026-01-10T00:00:00Z', 1000),
+    payment('p1', '2026-01-20T00:00:00Z', 400),
+    sale('s2', '2026-02-05T00:00:00Z', 500),
+    payment('p2', '2026-02-15T00:00:00Z', 300),
+  ];
+
+  it('reads revenue off the sales account, not the receivable', () => {
+    const stats = computePeriodStats(ledger, { start: '2026-02-01', end: '2026-02-28' });
+    expect(stats.netRevenue).toBe(500);
+    // The receivable moved by 200 in February; revenue was 500. The two are
+    // different questions and used to share one label.
+    expect(stats.net).toBe(200);
+  });
+
+  it('nets a reversal out of revenue', () => {
+    const reversed = [
+      ...ledger,
+      tx({
+        id: 'r1',
+        occurredAt: '2026-02-20T00:00:00Z',
+        debitAccountType: 'sales',
+        debitAmount: 500,
+        creditAccountType: 'receivable',
+        creditAmount: 500,
+        status: 'reversal',
+      }),
+    ];
+    const stats = computePeriodStats(reversed, { start: '2026-02-01', end: '2026-02-28' });
+    expect(stats.netRevenue).toBe(0);
+  });
+
+  it('counts the whole history for debt, whatever period is on screen', () => {
+    // February alone moved the debt by 200. What is actually owed is 800.
+    expect(computeTotalDebt(ledger)).toBe(800);
+  });
+
+  it('takes debt as of a date', () => {
+    expect(computeTotalDebt(ledger, '2026-01-31')).toBe(600);
+  });
+
+  it('leaves a client in credit netting off', () => {
+    expect(
+      computeTotalDebt([
+        sale('s', '2026-01-01T00:00:00Z', 100),
+        payment('p', '2026-01-02T00:00:00Z', 150),
+      ]),
+    ).toBe(-50);
+  });
+
+  it('ignores drafts, the way the dashboard SQL always has', () => {
+    const withDraft = [
+      ...ledger,
+      tx({
+        id: 'd1',
+        occurredAt: '2026-02-10T00:00:00Z',
+        debitAccountType: 'receivable',
+        debitAmount: 9999,
+        creditAccountType: 'sales',
+        creditAmount: 9999,
+        status: 'draft',
+      }),
+    ];
+    expect(computeTotalDebt(withDraft)).toBe(800);
+    expect(
+      computePeriodStats(withDraft, { start: '2026-02-01', end: '2026-02-28' }).netRevenue,
+    ).toBe(500);
   });
 });

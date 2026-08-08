@@ -70,25 +70,43 @@ function isWithinRange(occurredAt: string, range: PeriodRange): boolean {
   return date >= range.start && date <= range.end;
 }
 
+/** A draft is not a posting. The dashboard's SQL has always excluded them
+ * (`status <> 'draft'`); this path had not, so one unposted entry made the
+ * client page and the dashboard disagree. */
+function isPosted(t: LedgerTransaction): boolean {
+  return t.status !== 'draft';
+}
+
 /**
- * Turnover for a period: total kirim/chiqim money, and a breakdown by
+ * Turnover for a period: total kirim/chiqim money, revenue, and a breakdown by
  * category+unit+kind so quantities (kg, dona, ...) are summed too — e.g.
  * "10 000 kg sochiq" and "5 000 dona xalat" for the same month.
+ *
+ * `net` is kirim minus chiqim on the receivable — how much the client's debt
+ * *moved* over the period. It is not revenue, and it is not the debt itself;
+ * see computeTotalDebt for that one.
  */
 export function computePeriodStats(
   transactions: LedgerTransaction[],
   range: PeriodRange,
 ): PeriodStats {
-  const inRange = transactions.filter((t) => isWithinRange(t.occurredAt, range));
+  const inRange = transactions.filter((t) => isPosted(t) && isWithinRange(t.occurredAt, range));
 
   let totalKirim = 0;
   let totalChiqim = 0;
+  let netRevenue = 0;
   const byCategoryMap = new Map<string, CategoryBreakdown>();
 
   for (const t of inRange) {
     const isKirim = t.debitAccountType === 'receivable';
     const isChiqim = t.creditAccountType === 'receivable';
     const amount = isKirim ? t.debitAmount : isChiqim ? t.creditAmount : 0;
+
+    // Revenue lives on the sales account, not the receivable: a sale posts
+    // Дебет Клиенты / Кредит Продажи. Credit less debit, so a reversal — which
+    // debits it straight back off — nets itself out.
+    if (t.creditAccountType === 'sales') netRevenue += t.creditAmount;
+    if (t.debitAccountType === 'sales') netRevenue -= t.debitAmount;
 
     if (isKirim) totalKirim += amount;
     if (isChiqim) totalChiqim += amount;
@@ -120,9 +138,35 @@ export function computePeriodStats(
     totalKirim: Math.round(totalKirim * 100) / 100,
     totalChiqim: Math.round(totalChiqim * 100) / 100,
     net: Math.round((totalKirim - totalChiqim) * 100) / 100,
+    netRevenue: Math.round(netRevenue * 100) / 100,
     transactionCount: inRange.length,
     byCategory: Array.from(byCategoryMap.values()).sort((a, b) => b.totalAmount - a.totalAmount),
   };
+}
+
+/**
+ * Everything still owed, as of a date — the receivable position.
+ *
+ * Deliberately not range-scoped, which is the whole point of it. Debt is a
+ * position and a position has no start date: bounding it below would give the
+ * change over a window, which is exactly the figure that used to sit on the
+ * dashboard under the wrong name.
+ *
+ * A client in credit nets off, so this is the net receivable — the same figure
+ * as summing the per-client balances shown beside it.
+ */
+export function computeTotalDebt(transactions: LedgerTransaction[], asOf?: string): number {
+  let debt = 0;
+
+  for (const t of transactions) {
+    if (!isPosted(t)) continue;
+    if (asOf && t.occurredAt.slice(0, 10) > asOf) continue;
+
+    if (t.debitAccountType === 'receivable') debt += t.debitAmount;
+    if (t.creditAccountType === 'receivable') debt -= t.creditAmount;
+  }
+
+  return Math.round(debt * 100) / 100;
 }
 
 /**

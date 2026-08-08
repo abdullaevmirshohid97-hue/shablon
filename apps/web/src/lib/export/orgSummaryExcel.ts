@@ -75,7 +75,7 @@ export function exportOrgSummaryToExcel(
     tr('export.client'),
     tr('analytics.totalKirim'),
     tr('analytics.totalChiqim'),
-    tr('analytics.net'),
+    tr('analytics.debtChange'),
     tr('export.closingBalance'),
     tr('analytics.overdueTotal'),
     tr('export.entryCount'),

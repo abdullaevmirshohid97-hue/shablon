@@ -136,7 +136,7 @@ export function buildLedgerSheet(
   }
   summaryRows.push([tr('analytics.totalKirim'), round2(totalKirim)]);
   summaryRows.push([tr('analytics.totalChiqim'), round2(totalChiqim)]);
-  summaryRows.push([tr('analytics.net'), round2(totalKirim - totalChiqim)]);
+  summaryRows.push([tr('analytics.debtChange'), round2(totalKirim - totalChiqim)]);
   summaryRows.push([tr('export.closingBalance'), round2(closingBalance)]);
   if (overdueAmount > 0) {
     summaryRows.push([
