@@ -40,6 +40,7 @@ export function useCreateSkladLookup(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-lookups', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
     },
   });
 }
@@ -54,6 +55,7 @@ export function useRenameSkladLookup(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-lookups', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
     },
   });
 }
@@ -68,6 +70,7 @@ export function useDeleteSkladLookup(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-lookups', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
     },
   });
 }

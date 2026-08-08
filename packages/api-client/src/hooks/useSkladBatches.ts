@@ -25,6 +25,31 @@ export function useSkladBatches(supabase: SupabaseClient<Database>, orgId: strin
   });
 }
 
+/**
+ * One batch, as the edit form needs it: the raw record with its lookup ids,
+ * not the display row sklad_batch_page returns.
+ *
+ * The form used to be handed a row out of the full-table fetch. Now that the
+ * list only holds fifty flattened rows, the record it edits has to be fetched
+ * on its own — which is one small query instead of the whole table anyway.
+ */
+export function useSkladBatch(supabase: SupabaseClient<Database>, batchId: string | undefined) {
+  return useQuery({
+    queryKey: ['sklad-batch', batchId],
+    enabled: !!batchId,
+    queryFn: async (): Promise<SkladBatch> => {
+      const { data, error } = await supabase
+        .from('sklad_batches')
+        .select(EMBEDDED_SELECT)
+        .eq('id', batchId!)
+        .single();
+
+      if (error) throw error;
+      return toSkladBatch(data as unknown as SkladBatchEmbeddedRow);
+    },
+  });
+}
+
 type SkladBatchInput = {
   orgId: string;
   itemId: string;
@@ -34,7 +59,6 @@ type SkladBatchInput = {
   donaSoni?: number | null;
   naborSoni?: number | null;
   palletSoni?: number | null;
-  qoldiqDona?: number | null;
   ishlabChiqarilganSana?: string | null;
   omborgaKirganSana?: string;
   status?: SkladBatchStatus;
@@ -57,7 +81,10 @@ function toRow(input: SkladBatchInput) {
     dona_soni: input.donaSoni,
     nabor_soni: input.naborSoni,
     pallet_soni: input.palletSoni,
-    qoldiq_dona: input.qoldiqDona,
+    // qoldiq_dona is deliberately absent: since 0022 it is the sum of the
+    // batch's movements, maintained by trigger. Writing it here would be
+    // overwritten on the next movement anyway, and silently disagree with the
+    // stock history until then.
     ishlab_chiqarilgan_sana: input.ishlabChiqarilganSana,
     omborga_kirgan_sana: input.omborgaKirganSana,
     status: input.status,
@@ -88,6 +115,8 @@ export function useCreateSkladBatch(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-batches', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-stock', orgId] });
     },
   });
 }
@@ -105,6 +134,8 @@ export function useUpdateSkladBatch(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-batches', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-stock', orgId] });
     },
   });
 }
@@ -119,6 +150,8 @@ export function useDeleteSkladBatch(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-batches', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-stock', orgId] });
     },
   });
 }

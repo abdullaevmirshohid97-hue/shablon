@@ -62,6 +62,8 @@ export function useCreateSkladItem(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-items', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-stock', orgId] });
     },
   });
 }
@@ -76,6 +78,8 @@ export function useUpdateSkladItem(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-items', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-stock', orgId] });
     },
   });
 }
@@ -90,6 +94,8 @@ export function useDeleteSkladItem(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-items', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-stock', orgId] });
     },
   });
 }

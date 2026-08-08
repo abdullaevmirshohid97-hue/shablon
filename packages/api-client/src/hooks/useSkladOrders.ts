@@ -48,6 +48,22 @@ export function useCreateSkladOrder(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-orders', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
+    },
+  });
+}
+
+export function useDeleteSkladOrder(supabase: SupabaseClient<Database>) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ orderId }: { orgId: string; orderId: string }) => {
+      const { error } = await supabase.from('sklad_orders').delete().eq('id', orderId);
+      if (error) throw error;
+    },
+    onSuccess: (_data, { orgId }) => {
+      void queryClient.invalidateQueries({ queryKey: ['sklad-orders', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
     },
   });
 }
@@ -69,6 +85,7 @@ export function useUpdateSkladOrder(supabase: SupabaseClient<Database>) {
     },
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-orders', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
     },
   });
 }

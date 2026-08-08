@@ -1,24 +1,14 @@
-import { redirect } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { requireSkladAdmin } from '../access';
 import { LookupSettings } from '../lookup-settings';
+import { SkladAuditLog } from '../sklad-audit-log';
 
 export default async function SkladSettingsPage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { orgId } = await requireSkladAdmin();
 
-  if (!user) redirect('/login');
-
-  const { data: memberships } = await supabase
-    .from('memberships')
-    .select('org_id, role')
-    .eq('user_id', user.id);
-
-  const membership = memberships?.[0];
-  const isOrgAdmin = membership?.role === 'owner' || membership?.role === 'admin';
-
-  if (!membership || !isOrgAdmin) redirect('/hub/sklad');
-
-  return <LookupSettings orgId={membership.org_id} />;
+  return (
+    <div className="flex flex-col gap-6">
+      <LookupSettings orgId={orgId} />
+      <SkladAuditLog orgId={orgId} />
+    </div>
+  );
 }

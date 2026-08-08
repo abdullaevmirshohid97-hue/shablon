@@ -7,6 +7,11 @@
  * CompositeTypes are required for @supabase/supabase-js's generic client to
  * infer row types correctly — without them every query resolves to `never`.
  */
+/** Mirrors the `sklad_batch_status` enum (0011); named here because both the
+ * table row and the sklad_batch_page RPC signature need it. */
+export type SkladBatchStatusValue =
+  'tayyor' | 'qadoqlanmoqda' | 'omborda' | 'rezerv' | 'jonatildi' | 'qaytarildi' | 'brak';
+
 export interface Database {
   public: {
     Tables: {
@@ -288,8 +293,7 @@ export interface Database {
           qoldiq_dona: number | null;
           ishlab_chiqarilgan_sana: string | null;
           omborga_kirgan_sana: string;
-          status:
-            'tayyor' | 'qadoqlanmoqda' | 'omborda' | 'rezerv' | 'jonatildi' | 'qaytarildi' | 'brak';
+          status: SkladBatchStatusValue;
           qc_checked_by: string | null;
           qc_checked_at: string | null;
           defect_type: string | null;
@@ -334,6 +338,50 @@ export interface Database {
           org_id: string;
         };
         Update: Partial<Database['public']['Tables']['sklad_batch_prices']['Row']>;
+        Relationships: [];
+      };
+      sklad_movements: {
+        Row: {
+          id: string;
+          org_id: string;
+          batch_id: string;
+          kind: 'kirim' | 'chiqim' | 'qaytarish' | 'brak' | 'korrektirovka';
+          /** Signed: what the movement did to the batch. */
+          dona: number;
+          kg: number | null;
+          occurred_at: string;
+          counterparty_id: string | null;
+          order_id: string | null;
+          note: string | null;
+          is_initial: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_movements']['Row']> & {
+          org_id: string;
+          batch_id: string;
+          kind: 'kirim' | 'chiqim' | 'qaytarish' | 'brak' | 'korrektirovka';
+          dona: number;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_movements']['Row']>;
+        Relationships: [];
+      };
+      sklad_audit: {
+        Row: {
+          id: number;
+          org_id: string;
+          entity: 'batch' | 'item' | 'price' | 'order';
+          entity_id: string;
+          action: 'insert' | 'update' | 'delete';
+          changed_by: string | null;
+          changed_at: string;
+          old_row: Record<string, unknown> | null;
+          new_row: Record<string, unknown> | null;
+        };
+        // Written only by the SECURITY DEFINER trigger — there is no insert
+        // policy, so an Insert type here would be a lie the compiler tells.
+        Insert: never;
+        Update: never;
         Relationships: [];
       };
     };
@@ -551,6 +599,144 @@ export interface Database {
       reopen_accounting_period: {
         Args: { p_period_id: string };
         Returns: void;
+      };
+      // Sklad (0021-0023). sklad_batch_page and sklad_stock_by_item are
+      // SECURITY INVOKER: the price columns come back null for staff because
+      // sklad_batch_prices has no member SELECT policy, not because any code
+      // blanks them.
+      sklad_batch_page: {
+        Args: {
+          target_org_id: string;
+          p_search?: string | null;
+          p_product_type_id?: string | null;
+          p_color_id?: string | null;
+          p_pantone_id?: string | null;
+          p_size_id?: string | null;
+          p_sort_id?: string | null;
+          p_gsm?: number | null;
+          p_order_id?: string | null;
+          p_counterparty_id?: string | null;
+          // text at the database boundary, enum-valued in practice.
+          p_status?: SkladBatchStatusValue | null;
+          p_from?: string | null;
+          p_to?: string | null;
+          p_in_stock_only?: boolean | null;
+          p_limit?: number | null;
+          p_offset?: number | null;
+        };
+        Returns: {
+          id: string;
+          item_id: string;
+          order_id: string | null;
+          artikul: string | null;
+          kod: string | null;
+          item_name: string;
+          product_type: string | null;
+          yarn_type: string | null;
+          size_name: string | null;
+          sort_name: string | null;
+          color_name: string | null;
+          pantone_code: string | null;
+          gsm: number | null;
+          brutto_kg: number | null;
+          netto_kg: number | null;
+          tara_kg: number | null;
+          piece_weight_kg: number | null;
+          dona_soni: number | null;
+          nabor_soni: number | null;
+          pallet_soni: number | null;
+          qoldiq_dona: number | null;
+          qoldiq_kg: number | null;
+          ishlab_chiqarilgan_sana: string | null;
+          omborga_kirgan_sana: string;
+          status: SkladBatchStatusValue;
+          order_no: string | null;
+          order_name: string | null;
+          counterparty_name: string | null;
+          defect_type: string | null;
+          defect_qty: number | null;
+          notes: string | null;
+          location_sector: string | null;
+          location_row: string | null;
+          location_rack: string | null;
+          location_shelf: string | null;
+          created_at: string;
+          price_per_kg: number | null;
+          price_per_piece: number | null;
+          price_per_set: number | null;
+          total_amount: number | null;
+          purchase_cost: number | null;
+          profit_percent: number | null;
+          profit_amount: number | null;
+          currency: string | null;
+          total_count: number;
+          sum_netto_kg: number | null;
+          sum_qoldiq_dona: number | null;
+          sum_qoldiq_kg: number | null;
+          sum_total_amount: number | null;
+          /** Null when the filtered set mixes currencies — the sum is then
+           * not a figure anyone should be shown. */
+          sum_currency: string | null;
+        }[];
+      };
+      record_sklad_movement: {
+        Args: {
+          p_batch_id: string;
+          p_kind: 'kirim' | 'chiqim' | 'qaytarish' | 'brak' | 'korrektirovka';
+          p_dona: number;
+          p_kg?: number | null;
+          p_occurred_at?: string | null;
+          p_counterparty_id?: string | null;
+          p_order_id?: string | null;
+          p_note?: string | null;
+        };
+        Returns: string;
+      };
+      list_sklad_movements: {
+        Args: { p_batch_id: string; p_limit?: number | null };
+        Returns: {
+          id: string;
+          kind: 'kirim' | 'chiqim' | 'qaytarish' | 'brak' | 'korrektirovka';
+          dona: number;
+          kg: number | null;
+          occurred_at: string;
+          counterparty_name: string | null;
+          order_no: string | null;
+          note: string | null;
+          is_initial: boolean;
+          created_by_name: string | null;
+          created_at: string;
+        }[];
+      };
+      list_sklad_audit: {
+        Args: { target_org_id: string; p_limit?: number | null };
+        Returns: {
+          id: number;
+          entity: 'batch' | 'item' | 'price' | 'order';
+          entity_id: string;
+          action: 'insert' | 'update' | 'delete';
+          changed_at: string;
+          changed_by_name: string | null;
+          item_name: string | null;
+          artikul: string | null;
+          old_row: Record<string, unknown> | null;
+          new_row: Record<string, unknown> | null;
+        }[];
+      };
+      sklad_stock_by_item: {
+        Args: { target_org_id: string };
+        Returns: {
+          item_id: string;
+          artikul: string | null;
+          item_name: string;
+          product_type: string | null;
+          size_name: string | null;
+          color_name: string | null;
+          batch_count: number;
+          total_dona: number;
+          total_kg: number;
+          stock_value: number | null;
+        }[];
       };
       list_accounting_periods: {
         Args: { target_org_id: string; p_year?: number | null };

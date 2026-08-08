@@ -1,24 +1,7 @@
-import { redirect } from 'next/navigation';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { requireSkladAccess } from './access';
 import { SkladList } from './sklad-list';
 
 export default async function SkladPage() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect('/login');
-
-  const { data: memberships } = await supabase
-    .from('memberships')
-    .select('org_id, role')
-    .eq('user_id', user.id);
-
-  const membership = memberships?.[0];
-  if (!membership) redirect('/hub');
-
-  const isOrgAdmin = membership.role === 'owner' || membership.role === 'admin';
-
-  return <SkladList orgId={membership.org_id} isOrgAdmin={isOrgAdmin} />;
+  const { orgId, isOrgAdmin } = await requireSkladAccess();
+  return <SkladList orgId={orgId} isOrgAdmin={isOrgAdmin} />;
 }

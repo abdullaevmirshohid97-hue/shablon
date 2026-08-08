@@ -184,7 +184,9 @@ export type SkladBatchStatus =
 /** Narxlar — kept in a separate table so RLS can hide it from non-admins row-for-row. */
 export interface SkladBatchPrice {
   batchId: string;
-  orgId: string;
+  /** Absent on a list row: sklad_batch_page joins the price in but has no
+   * reason to repeat the org id forty times per page. */
+  orgId?: string;
   pricePerKg?: number | null;
   pricePerPiece?: number | null;
   pricePerSet?: number | null;
@@ -210,6 +212,8 @@ export interface SkladBatch {
   palletSoni?: number | null;
   /** Generated column (netto / dona) — never set directly. */
   pieceWeightKg?: number | null;
+  /** Derived from the batch's movements by trigger (0022) — never written by
+   * the app. To change it, record a movement. */
   qoldiqDona?: number | null;
   ishlabChiqarilganSana?: string | null;
   omborgaKirganSana: string;
@@ -231,4 +235,125 @@ export interface SkladBatch {
   orderName?: string | null;
   counterpartyName?: string | null;
   price?: SkladBatchPrice | null;
+}
+
+/**
+ * One row of the warehouse list, as `sklad_batch_page` (0023) returns it:
+ * batch, product card, order and price flattened together with the lookup ids
+ * already resolved to names.
+ *
+ * Distinct from SkladBatch on purpose. SkladBatch is the record you edit —
+ * lookup *ids*, one batch at a time. This is the record you read — names,
+ * derived remainders, and the totals for the whole filtered set. Collapsing
+ * the two would mean the edit form carrying display strings it cannot save.
+ *
+ * Every price field is null for staff: the price row is invisible to them at
+ * the RLS level, and the RPC runs with the caller's own rights.
+ */
+export interface SkladBatchRow {
+  id: string;
+  itemId: string;
+  orderId?: string | null;
+  artikul?: string | null;
+  kod?: string | null;
+  itemName: string;
+  productType?: string | null;
+  yarnType?: string | null;
+  sizeName?: string | null;
+  sortName?: string | null;
+  colorName?: string | null;
+  pantoneCode?: string | null;
+  gsm?: number | null;
+  bruttoKg?: number | null;
+  nettoKg?: number | null;
+  taraKg?: number | null;
+  pieceWeightKg?: number | null;
+  donaSoni?: number | null;
+  naborSoni?: number | null;
+  palletSoni?: number | null;
+  qoldiqDona?: number | null;
+  /** pieceWeightKg x qoldiqDona, computed in the database. */
+  qoldiqKg?: number | null;
+  ishlabChiqarilganSana?: string | null;
+  omborgaKirganSana: string;
+  status: SkladBatchStatus;
+  orderNo?: string | null;
+  orderName?: string | null;
+  counterpartyName?: string | null;
+  defectType?: string | null;
+  defectQty?: number | null;
+  notes?: string | null;
+  locationSector?: string | null;
+  locationRow?: string | null;
+  locationRack?: string | null;
+  locationShelf?: string | null;
+  createdAt: string;
+  price: SkladBatchPrice | null;
+}
+
+/** Totals across every batch matching the current filter, not just this page. */
+export interface SkladBatchTotals {
+  count: number;
+  nettoKg: number;
+  qoldiqDona: number;
+  qoldiqKg: number;
+  /** Null for staff — see SkladBatchRow. */
+  totalAmount: number | null;
+  /** The currency `totalAmount` is in. Null when the filtered batches are
+   * priced in more than one, in which case the sum is not worth showing. */
+  currency: string | null;
+}
+
+export interface SkladBatchPage {
+  rows: SkladBatchRow[];
+  totals: SkladBatchTotals;
+}
+
+export type SkladMovementKind = 'kirim' | 'chiqim' | 'qaytarish' | 'brak' | 'korrektirovka';
+
+/** One physical event in a batch's life. `dona` is signed: what it did to the
+ * stock, not how big it was. */
+export interface SkladMovement {
+  id: string;
+  kind: SkladMovementKind;
+  dona: number;
+  kg?: number | null;
+  occurredAt: string;
+  counterpartyName?: string | null;
+  orderNo?: string | null;
+  note?: string | null;
+  /** The batch's own receipt, written by trigger alongside the batch. */
+  isInitial: boolean;
+  createdByName?: string | null;
+  createdAt: string;
+}
+
+/** Current stock per product card, across all its batches. */
+export interface SkladStockRow {
+  itemId: string;
+  artikul?: string | null;
+  itemName: string;
+  productType?: string | null;
+  sizeName?: string | null;
+  colorName?: string | null;
+  batchCount: number;
+  totalDona: number;
+  totalKg: number;
+  /** Null for staff. */
+  stockValue: number | null;
+}
+
+export type SkladAuditEntity = 'batch' | 'item' | 'price' | 'order';
+
+export interface SkladAuditEntry {
+  id: number;
+  entity: SkladAuditEntity;
+  entityId: string;
+  action: 'insert' | 'update' | 'delete';
+  changedAt: string;
+  changedByName?: string | null;
+  itemName?: string | null;
+  artikul?: string | null;
+  oldRow: Record<string, unknown> | null;
+  newRow: Record<string, unknown> | null;
 }

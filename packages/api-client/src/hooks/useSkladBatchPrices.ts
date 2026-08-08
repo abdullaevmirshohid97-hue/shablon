@@ -35,7 +35,9 @@ type SkladBatchPriceInput = {
   purchaseCost?: number | null;
   profitPercent?: number | null;
   profitAmount?: number | null;
-  currency?: string;
+  /** Defaults to the org's base currency at the call site, not here — a price
+   * silently booked in the wrong currency is worse than one refused. */
+  currency: string;
 };
 
 export function useUpsertSkladBatchPrice(supabase: SupabaseClient<Database>) {
@@ -60,8 +62,14 @@ export function useUpsertSkladBatchPrice(supabase: SupabaseClient<Database>) {
       );
       if (error) throw error;
     },
-    onSuccess: (_data, { batchId }) => {
+    onSuccess: (_data, { orgId, batchId }) => {
       void queryClient.invalidateQueries({ queryKey: ['sklad-batch-price', batchId] });
+      // The list carries the price too — as a column, as the footer total, and
+      // embedded in useSkladBatches. Invalidating only the single-batch key
+      // left an admin looking at yesterday's figure right after saving today's.
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batch-page', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-batches', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['sklad-stock', orgId] });
     },
   });
 }

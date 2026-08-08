@@ -5,13 +5,14 @@ import {
   useSkladItems,
   useSkladOrders,
   useCreateSkladOrder,
+  useSkladBatch,
   useCreateSkladBatch,
   useUpdateSkladBatch,
   useSkladBatchPrice,
   useUpsertSkladBatchPrice,
   useCounterparties,
 } from '@mubosher/api-client';
-import type { SkladBatch, SkladBatchStatus } from '@mubosher/shared';
+import type { SkladBatchStatus } from '@mubosher/shared';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Input, Label, Select } from '@/components/ui/Input';
@@ -37,66 +38,59 @@ function todayIso(): string {
 export function BatchForm({
   orgId,
   isOrgAdmin,
-  batch,
+  batchId,
   onClose,
 }: {
   orgId: string;
   isOrgAdmin: boolean;
-  batch?: SkladBatch | null;
+  batchId?: string | null;
   onClose: () => void;
 }) {
   const { t } = useLocale();
   const [supabase] = useState(() => createSupabaseBrowserClient());
 
+  const { data: batch } = useSkladBatch(supabase, batchId ?? undefined);
   const { data: items } = useSkladItems(supabase, orgId);
   const { data: orders } = useSkladOrders(supabase, orgId);
   const { data: counterparties } = useCounterparties(supabase, orgId);
-  const { data: existingPrice } = useSkladBatchPrice(supabase, batch?.id);
+  const { data: existingPrice } = useSkladBatchPrice(supabase, batchId ?? undefined);
   const [roster, setRoster] = useState<
     { user_id: string; full_name: string | null; email: string | null }[]
   >([]);
+  const [currencies, setCurrencies] = useState<string[]>(['UZS']);
 
   const createBatch = useCreateSkladBatch(supabase);
   const updateBatch = useUpdateSkladBatch(supabase);
   const createOrder = useCreateSkladOrder(supabase);
   const upsertPrice = useUpsertSkladBatchPrice(supabase);
 
-  useEffect(() => {
-    supabase.rpc('list_org_roster', { target_org_id: orgId }).then(({ data }) => {
-      setRoster(data ?? []);
-    });
-  }, [supabase, orgId]);
-
-  const [itemId, setItemId] = useState(batch?.itemId ?? '');
-  const [orderId, setOrderId] = useState(batch?.orderId ?? '');
+  const [itemId, setItemId] = useState('');
+  const [orderId, setOrderId] = useState('');
   const [newOrderMode, setNewOrderMode] = useState(false);
   const [newOrderNo, setNewOrderNo] = useState('');
   const [newOrderName, setNewOrderName] = useState('');
   const [newOrderCounterpartyId, setNewOrderCounterpartyId] = useState('');
 
-  const [brutto, setBrutto] = useState(batch?.bruttoKg != null ? String(batch.bruttoKg) : '');
-  const [netto, setNetto] = useState(batch?.nettoKg != null ? String(batch.nettoKg) : '');
-  const [dona, setDona] = useState(batch?.donaSoni != null ? String(batch.donaSoni) : '');
-  const [nabor, setNabor] = useState(batch?.naborSoni != null ? String(batch.naborSoni) : '');
-  const [pallet, setPallet] = useState(batch?.palletSoni != null ? String(batch.palletSoni) : '');
-  const [qoldiq, setQoldiq] = useState(batch?.qoldiqDona != null ? String(batch.qoldiqDona) : '');
+  const [brutto, setBrutto] = useState('');
+  const [netto, setNetto] = useState('');
+  const [dona, setDona] = useState('');
+  const [nabor, setNabor] = useState('');
+  const [pallet, setPallet] = useState('');
 
-  const [producedAt, setProducedAt] = useState(batch?.ishlabChiqarilganSana ?? '');
-  const [receivedAt, setReceivedAt] = useState(batch?.omborgaKirganSana ?? todayIso());
-  const [status, setStatus] = useState<SkladBatchStatus>(batch?.status ?? 'omborda');
+  const [producedAt, setProducedAt] = useState('');
+  const [receivedAt, setReceivedAt] = useState(todayIso());
+  const [status, setStatus] = useState<SkladBatchStatus>('omborda');
 
-  const [qcCheckedBy, setQcCheckedBy] = useState(batch?.qcCheckedBy ?? '');
-  const [qcCheckedAt, setQcCheckedAt] = useState(batch?.qcCheckedAt ?? '');
-  const [defectType, setDefectType] = useState(batch?.defectType ?? '');
-  const [defectQty, setDefectQty] = useState(
-    batch?.defectQty != null ? String(batch.defectQty) : '',
-  );
-  const [notes, setNotes] = useState(batch?.notes ?? '');
+  const [qcCheckedBy, setQcCheckedBy] = useState('');
+  const [qcCheckedAt, setQcCheckedAt] = useState('');
+  const [defectType, setDefectType] = useState('');
+  const [defectQty, setDefectQty] = useState('');
+  const [notes, setNotes] = useState('');
 
-  const [locationSector, setLocationSector] = useState(batch?.locationSector ?? '');
-  const [locationRow, setLocationRow] = useState(batch?.locationRow ?? '');
-  const [locationRack, setLocationRack] = useState(batch?.locationRack ?? '');
-  const [locationShelf, setLocationShelf] = useState(batch?.locationShelf ?? '');
+  const [locationSector, setLocationSector] = useState('');
+  const [locationRow, setLocationRow] = useState('');
+  const [locationRack, setLocationRack] = useState('');
+  const [locationShelf, setLocationShelf] = useState('');
 
   const [pricePerKg, setPricePerKg] = useState('');
   const [pricePerPiece, setPricePerPiece] = useState('');
@@ -105,8 +99,58 @@ export function BatchForm({
   const [purchaseCost, setPurchaseCost] = useState('');
   const [profitPercent, setProfitPercent] = useState('');
   const [profitAmount, setProfitAmount] = useState('');
+  const [currency, setCurrency] = useState('UZS');
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.rpc('list_org_roster', { target_org_id: orgId }).then(({ data }) => {
+      setRoster(data ?? []);
+    });
+  }, [supabase, orgId]);
+
+  // The org's own currency is the sensible default; the invoices this
+  // warehouse works from are frequently in another one, which is the whole
+  // reason the selector exists.
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const [{ data: codes }, { data: org }] = await Promise.all([
+        supabase.from('currencies').select('code').order('code'),
+        supabase.from('organizations').select('base_currency').eq('id', orgId).maybeSingle(),
+      ]);
+      if (!active) return;
+      if (codes?.length) setCurrencies(codes.map((c) => c.code));
+      if (org?.base_currency) setCurrency((c) => (c === 'UZS' ? org.base_currency : c));
+    })();
+    return () => {
+      active = false;
+    };
+  }, [supabase, orgId]);
+
+  // The record arrives after the first render now that it is fetched by id.
+  useEffect(() => {
+    if (!batch) return;
+    setItemId(batch.itemId);
+    setOrderId(batch.orderId ?? '');
+    setBrutto(batch.bruttoKg != null ? String(batch.bruttoKg) : '');
+    setNetto(batch.nettoKg != null ? String(batch.nettoKg) : '');
+    setDona(batch.donaSoni != null ? String(batch.donaSoni) : '');
+    setNabor(batch.naborSoni != null ? String(batch.naborSoni) : '');
+    setPallet(batch.palletSoni != null ? String(batch.palletSoni) : '');
+    setProducedAt(batch.ishlabChiqarilganSana ?? '');
+    setReceivedAt(batch.omborgaKirganSana);
+    setStatus(batch.status);
+    setQcCheckedBy(batch.qcCheckedBy ?? '');
+    setQcCheckedAt(batch.qcCheckedAt ?? '');
+    setDefectType(batch.defectType ?? '');
+    setDefectQty(batch.defectQty != null ? String(batch.defectQty) : '');
+    setNotes(batch.notes ?? '');
+    setLocationSector(batch.locationSector ?? '');
+    setLocationRow(batch.locationRow ?? '');
+    setLocationRack(batch.locationRack ?? '');
+    setLocationShelf(batch.locationShelf ?? '');
+  }, [batch]);
 
   useEffect(() => {
     if (!existingPrice) return;
@@ -121,6 +165,7 @@ export function BatchForm({
       existingPrice.profitPercent != null ? String(existingPrice.profitPercent) : '',
     );
     setProfitAmount(existingPrice.profitAmount != null ? String(existingPrice.profitAmount) : '');
+    setCurrency(existingPrice.currency);
   }, [existingPrice]);
 
   const bruttoNum = brutto ? Number(brutto) : null;
@@ -159,7 +204,6 @@ export function BatchForm({
       donaSoni: donaNum,
       naborSoni: nabor ? Number(nabor) : null,
       palletSoni: pallet ? Number(pallet) : null,
-      qoldiqDona: qoldiq ? Number(qoldiq) : !batch && donaNum ? donaNum : null,
       ishlabChiqarilganSana: producedAt || null,
       omborgaKirganSana: receivedAt || undefined,
       status,
@@ -175,12 +219,12 @@ export function BatchForm({
     };
 
     try {
-      let batchId: string;
-      if (batch) {
-        await updateBatch.mutateAsync({ batchId: batch.id, ...input });
-        batchId = batch.id;
+      let savedId: string;
+      if (batchId) {
+        await updateBatch.mutateAsync({ batchId, ...input });
+        savedId = batchId;
       } else {
-        batchId = await createBatch.mutateAsync(input);
+        savedId = await createBatch.mutateAsync(input);
       }
 
       const hasPriceInput = [
@@ -196,7 +240,7 @@ export function BatchForm({
       if (isOrgAdmin && hasPriceInput) {
         await upsertPrice.mutateAsync({
           orgId,
-          batchId,
+          batchId: savedId,
           pricePerKg: pricePerKg ? Number(pricePerKg) : null,
           pricePerPiece: pricePerPiece ? Number(pricePerPiece) : null,
           pricePerSet: pricePerSet ? Number(pricePerSet) : null,
@@ -204,6 +248,7 @@ export function BatchForm({
           purchaseCost: purchaseCost ? Number(purchaseCost) : null,
           profitPercent: profitPercent ? Number(profitPercent) : null,
           profitAmount: profitAmount ? Number(profitAmount) : null,
+          currency,
         });
       }
 
@@ -279,9 +324,20 @@ export function BatchForm({
             </div>
             <div>
               <Label>{t('sklad.batch.qoldiqLabel')}</Label>
-              <Input type="number" value={qoldiq} onChange={(e) => setQoldiq(e.target.value)} />
+              <Input
+                type="text"
+                disabled
+                value={batch?.qoldiqDona ?? donaNum ?? ''}
+                className="bg-slate-50"
+              />
             </div>
           </div>
+
+          {/* The remainder is the sum of this batch's movements now, so it is
+              shown rather than typed. Changing it means recording a shipment,
+              a return or a stocktake — which is what the list's "harakat"
+              button does. */}
+          <p className="-mt-2 text-xs text-slate-500">{t('sklad.batch.qoldiqDerivedNote')}</p>
 
           <div>
             <Label>{t('sklad.batch.orderLabel')}</Label>
@@ -341,7 +397,7 @@ export function BatchForm({
                   <option value="">—</option>
                   {(orders ?? []).map((o) => (
                     <option key={o.id} value={o.id}>
-                      {o.orderNo ?? o.orderName ?? o.id}
+                      {o.orderNo ?? o.orderName ?? t('sklad.order.untitled')}
                     </option>
                   ))}
                 </Select>
@@ -487,6 +543,16 @@ export function BatchForm({
                 {t('sklad.price.title')}
               </p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div>
+                  <Label>{t('sklad.price.currencyLabel')}</Label>
+                  <Select value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                    {currencies.map((code) => (
+                      <option key={code} value={code}>
+                        {code}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
                 <div>
                   <Label>{t('sklad.price.pricePerKgLabel')}</Label>
                   <Input
