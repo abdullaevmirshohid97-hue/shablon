@@ -22,7 +22,6 @@ export interface ReceiveTotals {
   rowCount: number;
   nettoKg: number;
   dona: number;
-  amount: number;
 }
 
 /**
@@ -31,6 +30,9 @@ export interface ReceiveTotals {
  * Blank rows are skipped, and so is anything that will not parse: a cell
  * holding "12kg" contributes nothing rather than NaN, which would otherwise
  * poison the whole column and leave the storekeeper with no total at all.
+ *
+ * No money here: receiving records what arrived, and what it is worth is set
+ * by the manager on the sales invoice.
  */
 export function summariseReceiveRows(rows: SkladReceiveRow[]): ReceiveTotals {
   const filled = rows.filter((row) => !isBlankReceiveRow(row));
@@ -40,9 +42,8 @@ export function summariseReceiveRows(rows: SkladReceiveRow[]): ReceiveTotals {
       rowCount: totals.rowCount,
       nettoKg: totals.nettoKg + toNumber(row.netto),
       dona: totals.dona + toNumber(row.dona),
-      amount: totals.amount + toNumber(row.totalAmount),
     }),
-    { rowCount: filled.length, nettoKg: 0, dona: 0, amount: 0 },
+    { rowCount: filled.length, nettoKg: 0, dona: 0 },
   );
 }
 

@@ -255,9 +255,11 @@ begin
   perform test_report('a received batch starts with its full count in stock', v_qoldiq = 108);
 end $$;
 
--- The gate: definer rights would otherwise let a storekeeper write margins.
+-- Receiving carries no money at all since 0028: price belongs to the sales
+-- invoice, set by a manager while selling. Prices sent by an out-of-date
+-- client are ignored rather than honoured.
 do $$
-declare v_prices bigint;
+declare v_prices bigint; v_batches bigint;
 begin
   perform sklad_receive_rows(
     '11111111-1111-1111-1111-111111111111',
@@ -269,28 +271,34 @@ begin
   join sklad_batches b on b.id = p.batch_id
   join sklad_items i on i.id = b.item_id
   where i.kod = 'C-300';
+  select count(*) into v_batches from sklad_batches b
+  join sklad_items i on i.id = b.item_id where i.kod = 'C-300';
   set role app_user;
 
-  perform test_report('staff receiving cannot write a price, even if one is sent',
-                      v_prices = 0);
+  perform test_report('receiving still books the goods', v_batches = 1);
+  perform test_report('but writes no price, whoever is receiving', v_prices = 0);
 end $$;
 
 set app.current_user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
 
 do $$
-declare v_price numeric;
+declare v_price numeric; v_batches bigint;
 begin
   perform sklad_receive_rows(
     '11111111-1111-1111-1111-111111111111',
-    '[{"kod":"D-400","name":"Pештамал","netto":"10","dona":"20",
+    '[{"kod":"D-400","name":"Peshtamal","netto":"10","dona":"20",
        "pricePerKg":"5.50","totalAmount":"55.00","currency":"USD"}]'::jsonb);
 
+  select count(*) into v_batches from sklad_batches b
+  join sklad_items i on i.id = b.item_id where i.kod = 'D-400';
   select p.total_amount into v_price from sklad_batch_prices p
   join sklad_batches b on b.id = p.batch_id
   join sklad_items i on i.id = b.item_id
   where i.kod = 'D-400';
 
-  perform test_report('an admin receiving does write the price', v_price = 55.00);
+  perform test_report('an admin receiving books the goods too', v_batches = 1);
+  perform test_report('and no price either — that is the invoice''s job',
+                      v_price is null);
 end $$;
 
 -- ---------------------------------------------------------------------

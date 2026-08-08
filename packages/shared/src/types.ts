@@ -511,12 +511,6 @@ export interface SkladReceiveRow {
   qop?: string;
   producedAt?: string;
   notes?: string;
-  pricePerKg?: string;
-  pricePerPiece?: string;
-  pricePerSet?: string;
-  totalAmount?: string;
-  purchaseCost?: string;
-  currency?: string;
 }
 
 /** A batch with stock left on it, as the despatch grid offers it. */

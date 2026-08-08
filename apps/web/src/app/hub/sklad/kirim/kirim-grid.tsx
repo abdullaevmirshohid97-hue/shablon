@@ -24,7 +24,6 @@ interface Column {
   /** Which lookup list suggests values for this cell, if any. */
   lookupKind?: string;
   numeric?: boolean;
-  adminOnly?: boolean;
   width: string;
 }
 
@@ -51,27 +50,6 @@ const COLUMNS: Column[] = [
   { field: 'nabor', labelKey: 'sklad.batch.naborLabel', numeric: true, width: 'w-20' },
   { field: 'qop', labelKey: 'sklad.batch.qopLabel', numeric: true, width: 'w-20' },
   { field: 'notes', labelKey: 'sklad.batch.notesLabel', width: 'w-40' },
-  {
-    field: 'pricePerKg',
-    labelKey: 'sklad.price.pricePerKgLabel',
-    numeric: true,
-    adminOnly: true,
-    width: 'w-24',
-  },
-  {
-    field: 'pricePerPiece',
-    labelKey: 'sklad.price.pricePerPieceLabel',
-    numeric: true,
-    adminOnly: true,
-    width: 'w-24',
-  },
-  {
-    field: 'totalAmount',
-    labelKey: 'sklad.price.totalAmountLabel',
-    numeric: true,
-    adminOnly: true,
-    width: 'w-28',
-  },
 ];
 
 const EMPTY_ROW: SkladReceiveRow = {};
@@ -98,7 +76,7 @@ const cellClass =
  * created on save. The dropdown-only version was fewer typos and more
  * dead ends: no one can receive today's cloth until an admin adds its colour.
  */
-export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: boolean }) {
+export function KirimGrid({ orgId }: { orgId: string }) {
   const { t } = useLocale();
   const router = useRouter();
   const [supabase] = useState(() => createSupabaseBrowserClient());
@@ -111,7 +89,6 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
 
   const [receivedAt, setReceivedAt] = useState(todayIso());
   const [orderId, setOrderId] = useState('');
-  const [currency, setCurrency] = useState('UZS');
   const [rows, setRows] = useState<SkladReceiveRow[]>(() =>
     Array.from({ length: INITIAL_ROWS }, () => ({ ...EMPTY_ROW })),
   );
@@ -119,8 +96,6 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
   const [newOrderCustomer, setNewOrderCustomer] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savedCount, setSavedCount] = useState<number | null>(null);
-
-  const columns = useMemo(() => COLUMNS.filter((c) => isOrgAdmin || !c.adminOnly), [isOrgAdmin]);
 
   const suggestions = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -153,7 +128,7 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
       const above = current[rowIndex - 1];
       if (!above) return current;
       // Everything except the figures that are specific to this bale.
-      const copy = { ...above, brutto: '', netto: '', dona: '', totalAmount: '' };
+      const copy = { ...above, brutto: '', netto: '', dona: '' };
       return current.map((r, i) => (i === rowIndex ? copy : r));
     });
   }
@@ -190,7 +165,7 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
         orgId,
         orderId: orderId || null,
         receivedAt,
-        rows: filledRows.map((r) => (isOrgAdmin ? { ...r, currency } : r)),
+        rows: filledRows,
       });
       setSavedCount(saved);
       setRows(Array.from({ length: INITIAL_ROWS }, () => ({ ...EMPTY_ROW })));
@@ -237,18 +212,6 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
               ))}
             </Select>
           </div>
-          {isOrgAdmin && (
-            <div>
-              <Label>{t('sklad.price.currencyLabel')}</Label>
-              <Select value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                {['UZS', 'USD', 'EUR', 'RUB'].map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          )}
           <div className="flex items-end gap-2">
             <div className="flex-1">
               <Label>{t('sklad.kirim.newOrderNo')}</Label>
@@ -300,7 +263,7 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
                 <th className="w-10 px-1 py-2 text-center font-medium">№</th>
-                {columns.map((c) => (
+                {COLUMNS.map((c) => (
                   <th key={c.field} className={`px-1 py-2 font-medium ${c.width}`}>
                     {t(c.labelKey)}
                   </th>
@@ -315,7 +278,7 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
                   className={`border-b border-slate-100 ${isBlankReceiveRow(row) ? '' : 'bg-slate-50/40'}`}
                 >
                   <td className="px-1 py-0.5 text-center text-xs text-slate-400">{rowIndex + 1}</td>
-                  {columns.map((c) => (
+                  {COLUMNS.map((c) => (
                     <td key={c.field} className="px-0.5 py-0.5">
                       <input
                         className={`${cellClass} ${c.numeric ? 'text-right tabular-nums' : ''}`}
@@ -352,8 +315,8 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
             </tbody>
             <tfoot>
               {/* Column arithmetic: 1 (№) + 11 columns up to and including
-                  brutto = 12, then netto, then dona, then the three that have
-                  no total, then the two admin price-per columns, then the sum. */}
+                  brutto = 12, then netto, then dona, then the three that carry
+                  no total, then the actions column. */}
               <tr className="border-t-2 border-slate-300 text-sm font-semibold">
                 <td className="px-1 py-2 text-xs uppercase text-slate-500" colSpan={12}>
                   {t('sklad.totals.label')}
@@ -362,16 +325,7 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
                   {totals.nettoKg ? totals.nettoKg.toFixed(2) : ''}
                 </td>
                 <td className="px-1 py-2 text-right tabular-nums">{totals.dona || ''}</td>
-                <td colSpan={3} />
-                {isOrgAdmin && (
-                  <>
-                    <td colSpan={2} />
-                    <td className="px-1 py-2 text-right tabular-nums">
-                      {totals.amount ? `${totals.amount.toFixed(2)} ${currency}` : ''}
-                    </td>
-                  </>
-                )}
-                <td />
+                <td colSpan={4} />
               </tr>
             </tfoot>
           </table>

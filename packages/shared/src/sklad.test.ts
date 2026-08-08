@@ -51,16 +51,15 @@ describe('isBlankReceiveRow', () => {
 describe('summariseReceiveRows', () => {
   it('counts only the rows that will be sent', () => {
     const totals = summariseReceiveRows([
-      { netto: '37.18', dona: '125', totalAmount: '148.70' },
+      { netto: '37.18', dona: '125' },
       {},
-      { netto: '35.08', dona: '65', totalAmount: '192.94' },
+      { netto: '35.08', dona: '65' },
       { kod: '   ' },
     ]);
 
     expect(totals.rowCount).toBe(2);
     expect(totals.dona).toBe(190);
     expect(totals.nettoKg).toBeCloseTo(72.26, 5);
-    expect(totals.amount).toBeCloseTo(341.64, 5);
   });
 
   it('ignores a cell that will not parse rather than returning NaN', () => {
@@ -77,12 +76,7 @@ describe('summariseReceiveRows', () => {
   });
 
   it('is zero across the board for an empty grid', () => {
-    expect(summariseReceiveRows([{}, {}])).toEqual({
-      rowCount: 0,
-      nettoKg: 0,
-      dona: 0,
-      amount: 0,
-    });
+    expect(summariseReceiveRows([{}, {}])).toEqual({ rowCount: 0, nettoKg: 0, dona: 0 });
   });
 });
 
