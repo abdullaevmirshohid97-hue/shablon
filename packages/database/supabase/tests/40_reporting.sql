@@ -293,3 +293,121 @@ begin
   perform test_report('a payment lowers the overdue figure rather than raising it',
                       v_first is null or v_second is null or v_second < v_first);
 end $$;
+
+-- ---------------------------------------------------------------------
+-- The client journal (0032).
+--
+-- Past-due and total are two figures, not one. Total is the balance today;
+-- past-due is what was outstanding when the deadline passed, capped at what
+-- is still owed — so paying it down lowers it and a later debt does not.
+-- ---------------------------------------------------------------------
+set app.current_user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+
+insert into counterparties (id, org_id, name, currency, manager_id)
+values ('eeeeeeee-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111',
+        'Mijoz C', 'USD', 'bbbbbbbb-0000-0000-0000-000000000002');
+
+do $$
+begin
+  -- Owed 1000 by the time the deadline passed, then 400 paid afterwards.
+  insert into transactions (org_id, counterparty_id, occurred_at, due_date,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000003',
+    (current_date - 30)::timestamptz, null,
+    'cccccccc-0000-0000-0000-000000000001', 1000,
+    'cccccccc-0000-0000-0000-000000000002', 1000, 'UZS', 'sotuv');
+
+  insert into transactions (org_id, counterparty_id, occurred_at, due_date,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000003',
+    (current_date - 10)::timestamptz, current_date - 20,
+    'cccccccc-0000-0000-0000-000000000002', 400,
+    'cccccccc-0000-0000-0000-000000000001', 400, 'UZS', 'qisman to''lov');
+end $$;
+
+do $$
+declare r record;
+begin
+  select * into r from counterparty_journal('11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000003';
+
+  perform test_report('total debt is the balance today', r.total_debt = 600);
+  perform test_report('past-due is what was outstanding at the deadline, capped at that',
+                      r.overdue_amount = 600);
+  perform test_report('and it is dated from when the deadline passed',
+                      r.overdue_date = current_date - 20);
+  perform test_report('the journal names the account manager',
+                      r.manager_name is not null);
+  perform test_report('and carries the client''s own currency', r.currency = 'USD');
+end $$;
+
+-- A debt run up after the deadline moves the total and not the past-due part.
+do $$
+declare r record;
+begin
+  insert into transactions (org_id, counterparty_id, occurred_at,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000003',
+    current_date::timestamptz,
+    'cccccccc-0000-0000-0000-000000000001', 500,
+    'cccccccc-0000-0000-0000-000000000002', 500, 'UZS', 'yangi sotuv');
+
+  select * into r from counterparty_journal('11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000003';
+
+  perform test_report('a later debt raises the total', r.total_debt = 1100);
+  perform test_report('but not what was already overdue', r.overdue_amount = 600);
+end $$;
+
+-- Paying the overdue part down lowers it.
+do $$
+declare r record;
+begin
+  insert into transactions (org_id, counterparty_id, occurred_at,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000003',
+    current_date::timestamptz,
+    'cccccccc-0000-0000-0000-000000000002', 700,
+    'cccccccc-0000-0000-0000-000000000001', 700, 'UZS', 'yana to''lov');
+
+  select * into r from counterparty_journal('11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000003';
+
+  -- Oldest debt settles first: 1100 paid against a 1000 overdue balance clears
+  -- it outright, and what remains in the total is the newer sale.
+  perform test_report('paying lowers the total', r.total_debt = 400);
+  perform test_report('paying past the overdue part clears it', r.overdue_amount = 0);
+end $$;
+
+-- The filters the journal toolbar drives.
+do $$
+declare n int;
+begin
+  select count(*) into n from counterparty_journal('11111111-1111-1111-1111-111111111111');
+  perform test_report('the journal lists every client, debtor or not', n >= 3);
+
+  select count(*) into n from counterparty_journal(
+    '11111111-1111-1111-1111-111111111111', null, null, null, false, true);
+  perform test_report('and can be narrowed to the overdue ones', n >= 1 and n < 3);
+
+  select count(*) into n from counterparty_journal(
+    '11111111-1111-1111-1111-111111111111', null,
+    'bbbbbbbb-0000-0000-0000-000000000002');
+  perform test_report('filtering by manager finds their clients', n = 1);
+
+  select count(*) into n from counterparty_journal(
+    '11111111-1111-1111-1111-111111111111', null, null, 'USD');
+  perform test_report('filtering by currency works', n = 1);
+
+  select count(*) into n from counterparty_journal(
+    '11111111-1111-1111-1111-111111111111', 'Mijoz C');
+  perform test_report('and search finds a client by name', n = 1);
+end $$;
+
+do $$
+declare n int;
+begin
+  select count(*) into n from currencies
+  where code in ('KZT', 'KGS', 'TJS', 'AZN', 'AFN', 'CNY', 'GBP');
+  perform test_report('the neighbouring currencies are available', n = 7);
+end $$;

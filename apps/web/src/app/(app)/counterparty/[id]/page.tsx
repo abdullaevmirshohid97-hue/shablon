@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
+import { CounterpartySettings } from '@/components/CounterpartySettings';
 import { CounterpartyLedgerClient } from './ledger-client';
 
 export default async function CounterpartyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,7 +17,7 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
 
   const { data: counterparty, error } = await supabase
     .from('counterparties')
-    .select('id, org_id, name')
+    .select('id, org_id, name, phone, currency, manager_id, notes')
     .eq('id', id)
     .single();
 
@@ -36,6 +37,15 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
     .maybeSingle();
 
   const orgName = org?.name ?? null;
+
+  // Managers read; owner/admin edit. Same split as the client directory.
+  const { data: memberships } = await supabase
+    .from('memberships')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('org_id', counterparty.org_id);
+  const role = memberships?.[0]?.role;
+  const canWrite = role === 'owner' || role === 'admin';
 
   return (
     <div>
@@ -57,6 +67,21 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
       <h1 className="no-print mb-6 text-2xl font-semibold tracking-tight text-slate-900">
         {counterparty.name}
       </h1>
+      <div className="mb-4">
+        <CounterpartySettings
+          orgId={counterparty.org_id}
+          counterpartyId={counterparty.id}
+          canWrite={canWrite}
+          initial={{
+            name: counterparty.name,
+            phone: counterparty.phone,
+            currency: counterparty.currency,
+            managerId: counterparty.manager_id,
+            notes: counterparty.notes,
+          }}
+        />
+      </div>
+
       <CounterpartyLedgerClient
         orgId={counterparty.org_id}
         orgName={orgName}

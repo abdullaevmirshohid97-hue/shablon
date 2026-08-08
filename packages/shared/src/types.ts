@@ -34,7 +34,36 @@ export interface Counterparty {
   categories: string[];
   notes?: string | null;
   currency?: string | null;
+  /** Who looks after this client (0032) — distinct from the manager on any one
+   * despatch, which answers who handled that. */
+  managerId?: string | null;
   createdAt: string;
+}
+
+/**
+ * One line of the client journal.
+ *
+ * Two debt figures, deliberately: totalDebt is the balance today, overdueAmount
+ * is what was outstanding when the deadline passed less everything paid since.
+ * Oldest debt settles first, so a payment lowers the overdue part and a new
+ * sale raises only the total.
+ */
+export interface CounterpartyJournalRow {
+  counterpartyId: string;
+  name: string;
+  phone?: string | null;
+  currency: string;
+  categories: string[];
+  managerId?: string | null;
+  managerName?: string | null;
+  totalDebt: number;
+  overdueAmount: number;
+  /** Since when they have been late. */
+  overdueDate?: string | null;
+  /** The nearest deadline still ahead of them. */
+  nextDueDate?: string | null;
+  lastEntryAt?: string | null;
+  entryCount: number;
 }
 
 export interface Account {

@@ -182,7 +182,18 @@
     "noDebtors": "Hozircha qarzdorlik yo'q",
     "byModule": "Modullar bo'yicha",
     "module": "Modul",
-    "clientCount": "Mijozlar"
+    "clientCount": "Mijozlar",
+    "debtorName": "Mijoz",
+    "overdueSum": "Muddati kelgan",
+    "overdueSince": "Muddat sanasi",
+    "totalDebtShort": "Jami qarz",
+    "nextDue": "Keyingi muddat",
+    "manager": "Menejer",
+    "onlyOverdue": "Faqat kechikkanlar",
+    "onlyDebtors": "Faqat qarzdorlar",
+    "journalTitle": "Mijozlar jurnali",
+    "journalSearch": "Mijoz, telefon yoki menejer",
+    "journalEmpty": "Mijoz topilmadi"
   },
   "hub": {
     "finance": "Finance",
@@ -627,5 +638,13 @@
     "appleTitle": "iPhone/iPad da o‘rnatish",
     "appleStep1": "Pastdagi «Ulashish» tugmasini bosing",
     "appleStep2": "«Bosh ekranga qo‘shish» ni tanlang"
+  },
+  "counterparty": {
+    "currencyLabel": "Hisob valyutasi",
+    "currencyDefault": "Tashkilot valyutasi",
+    "currencyHint": "Bu mijoz bilan hisob-kitob shu valyutada yuritiladi.",
+    "notesLabel": "Izohlar",
+    "notesPlaceholder": "Mijoz haqida eslatma: to‘lov odati, aloqa tartibi va h.k.",
+    "saved": "Saqlandi"
   }
 }

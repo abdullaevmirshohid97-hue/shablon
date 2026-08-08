@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useOrgReport, fetchOrgLedger } from '@mubosher/api-client';
+import { useOrgReport, fetchOrgLedger, useCounterpartyJournal } from '@mubosher/api-client';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { exportOrgSummaryToExcel } from '@/lib/export/orgSummaryExcel';
@@ -9,6 +9,7 @@ import { analyticsFromReport } from '@/lib/analyticsData';
 import { LedgerAnalytics } from './LedgerAnalytics';
 import { TopDebtors } from './TopDebtors';
 import { ModuleBreakdownTable } from './ModuleBreakdownTable';
+import { CounterpartyJournal } from './CounterpartyJournal';
 import { PrintHeader } from './PrintHeader';
 import { formatPeriodLabel, PeriodFilter, usePeriodFilter } from './PeriodFilter';
 import { Button } from '@/components/ui/Button';
@@ -45,6 +46,11 @@ export function OverviewAnalytics({
     { from: period.range?.start ?? null, to: period.range?.end ?? null },
     categoryFilter,
   );
+
+  // The debtors panel and the journal below read the same list, so the two
+  // cannot show different figures for a client on one screen. Not period
+  // scoped: a debt is a position and does not restart with the filter.
+  const { data: journal } = useCounterpartyJournal(supabase, orgId);
 
   const [exporting, setExporting] = useState(false);
   const analytics = useMemo(() => (data ? analyticsFromReport(data) : null), [data]);
@@ -120,10 +126,16 @@ export function OverviewAnalytics({
               the per-client ledger it always goes into the printed PDF. */}
           <LedgerAnalytics data={analytics} period={period} forcePrintVisible />
         </div>
-        <TopDebtors balances={data.balances} />
+        <TopDebtors rows={journal ?? []} />
       </div>
 
-      {!categoryFilter && data.modules.length > 0 && (
+      {/* The journal replaces the module table as the bottom of the page:
+          the question asked here is which client owes what, and a per-module
+          turnover row cannot answer it. The module table stays below it, and
+          only when there is more than one module to compare. */}
+      {!categoryFilter && <CounterpartyJournal orgId={orgId} />}
+
+      {!categoryFilter && data.modules.length > 1 && (
         <ModuleBreakdownTable modules={data.modules} />
       )}
     </div>

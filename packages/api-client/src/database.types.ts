@@ -47,6 +47,7 @@ export interface Database {
           categories: string[];
           notes: string | null;
           currency: string | null;
+          manager_id: string | null;
           created_at: string;
         };
         Insert: Partial<Database['public']['Tables']['counterparties']['Row']> & {
@@ -660,6 +661,32 @@ export interface Database {
           counterparty_name: string;
           balance: number;
           base_balance: number;
+        }[];
+      };
+      counterparty_journal: {
+        Args: {
+          target_org_id: string;
+          p_search?: string | null;
+          p_manager_id?: string | null;
+          p_currency?: string | null;
+          p_only_debtors?: boolean | null;
+          p_only_overdue?: boolean | null;
+          p_as_of?: string | null;
+        };
+        Returns: {
+          counterparty_id: string;
+          counterparty_name: string;
+          phone: string | null;
+          currency: string;
+          categories: string[];
+          manager_id: string | null;
+          manager_name: string | null;
+          total_debt: number;
+          overdue_amount: number;
+          overdue_date: string | null;
+          next_due_date: string | null;
+          last_entry_at: string | null;
+          entry_count: number;
         }[];
       };
       org_category_breakdown: {

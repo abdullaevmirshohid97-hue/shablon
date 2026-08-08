@@ -182,7 +182,18 @@
     "noDebtors": "Пока нет задолженностей",
     "byModule": "По модулям",
     "module": "Модуль",
-    "clientCount": "Клиентов"
+    "clientCount": "Клиентов",
+    "debtorName": "Клиент",
+    "overdueSum": "Просрочено",
+    "overdueSince": "Дата срока",
+    "totalDebtShort": "Всего долг",
+    "nextDue": "Следующий срок",
+    "manager": "Менеджер",
+    "onlyOverdue": "Только просроченные",
+    "onlyDebtors": "Только должники",
+    "journalTitle": "Журнал клиентов",
+    "journalSearch": "Клиент, телефон или менеджер",
+    "journalEmpty": "Клиенты не найдены"
   },
   "hub": {
     "finance": "Finance",
@@ -627,5 +638,13 @@
     "appleTitle": "Установка на iPhone/iPad",
     "appleStep1": "Нажмите кнопку «Поделиться» внизу",
     "appleStep2": "Выберите «На экран «Домой»»"
+  },
+  "counterparty": {
+    "currencyLabel": "Валюта расчётов",
+    "currencyDefault": "Валюта организации",
+    "currencyHint": "Расчёты с этим клиентом ведутся в этой валюте.",
+    "notesLabel": "Заметки",
+    "notesPlaceholder": "Заметка о клиенте: платёжная дисциплина, порядок связи и т.д.",
+    "saved": "Сохранено"
   }
 }

@@ -1,0 +1,166 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useUpdateCounterparty } from '@mubosher/api-client';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { useLocale } from '@/lib/i18n/LocaleProvider';
+import { Card } from '@/components/ui/Card';
+import { Input, Label, Select } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+
+const textareaClass =
+  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 ' +
+  'placeholder:text-slate-400 transition-shadow focus:border-brand-500';
+
+/**
+ * The client's own details, on their page.
+ *
+ * Currency sits first because it governs how every figure below it reads: a
+ * client who trades in dollars has their account kept in dollars, and the
+ * ledger, the analytics and the journal all take the code from here. Changing
+ * it is a decision about the account, not a display preference, which is why
+ * it is at the top rather than buried with the phone number.
+ *
+ * Notes get their own field and their own room. They were a column on the
+ * table that nothing ever wrote to — the place where "pays late, always
+ * settles" or "call the warehouse before delivering" has to live, and a
+ * single-line input is not that place.
+ */
+export function CounterpartySettings({
+  orgId,
+  counterpartyId,
+  initial,
+  canWrite,
+}: {
+  orgId: string;
+  counterpartyId: string;
+  initial: {
+    name: string;
+    phone?: string | null;
+    currency?: string | null;
+    managerId?: string | null;
+    notes?: string | null;
+  };
+  canWrite: boolean;
+}) {
+  const { t } = useLocale();
+  const [supabase] = useState(() => createSupabaseBrowserClient());
+  const update = useUpdateCounterparty(supabase);
+
+  const [currency, setCurrency] = useState(initial.currency ?? '');
+  const [managerId, setManagerId] = useState(initial.managerId ?? '');
+  const [phone, setPhone] = useState(initial.phone ?? '');
+  const [notes, setNotes] = useState(initial.notes ?? '');
+  const [currencies, setCurrencies] = useState<string[]>([]);
+  const [roster, setRoster] = useState<
+    { user_id: string; full_name: string | null; email: string | null }[]
+  >([]);
+  const [saved, setSaved] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    void supabase
+      .from('currencies')
+      .select('code')
+      .order('code')
+      .then(({ data }) => setCurrencies((data ?? []).map((c) => c.code)));
+    void supabase
+      .rpc('list_org_roster', { target_org_id: orgId })
+      .then(({ data }) => setRoster(data ?? []));
+  }, [supabase, orgId]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSaved(false);
+    try {
+      await update.mutateAsync({
+        orgId,
+        counterpartyId,
+        phone: phone.trim() || null,
+        // Empty means "follow the organisation's own currency", which is what
+        // the journal falls back to — not a client trading in nothing.
+        currency: currency || null,
+        managerId: managerId || null,
+        notes: notes.trim() || null,
+      });
+      setSaved(true);
+    } catch (err) {
+      setErrorMessage((err as Error).message);
+    }
+  }
+
+  return (
+    <Card className="no-print p-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div>
+            <Label>{t('counterparty.currencyLabel')}</Label>
+            <Select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              disabled={!canWrite}
+            >
+              <option value="">{t('counterparty.currencyDefault')}</option>
+              {currencies.map((code) => (
+                <option key={code} value={code}>
+                  {code}
+                </option>
+              ))}
+            </Select>
+            <p className="mt-1 text-[11px] leading-snug text-slate-400">
+              {t('counterparty.currencyHint')}
+            </p>
+          </div>
+          <div>
+            <Label>{t('overview.manager')}</Label>
+            <Select
+              value={managerId}
+              onChange={(e) => setManagerId(e.target.value)}
+              disabled={!canWrite}
+            >
+              <option value="">—</option>
+              {roster.map((r) => (
+                <option key={r.user_id} value={r.user_id}>
+                  {r.full_name ?? r.email}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <Label>{t('addCounterparty.phoneLabel')}</Label>
+            <Input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              disabled={!canWrite}
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label>{t('counterparty.notesLabel')}</Label>
+          <textarea
+            className={textareaClass}
+            rows={3}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder={t('counterparty.notesPlaceholder')}
+            disabled={!canWrite}
+          />
+        </div>
+
+        {errorMessage && <p className="text-sm text-rose-600">{errorMessage}</p>}
+
+        {canWrite && (
+          <div className="flex items-center gap-3">
+            <Button type="submit" size="sm" disabled={update.isPending}>
+              {update.isPending ? t('common.saving') : t('common.save')}
+            </Button>
+            {saved && <span className="text-sm text-emerald-700">{t('counterparty.saved')}</span>}
+          </div>
+        )}
+      </form>
+    </Card>
+  );
+}

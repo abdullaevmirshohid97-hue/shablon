@@ -2,67 +2,80 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import type { CounterpartyBalance } from '@mubosher/api-client';
+import type { CounterpartyJournalRow } from '@mubosher/shared';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
 
-const currencyFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 0 });
+const money = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
 
-interface DebtorRow {
-  id: string;
-  name: string;
-  balance: number;
-}
+/**
+ * Everyone who is late, with both figures side by side.
+ *
+ * It used to list the six largest balances and call them debtors, which is a
+ * different question — a client can owe a lot and owe none of it yet. This is
+ * the ones whose deadline has passed, and it shows what is past due next to
+ * what they owe altogether, because the gap between those two is the thing
+ * worth looking at.
+ *
+ * The list scrolls rather than truncating: "eng ko'p" is a sort order, not a
+ * reason to hide the seventh debtor.
+ */
+export function TopDebtors({ rows }: { rows: CounterpartyJournalRow[] }) {
+  const { t, locale } = useLocale();
+  const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
 
-export function TopDebtors({
-  balances,
-  limit = 6,
-}: {
-  /** Already ordered by balance, straight from counterparty_balances(). */
-  balances: CounterpartyBalance[];
-  limit?: number;
-}) {
-  const { t } = useLocale();
-
-  const rows = useMemo<DebtorRow[]>(
+  const debtors = useMemo(
     () =>
-      balances
-        .filter((b) => b.balance > 0)
-        .slice(0, limit)
-        .map((b) => ({ id: b.counterpartyId, name: b.name, balance: b.balance })),
-    [balances, limit],
+      rows
+        .filter((row) => row.overdueDate && row.totalDebt > 0)
+        .sort((a, b) => b.overdueAmount - a.overdueAmount || b.totalDebt - a.totalDebt),
+    [rows],
   );
 
-  const maxBalance = rows[0]?.balance ?? 0;
-
   return (
-    <Card className="p-4">
+    <Card className="flex flex-col p-4">
       <h2 className="mb-3 text-base font-semibold text-slate-900">{t('overview.topDebtors')}</h2>
-      {rows.length === 0 ? (
+
+      {debtors.length === 0 ? (
         <p className="text-sm text-slate-500">{t('overview.noDebtors')}</p>
       ) : (
-        <ul className="space-y-3">
-          {rows.map((row) => (
-            <li key={row.id}>
-              <Link href={`/counterparty/${row.id}`} className="group block">
-                <div className="mb-1 flex items-center justify-between gap-2 text-sm">
-                  <span className="truncate font-medium text-slate-700 group-hover:text-brand-700">
-                    {row.name}
-                  </span>
-                  <span className="shrink-0 tabular-nums font-semibold text-slate-900">
-                    {currencyFormatter.format(row.balance)}
-                  </span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className="h-full rounded-full bg-brand-600 transition-all"
-                    style={{ width: `${maxBalance > 0 ? (row.balance / maxBalance) * 100 : 0}%` }}
-                  />
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="-mx-1 max-h-[420px] overflow-y-auto px-1">
+          <table className="w-full border-collapse text-sm">
+            <thead className="sticky top-0 bg-white">
+              <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                <th className="py-1.5 pr-2 font-medium">{t('overview.debtorName')}</th>
+                <th className="py-1.5 pr-2 text-right font-medium">{t('overview.overdueSum')}</th>
+                <th className="py-1.5 text-right font-medium">{t('overview.totalDebtShort')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {debtors.map((row) => (
+                <tr key={row.counterpartyId} className="border-b border-slate-100">
+                  <td className="py-1.5 pr-2">
+                    <Link
+                      href={`/counterparty/${row.counterpartyId}`}
+                      className="block font-medium text-slate-800 hover:text-brand-700 hover:underline"
+                    >
+                      {row.name}
+                    </Link>
+                    {row.overdueDate && (
+                      <span className="text-[11px] text-rose-500">
+                        {new Date(row.overdueDate).toLocaleDateString(dateLocale)}
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-1.5 pr-2 text-right font-semibold tabular-nums text-rose-700">
+                    {money.format(row.overdueAmount)}
+                  </td>
+                  <td className="py-1.5 text-right tabular-nums text-slate-900">
+                    {money.format(row.totalDebt)}
+                    <span className="ml-1 text-[11px] text-slate-400">{row.currency}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </Card>
   );
