@@ -16,3 +16,4 @@ export * from './hooks/useSkladBatchPage';
 export * from './hooks/useSkladBatchPrices';
 export * from './hooks/useSkladMovements';
 export * from './hooks/useSkladAudit';
+export * from './hooks/useSkladProduction';

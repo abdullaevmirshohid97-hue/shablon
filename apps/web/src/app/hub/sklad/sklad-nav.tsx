@@ -15,15 +15,18 @@ export function SkladNav({ isOrgAdmin }: { isOrgAdmin: boolean }) {
 
   const tabs = [
     { href: '/hub/sklad', label: t('sklad.nav.stock') },
-    { href: '/hub/sklad/items', label: t('sklad.nav.items') },
     { href: '/hub/sklad/orders', label: t('sklad.nav.orders') },
+    { href: '/hub/sklad/items', label: t('sklad.nav.items') },
+    { href: '/hub/sklad/analytics', label: t('sklad.nav.analytics') },
     ...(isOrgAdmin ? [{ href: '/hub/sklad/settings', label: t('sklad.nav.settings') }] : []),
   ];
 
   return (
     <nav className="mb-4 flex gap-1 overflow-x-auto border-b border-slate-200">
       {tabs.map(({ href, label }) => {
-        const active = pathname === href;
+        // Prefix match, so an order's own page keeps its tab lit — except for
+        // the root, which every other route is a prefix of.
+        const active = href === '/hub/sklad' ? pathname === href : pathname.startsWith(href);
         return (
           <Link
             key={href}

@@ -12,6 +12,10 @@
 export type SkladBatchStatusValue =
   'tayyor' | 'qadoqlanmoqda' | 'omborda' | 'rezerv' | 'jonatildi' | 'qaytarildi' | 'brak';
 
+/** Mirrors the `sklad_order_status` enum (0024). */
+export type SkladOrderStatusValue =
+  'yangi' | 'ishlab_chiqarishda' | 'tayyor' | 'yuklandi' | 'yopilgan';
+
 export interface Database {
   public: {
     Tables: {
@@ -268,6 +272,11 @@ export interface Database {
           order_no: string | null;
           order_name: string | null;
           counterparty_id: string | null;
+          // 0024: the order became the document the whole factory writes into.
+          manager_id: string | null;
+          deadline: string | null;
+          status: SkladOrderStatusValue;
+          notes: string | null;
           created_by: string | null;
           created_at: string;
         };
@@ -366,11 +375,114 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['sklad_movements']['Row']>;
         Relationships: [];
       };
+      sklad_stages: {
+        Row: {
+          id: string;
+          org_id: string;
+          name: string;
+          position: number;
+          is_final: boolean;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_stages']['Row']> & {
+          org_id: string;
+          name: string;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_stages']['Row']>;
+        Relationships: [];
+      };
+      sklad_order_lines: {
+        Row: {
+          id: string;
+          org_id: string;
+          order_id: string;
+          item_id: string | null;
+          position: number;
+          description: string | null;
+          size_text: string | null;
+          color_text: string | null;
+          planned_dona: number | null;
+          planned_kg: number | null;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_order_lines']['Row']> & {
+          org_id: string;
+          order_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_order_lines']['Row']>;
+        Relationships: [];
+      };
+      sklad_stage_entries: {
+        Row: {
+          id: string;
+          org_id: string;
+          order_line_id: string;
+          stage_id: string;
+          qty_in: number | null;
+          qty_out: number | null;
+          defect_qty: number | null;
+          kg: number | null;
+          executor_id: string | null;
+          executor_name: string | null;
+          occurred_at: string;
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_stage_entries']['Row']> & {
+          org_id: string;
+          order_line_id: string;
+          stage_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_stage_entries']['Row']>;
+        Relationships: [];
+      };
+      sklad_shipments: {
+        Row: {
+          id: string;
+          org_id: string;
+          order_id: string | null;
+          counterparty_id: string | null;
+          manager_id: string | null;
+          document_no: string | null;
+          shipped_at: string;
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_shipments']['Row']> & {
+          org_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_shipments']['Row']>;
+        Relationships: [];
+      };
+      sklad_shipment_lines: {
+        Row: {
+          id: string;
+          org_id: string;
+          shipment_id: string;
+          order_line_id: string | null;
+          batch_id: string | null;
+          dona: number;
+          kg: number | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_shipment_lines']['Row']> & {
+          org_id: string;
+          shipment_id: string;
+          dona: number;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_shipment_lines']['Row']>;
+        Relationships: [];
+      };
       sklad_audit: {
         Row: {
           id: number;
           org_id: string;
-          entity: 'batch' | 'item' | 'price' | 'order';
+          entity: 'batch' | 'item' | 'price' | 'order' | 'line' | 'stage_entry' | 'shipment';
           entity_id: string;
           action: 'insert' | 'update' | 'delete';
           changed_by: string | null;
@@ -708,11 +820,120 @@ export interface Database {
           created_at: string;
         }[];
       };
+      // Production chain (0024-0025).
+      sklad_receive_rows: {
+        Args: {
+          target_org_id: string;
+          p_rows: unknown;
+          p_order_id?: string | null;
+          p_received_at?: string | null;
+        };
+        Returns: number;
+      };
+      sklad_order_progress: {
+        Args: { p_order_id: string };
+        Returns: {
+          line_id: string;
+          line_position: number;
+          description: string | null;
+          item_name: string | null;
+          artikul: string | null;
+          size_text: string | null;
+          color_text: string | null;
+          planned_dona: number | null;
+          planned_kg: number | null;
+          ready_dona: number;
+          defect_dona: number;
+          shipped_dona: number;
+          shipped_kg: number;
+          remaining_dona: number;
+        }[];
+      };
+      sklad_order_stage_matrix: {
+        Args: { p_order_id: string };
+        Returns: {
+          line_id: string;
+          stage_id: string;
+          stage_name: string;
+          stage_position: number;
+          is_final: boolean;
+          qty_in: number | null;
+          qty_out: number | null;
+          defect_qty: number | null;
+          kg: number | null;
+          entry_count: number;
+          last_occurred_at: string | null;
+        }[];
+      };
+      sklad_order_clients: {
+        Args: { p_order_id: string };
+        Returns: {
+          counterparty_id: string | null;
+          counterparty_name: string;
+          shipment_count: number;
+          shipped_dona: number;
+          shipped_kg: number;
+          last_shipped_at: string | null;
+        }[];
+      };
+      sklad_order_summary: {
+        Args: {
+          target_org_id: string;
+          p_status?: SkladOrderStatusValue | null;
+          p_counterparty_id?: string | null;
+          p_manager_id?: string | null;
+          p_limit?: number | null;
+        };
+        Returns: {
+          order_id: string;
+          order_no: string | null;
+          order_name: string | null;
+          status: SkladOrderStatusValue;
+          deadline: string | null;
+          counterparty_id: string | null;
+          counterparty_name: string | null;
+          manager_name: string | null;
+          line_count: number;
+          planned_dona: number;
+          ready_dona: number;
+          shipped_dona: number;
+          remaining_dona: number;
+          current_stage: string | null;
+          created_at: string;
+        }[];
+      };
+      sklad_stage_load: {
+        Args: { target_org_id: string; p_from?: string | null; p_to?: string | null };
+        Returns: {
+          stage_id: string;
+          stage_name: string;
+          stage_position: number;
+          entry_count: number;
+          qty_out: number;
+          defect_qty: number;
+          kg: number;
+        }[];
+      };
+      list_sklad_stage_entries: {
+        Args: { p_order_line_id: string; p_stage_id: string };
+        Returns: {
+          id: string;
+          qty_in: number | null;
+          qty_out: number | null;
+          defect_qty: number | null;
+          kg: number | null;
+          executor_name: string | null;
+          occurred_at: string;
+          note: string | null;
+          created_by_name: string | null;
+          created_at: string;
+        }[];
+      };
       list_sklad_audit: {
         Args: { target_org_id: string; p_limit?: number | null };
         Returns: {
           id: number;
-          entity: 'batch' | 'item' | 'price' | 'order';
+          entity: 'batch' | 'item' | 'price' | 'order' | 'line' | 'stage_entry' | 'shipment';
           entity_id: string;
           action: 'insert' | 'update' | 'delete';
           changed_at: string;

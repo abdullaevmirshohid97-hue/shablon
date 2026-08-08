@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import {
   useSkladOrders,
   useCreateSkladOrder,
@@ -193,7 +194,14 @@ export function OrdersList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: b
             <tbody>
               {filtered.map((o) => (
                 <tr key={o.id} className="border-b border-slate-100">
-                  <td className="py-1.5 pr-3 font-medium">{o.orderNo ?? '—'}</td>
+                  <td className="py-1.5 pr-3 font-medium">
+                    <Link
+                      href={`/hub/sklad/orders/${o.id}`}
+                      className="text-brand-700 hover:underline"
+                    >
+                      {o.orderNo ?? o.orderName ?? t('sklad.order.untitled')}
+                    </Link>
+                  </td>
                   <td className="py-1.5 pr-3">{o.orderName ?? '—'}</td>
                   <td className="py-1.5 pr-3">{customerName(o.counterpartyId)}</td>
                   <td className="py-1.5 pr-3 tabular-nums text-slate-500">

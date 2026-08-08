@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import {
   useSkladBatchPage,
   useSkladItems,
@@ -123,15 +124,23 @@ export function SkladList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
             {t('sklad.totals.batches')}: {qtyFormat.format(totalCount)}
           </p>
         </div>
-        <Button
-          type="button"
-          onClick={() => {
-            setEditingBatchId(null);
-            setBatchModalOpen(true);
-          }}
-        >
-          {t('sklad.addBatch')}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setEditingBatchId(null);
+              setBatchModalOpen(true);
+            }}
+          >
+            {t('sklad.addSingleBatch')}
+          </Button>
+          {/* Receiving a delivery is a page of its own now: an invoice is a
+              hundred rows, not one. */}
+          <Link href="/hub/sklad/kirim">
+            <Button type="button">{t('sklad.addBatch')}</Button>
+          </Link>
+        </div>
       </div>
 
       <Card className="p-4">

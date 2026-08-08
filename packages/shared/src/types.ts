@@ -175,6 +175,11 @@ export interface SkladOrder {
   orderNo?: string | null;
   orderName?: string | null;
   counterpartyId?: string | null;
+  /** Who is answerable for it (0024). */
+  managerId?: string | null;
+  deadline?: string | null;
+  status: SkladOrderStatus;
+  notes?: string | null;
   createdAt: string;
 }
 
@@ -343,7 +348,176 @@ export interface SkladStockRow {
   stockValue: number | null;
 }
 
-export type SkladAuditEntity = 'batch' | 'item' | 'price' | 'order';
+// ---------------------------------------------------------------------
+// Production chain (0024-0025): one order, written into by every shop from
+// the loom to the loading bay.
+// ---------------------------------------------------------------------
+
+export type SkladOrderStatus = 'yangi' | 'ishlab_chiqarishda' | 'tayyor' | 'yuklandi' | 'yopilgan';
+
+/** A shop floor. Ordered and renameable per org; exactly one is the finished
+ * goods warehouse, whose output is what becomes shippable. */
+export interface SkladStage {
+  id: string;
+  orgId: string;
+  name: string;
+  position: number;
+  isFinal: boolean;
+}
+
+/** One row of an order — the unit each shop reports against. */
+export interface SkladOrderLine {
+  id: string;
+  orgId: string;
+  orderId: string;
+  itemId?: string | null;
+  position: number;
+  description?: string | null;
+  sizeText?: string | null;
+  colorText?: string | null;
+  plannedDona?: number | null;
+  plannedKg?: number | null;
+  notes?: string | null;
+  createdAt: string;
+}
+
+/** What one shop did to one row on one day. Several per (line, stage) is
+ * normal — a dye house rarely finishes a thousand towels in one pass. */
+export interface SkladStageEntry {
+  id: string;
+  qtyIn?: number | null;
+  qtyOut?: number | null;
+  defectQty?: number | null;
+  kg?: number | null;
+  executorName?: string | null;
+  occurredAt: string;
+  note?: string | null;
+  createdByName?: string | null;
+  createdAt: string;
+}
+
+/** A row's standing: planned, made, shipped, still owed. */
+export interface SkladLineProgress {
+  lineId: string;
+  position: number;
+  description?: string | null;
+  itemName?: string | null;
+  artikul?: string | null;
+  sizeText?: string | null;
+  colorText?: string | null;
+  plannedDona?: number | null;
+  plannedKg?: number | null;
+  readyDona: number;
+  defectDona: number;
+  shippedDona: number;
+  shippedKg: number;
+  remainingDona: number;
+}
+
+/** One cell of the order x stage grid. Empty cells are the point of it. */
+export interface SkladStageCell {
+  lineId: string;
+  stageId: string;
+  stageName: string;
+  stagePosition: number;
+  isFinal: boolean;
+  qtyIn?: number | null;
+  qtyOut?: number | null;
+  defectQty?: number | null;
+  kg?: number | null;
+  entryCount: number;
+  lastOccurredAt?: string | null;
+}
+
+/** How much of one order has gone to one client. */
+export interface SkladOrderClient {
+  counterpartyId?: string | null;
+  counterpartyName: string;
+  shipmentCount: number;
+  shippedDona: number;
+  shippedKg: number;
+  lastShippedAt?: string | null;
+}
+
+/** A line of the analytics screen: one order, end to end. */
+export interface SkladOrderSummary {
+  orderId: string;
+  orderNo?: string | null;
+  orderName?: string | null;
+  status: SkladOrderStatus;
+  deadline?: string | null;
+  counterpartyId?: string | null;
+  counterpartyName?: string | null;
+  managerName?: string | null;
+  lineCount: number;
+  plannedDona: number;
+  readyDona: number;
+  shippedDona: number;
+  remainingDona: number;
+  /** The furthest shop that has reported output — as close to "where is it"
+   * as a single word gets. */
+  currentStage?: string | null;
+  createdAt: string;
+}
+
+export interface SkladStageLoad {
+  stageId: string;
+  stageName: string;
+  stagePosition: number;
+  entryCount: number;
+  qtyOut: number;
+  defectQty: number;
+  kg: number;
+}
+
+export interface SkladShipment {
+  id: string;
+  orgId: string;
+  orderId?: string | null;
+  counterpartyId?: string | null;
+  managerId?: string | null;
+  documentNo?: string | null;
+  shippedAt: string;
+  note?: string | null;
+  createdAt: string;
+}
+
+/**
+ * One typed line of a paper invoice, on its way to sklad_receive_rows.
+ *
+ * Every field is a string because every field is an input the storekeeper
+ * types; the database parses and, for the reference values, creates what does
+ * not exist yet. Sending numbers from here would mean the grid had to validate
+ * before it could save, which is the opposite of typing an invoice.
+ */
+export interface SkladReceiveRow {
+  artikul?: string;
+  kod?: string;
+  name?: string;
+  productType?: string;
+  yarnType?: string;
+  size?: string;
+  sort?: string;
+  color?: string;
+  pantone?: string;
+  gsm?: string;
+  brutto?: string;
+  netto?: string;
+  dona?: string;
+  nabor?: string;
+  pallet?: string;
+  producedAt?: string;
+  notes?: string;
+  pricePerKg?: string;
+  pricePerPiece?: string;
+  pricePerSet?: string;
+  totalAmount?: string;
+  purchaseCost?: string;
+  currency?: string;
+}
+
+export type SkladAuditEntity =
+  'batch' | 'item' | 'price' | 'order' | 'line' | 'stage_entry' | 'shipment';
 
 export interface SkladAuditEntry {
   id: number;

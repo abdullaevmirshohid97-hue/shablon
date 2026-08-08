@@ -14,6 +14,9 @@ import type {
   SkladMovement,
   SkladStockRow,
   SkladAuditEntry,
+  SkladStage,
+  SkladOrderLine,
+  SkladShipment,
 } from '@mubosher/shared';
 import type { Database } from './database.types';
 
@@ -33,6 +36,9 @@ type SkladBatchPageRow = Database['public']['Functions']['sklad_batch_page']['Re
 type SkladMovementRow = Database['public']['Functions']['list_sklad_movements']['Returns'][number];
 type SkladStockRpcRow = Database['public']['Functions']['sklad_stock_by_item']['Returns'][number];
 type SkladAuditRow = Database['public']['Functions']['list_sklad_audit']['Returns'][number];
+type SkladStageRow = Database['public']['Tables']['sklad_stages']['Row'];
+type SkladOrderLineRow = Database['public']['Tables']['sklad_order_lines']['Row'];
+type SkladShipmentRow = Database['public']['Tables']['sklad_shipments']['Row'];
 
 export function toModule(row: ModuleRow): Module {
   return {
@@ -95,6 +101,47 @@ export function toSkladItem(row: SkladItemRow): SkladItem {
   };
 }
 
+export function toSkladStage(row: SkladStageRow): SkladStage {
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    name: row.name,
+    position: row.position,
+    isFinal: row.is_final,
+  };
+}
+
+export function toSkladOrderLine(row: SkladOrderLineRow): SkladOrderLine {
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    orderId: row.order_id,
+    itemId: row.item_id,
+    position: row.position,
+    description: row.description,
+    sizeText: row.size_text,
+    colorText: row.color_text,
+    plannedDona: row.planned_dona,
+    plannedKg: row.planned_kg == null ? null : Number(row.planned_kg),
+    notes: row.notes,
+    createdAt: row.created_at,
+  };
+}
+
+export function toSkladShipment(row: SkladShipmentRow): SkladShipment {
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    orderId: row.order_id,
+    counterpartyId: row.counterparty_id,
+    managerId: row.manager_id,
+    documentNo: row.document_no,
+    shippedAt: row.shipped_at,
+    note: row.note,
+    createdAt: row.created_at,
+  };
+}
+
 export function toSkladOrder(row: SkladOrderRow): SkladOrder {
   return {
     id: row.id,
@@ -102,6 +149,10 @@ export function toSkladOrder(row: SkladOrderRow): SkladOrder {
     orderNo: row.order_no,
     orderName: row.order_name,
     counterpartyId: row.counterparty_id,
+    managerId: row.manager_id,
+    deadline: row.deadline,
+    status: row.status,
+    notes: row.notes,
     createdAt: row.created_at,
   };
 }

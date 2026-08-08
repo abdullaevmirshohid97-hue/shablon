@@ -362,7 +362,8 @@
       "stock": "Ombor qoldig‘i",
       "items": "Mahsulot kartalari",
       "orders": "Buyurtmalar",
-      "settings": "Sozlamalar"
+      "settings": "Sozlamalar",
+      "analytics": "Analitika"
     },
     "totals": {
       "label": "Jami",
@@ -409,7 +410,24 @@
       "createdAt": "Yaratilgan",
       "untitled": "Nomsiz buyurtma",
       "deleteConfirm": "Bu buyurtmani o‘chirasizmi?",
-      "deleteInUse": "Bu buyurtmaga bog‘langan partiyalar bor — avval ularni ajrating."
+      "deleteInUse": "Bu buyurtmaga bog‘langan partiyalar bor — avval ularni ajrating.",
+      "manager": "Menejer",
+      "deadline": "Muddat",
+      "statusLabel": "Holati",
+      "chainTitle": "Ishlab chiqarish zanjiri",
+      "line": "Qator",
+      "addLine": "+ qator",
+      "noLines": "Buyurtmada hali qator yo‘q",
+      "deleteLineConfirm": "Bu qatorni o‘chirasizmi?",
+      "planned": "Reja",
+      "ready": "Tayyor",
+      "shipped": "Yuklandi",
+      "remaining": "Qoldi",
+      "currentStage": "Qaysi sexda",
+      "clientsTitle": "Qaysi klientga qancha ketdi",
+      "noShipments": "Hozircha yuklash bo‘lmagan",
+      "qrAlt": "Buyurtma QR kodi",
+      "qrPrint": "QR chop etish"
     },
     "audit": {
       "title": "Ombor o‘zgarishlari tarixi",
@@ -418,7 +436,65 @@
       "entity_batch": "Partiya",
       "entity_item": "Mahsulot kartasi",
       "entity_price": "Narx",
-      "entity_order": "Buyurtma"
+      "entity_order": "Buyurtma",
+      "entity_line": "Buyurtma qatori",
+      "entity_stage_entry": "Bosqich yozuvi",
+      "entity_shipment": "Yuklash"
+    },
+    "addSingleBatch": "Bitta partiya",
+    "kirim": {
+      "title": "Kirim qilish",
+      "description": "Nakladnoyni qatorma-qator kiriting. Har bir katak qo‘lda yoziladi; ro‘yxatda yo‘q qiymat yozilsa, saqlashda o‘zi qo‘shiladi.",
+      "save": "Saqlash",
+      "saved": "{n} ta qator omborga kiritildi",
+      "nothingToSave": "Kiritilgan qator yo‘q",
+      "addRow": "+ qator qo‘shish",
+      "copyAbove": "Yuqoridagi qatordan nusxa",
+      "newOrderNo": "Yangi buyurtma raqami",
+      "hint": "Oxirgi qatorga yozsangiz, yangi qator o‘zi qo‘shiladi"
+    },
+    "orderStatus": {
+      "yangi": "Yangi",
+      "ishlab_chiqarishda": "Ishlab chiqarishda",
+      "tayyor": "Tayyor",
+      "yuklandi": "Yuklandi",
+      "yopilgan": "Yopilgan"
+    },
+    "stage": {
+      "qtyIn": "Kirdi (dona)",
+      "qtyOut": "Chiqdi (dona)",
+      "executor": "Bajaruvchi",
+      "executorHint": "Brigada yoki xodim nomi",
+      "save": "Yozib qo‘yish",
+      "historyTitle": "Shu bosqich bo‘yicha yozuvlar",
+      "historyEmpty": "Hozircha yozuv yo‘q"
+    },
+    "stageSettings": {
+      "title": "Ishlab chiqarish bosqichlari",
+      "description": "Buyurtma qaysi sexlardan o‘tishini shu yerdan boshqaring. Bittasi tayyor mahsulot ombori bo‘lishi kerak — yuklashga tayyor miqdor o‘shandan hisoblanadi.",
+      "namePlaceholder": "Yangi bosqich",
+      "final": "Tayyor mahsulot",
+      "markFinal": "Tayyor deb belgilash",
+      "deleteConfirm": "Bu bosqichni o‘chirasizmi?",
+      "deleteInUse": "Bu bosqich bo‘yicha yozuvlar bor — avval ularni o‘chiring."
+    },
+    "shipment": {
+      "action": "Yuklash",
+      "title": "Yuklash",
+      "save": "Yuklashni yozib qo‘yish",
+      "documentNo": "Hujjat raqami",
+      "date": "Yuklangan sana",
+      "nowShipping": "Hozir ketyapti",
+      "nothingSelected": "Miqdor kiritilmagan",
+      "count": "Yuklamalar",
+      "lastDate": "Oxirgi yuklash"
+    },
+    "analytics": {
+      "orders": "Buyurtmalar holati",
+      "stageLoad": "Sexlar bo‘yicha ishlab chiqarish",
+      "stock": "Ombor qoldig‘i",
+      "progress": "Bajarildi",
+      "noStages": "Bu davrda yozuv yo‘q"
     }
   },
   "readOnly": {
