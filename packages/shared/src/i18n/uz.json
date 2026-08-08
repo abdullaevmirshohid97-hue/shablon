@@ -257,7 +257,6 @@
       "color": "Rang",
       "pantone": "Pantone",
       "gsm": "Zichligi (GSM)",
-      "size": "O'lcham",
       "sort": "Sort",
       "order": "Buyurtma",
       "customer": "Mijoz",
@@ -272,13 +271,12 @@
     },
     "item": {
       "title": "Mahsulot kartasi",
-      "artikulLabel": "Artikul",
       "kodLabel": "Kod",
       "nameLabel": "Mahsulot nomi",
       "productTypeLabel": "Mahsulot turi",
       "yarnTypeLabel": "Ip turi",
       "gsmLabel": "Zichligi (g/m²)",
-      "sizeLabel": "O'lcham",
+      "sizeLabel": "O‘lcham (eni×bo‘yi)",
       "sortLabel": "Sort",
       "colorLabel": "Rang",
       "pantoneLabel": "Pantone kodi",
@@ -287,7 +285,9 @@
       "deleteConfirm": "Bu mahsulot kartasini o'chirasizmi?",
       "createButton": "Mahsulot qo'shish",
       "empty": "Hozircha mahsulot kartasi yo‘q",
-      "deleteInUse": "Bu mahsulot bo‘yicha ombor partiyalari bor — avval ularni o‘chiring."
+      "deleteInUse": "Bu mahsulot bo‘yicha ombor partiyalari bor — avval ularni o‘chiring.",
+      "lengthLabel": "Bo‘yi (sm)",
+      "widthLabel": "Eni (sm)"
     },
     "batch": {
       "title": "Kirim / partiya",
@@ -298,7 +298,6 @@
       "pieceWeightLabel": "1 dona og'irligi (kg)",
       "donaLabel": "Soni (dona)",
       "naborLabel": "Nabor soni",
-      "palletLabel": "Pallet soni",
       "qoldiqLabel": "Ombordagi qoldiq (dona)",
       "orderLabel": "Buyurtma",
       "newOrder": "+ yangi buyurtma",
@@ -322,7 +321,8 @@
       "save": "Saqlash",
       "saving": "Saqlanmoqda...",
       "deleteConfirm": "Bu partiyani o'chirasizmi?",
-      "qoldiqDerivedNote": "Qoldiq harakatlardan hisoblanadi — uni o‘zgartirish uchun ro‘yxatdagi «Harakat» tugmasidan foydalaning."
+      "qoldiqDerivedNote": "Qoldiq harakatlardan hisoblanadi — uni o‘zgartirish uchun ro‘yxatdagi «Harakat» tugmasidan foydalaning.",
+      "qopLabel": "Qop soni"
     },
     "status": {
       "tayyor": "Tayyor",
@@ -351,7 +351,6 @@
       "description": "Mahsulot kartasidagi tanlash ro'yxatlarini shu yerdan boshqaring.",
       "productType": "Mahsulot turi",
       "yarnType": "Ip turi",
-      "size": "O'lcham",
       "sort": "Sort",
       "color": "Rang",
       "pantone": "Pantone",
@@ -371,7 +370,9 @@
       "settings": "Sozlamalar",
       "analytics": "Analitika",
       "overview": "Umumiy ko‘rinish",
-      "receiving": "Kirim qilish"
+      "receiving": "Kirim qilish",
+      "operations": "Ombor amallari",
+      "issuing": "Chiqim qilish"
     },
     "totals": {
       "label": "Jami",
@@ -511,6 +512,15 @@
       "items": "Mahsulot kartalari",
       "audit": "O‘zgarishlar tarixi",
       "itemsDescription": "Mahsulot kartalari va ularning joriy ombor qoldig‘i."
+    },
+    "chiqim": {
+      "title": "Chiqim qilish",
+      "description": "Omborda qolgan partiyalardan qaysi biri, qancha ketayotganini yozing.",
+      "save": "Chiqimni yozish",
+      "saved": "{n} ta partiya bo‘yicha chiqim yozildi",
+      "nothingSelected": "Miqdor kiritilmagan",
+      "nowIssuing": "Chiqyapti",
+      "empty": "Omborda qoldiq qolmagan"
     }
   },
   "readOnly": {

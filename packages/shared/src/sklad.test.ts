@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   clampShipmentQty,
   completionPercent,
+  formatSize,
   indexStageCells,
   isBlankReceiveRow,
   stageCellKey,
@@ -39,7 +40,7 @@ describe('isBlankReceiveRow', () => {
   });
 
   it('treats whitespace as blank — a tab left behind is not data', () => {
-    expect(isBlankReceiveRow({ artikul: '   ', name: '' })).toBe(true);
+    expect(isBlankReceiveRow({ kod: '   ', name: '' })).toBe(true);
   });
 
   it('treats any real value as filled', () => {
@@ -53,7 +54,7 @@ describe('summariseReceiveRows', () => {
       { netto: '37.18', dona: '125', totalAmount: '148.70' },
       {},
       { netto: '35.08', dona: '65', totalAmount: '192.94' },
-      { artikul: '   ' },
+      { kod: '   ' },
     ]);
 
     expect(totals.rowCount).toBe(2);
@@ -155,6 +156,30 @@ describe('clampShipmentQty', () => {
   it('allows nothing against a row that is already fully despatched', () => {
     expect(clampShipmentQty('10', 0)).toBe('0');
     expect(clampShipmentQty('10', -3)).toBe('0');
+  });
+});
+
+describe('formatSize', () => {
+  it('writes a whole measurement without a decimal', () => {
+    expect(formatSize(70, 130)).toBe('70x130');
+  });
+
+  it('keeps a real half', () => {
+    expect(formatSize(70.5, 130)).toBe('70.5x130');
+  });
+
+  it('parses a numeric that arrived as a string, .0 and all', () => {
+    expect(formatSize('70.0', '130.0')).toBe('70x130');
+  });
+
+  it('shows the one measurement it has', () => {
+    expect(formatSize(70, null)).toBe('70');
+    expect(formatSize(null, 130)).toBe('130');
+  });
+
+  it('says nothing rather than 0 for an unmeasured card', () => {
+    expect(formatSize(null, null)).toBe('—');
+    expect(formatSize(undefined, undefined)).toBe('—');
   });
 });
 

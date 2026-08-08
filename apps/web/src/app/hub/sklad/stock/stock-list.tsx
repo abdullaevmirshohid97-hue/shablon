@@ -11,7 +11,7 @@ import {
   SKLAD_PAGE_SIZE,
   type SkladBatchFilters,
 } from '@mubosher/api-client';
-import type { SkladBatchStatus } from '@mubosher/shared';
+import { formatSize, type SkladBatchStatus } from '@mubosher/shared';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
@@ -51,7 +51,8 @@ const EXTRA_FILTER_KEYS = [
   'colorId',
   'pantoneId',
   'gsm',
-  'sizeId',
+  'widthCm',
+  'lengthCm',
   'sortId',
   'orderId',
   'counterpartyId',
@@ -271,17 +272,20 @@ export function StockList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
                 </option>
               ))}
             </Select>
-            <Select
-              value={filters.sizeId ?? ''}
-              onChange={(e) => setFilter('sizeId', e.target.value)}
-            >
-              <option value="">{t('sklad.filters.size')}</option>
-              {(lookupsByKind.get('olcham') ?? []).map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.name}
-                </option>
-              ))}
-            </Select>
+            <Input
+              type="number"
+              step="0.1"
+              value={filters.lengthCm ?? ''}
+              onChange={(e) => setFilter('lengthCm', e.target.value)}
+              placeholder={t('sklad.item.lengthLabel')}
+            />
+            <Input
+              type="number"
+              step="0.1"
+              value={filters.widthCm ?? ''}
+              onChange={(e) => setFilter('widthCm', e.target.value)}
+              placeholder={t('sklad.item.widthLabel')}
+            />
             <Select
               value={filters.sortId ?? ''}
               onChange={(e) => setFilter('sortId', e.target.value)}
@@ -338,10 +342,10 @@ export function StockList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
           <table className="w-full min-w-[1000px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-                <th className="py-1.5 pr-3 font-medium">{t('sklad.item.artikulLabel')}</th>
+                <th className="py-1.5 pr-3 font-medium">{t('sklad.item.kodLabel')}</th>
                 <th className="py-1.5 pr-3 font-medium">{t('sklad.item.nameLabel')}</th>
                 <th className="py-1.5 pr-3 font-medium">{t('sklad.filters.color')}</th>
-                <th className="py-1.5 pr-3 font-medium">{t('sklad.filters.size')}</th>
+                <th className="py-1.5 pr-3 font-medium">{t('sklad.item.sizeLabel')}</th>
                 <th className="py-1.5 pr-3 text-right font-medium">{t('sklad.batch.donaLabel')}</th>
                 <th className="py-1.5 pr-3 text-right font-medium">
                   {t('sklad.batch.qoldiqLabel')}
@@ -361,10 +365,10 @@ export function StockList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
             <tbody>
               {rows.map((b) => (
                 <tr key={b.id} className="border-b border-slate-100">
-                  <td className="py-1.5 pr-3">{b.artikul ?? '—'}</td>
+                  <td className="py-1.5 pr-3">{b.kod ?? '—'}</td>
                   <td className="py-1.5 pr-3">{b.itemName}</td>
                   <td className="py-1.5 pr-3">{b.colorName ?? '—'}</td>
-                  <td className="py-1.5 pr-3">{b.sizeName ?? '—'}</td>
+                  <td className="py-1.5 pr-3 tabular-nums">{formatSize(b.widthCm, b.lengthCm)}</td>
                   <td className="py-1.5 pr-3 text-right tabular-nums text-slate-500">
                     {num(b.donaSoni, qtyFormat)}
                   </td>

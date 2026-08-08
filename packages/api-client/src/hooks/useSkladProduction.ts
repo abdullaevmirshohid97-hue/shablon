@@ -7,6 +7,8 @@ import type {
   SkladOrderLine,
   SkladOrderStatus,
   SkladOrderSummary,
+  SkladIssuableBatch,
+  SkladIssueRow,
   SkladReceiveRow,
   SkladStage,
   SkladStageCell,
@@ -198,7 +200,7 @@ export function useSkladOrderDetail(
           position: r.line_position,
           description: r.description,
           itemName: r.item_name,
-          artikul: r.artikul,
+          kod: r.kod,
           sizeText: r.size_text,
           colorText: r.color_text,
           plannedDona: r.planned_dona,
@@ -507,6 +509,97 @@ export function useSkladStageLoad(
         defectQty: Number(r.defect_qty),
         kg: Number(r.kg),
       }));
+    },
+  });
+}
+
+// ---------------------------------------------------------------------
+// Despatch
+// ---------------------------------------------------------------------
+
+/** Every batch with something left on it, for the despatch grid to pick from. */
+export function useIssuableBatches(
+  supabase: SupabaseClient<Database>,
+  orgId: string | undefined,
+  search = '',
+) {
+  return useQuery({
+    queryKey: ['sklad-issuable', orgId, search],
+    enabled: !!orgId,
+    queryFn: async (): Promise<SkladIssuableBatch[]> => {
+      const { data, error } = await supabase.rpc('sklad_issuable_batches', {
+        target_org_id: orgId!,
+        p_search: search.trim() || null,
+        p_limit: 300,
+      });
+      if (error) throw error;
+      return (data ?? []).map((r) => ({
+        batchId: r.batch_id,
+        itemId: r.item_id,
+        kod: r.kod,
+        itemName: r.item_name,
+        productType: r.product_type,
+        widthCm: r.width_cm == null ? null : Number(r.width_cm),
+        lengthCm: r.length_cm == null ? null : Number(r.length_cm),
+        colorName: r.color_name,
+        sortName: r.sort_name,
+        qoldiqDona: Number(r.qoldiq_dona),
+        pieceWeightKg: r.piece_weight_kg == null ? null : Number(r.piece_weight_kg),
+        orderId: r.order_id,
+        orderNo: r.order_no,
+        omborgaKirganSana: r.omborga_kirgan_sana,
+      }));
+    },
+  });
+}
+
+/**
+ * Sends a whole despatch in one call.
+ *
+ * The counterpart of useReceiveSkladRows: one document, several batches, one
+ * transaction. Every line goes through the same stock rules as a single
+ * movement does, so a line that would overdraw a batch aborts the despatch
+ * rather than leaving half a truck recorded.
+ */
+export function useIssueSkladRows(supabase: SupabaseClient<Database>) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      orgId: string;
+      rows: SkladIssueRow[];
+      counterpartyId?: string | null;
+      orderId?: string | null;
+      managerId?: string | null;
+      documentNo?: string | null;
+      shippedAt?: string | null;
+      note?: string | null;
+    }): Promise<string> => {
+      const { data, error } = await supabase.rpc('sklad_issue_rows', {
+        target_org_id: input.orgId,
+        p_rows: input.rows,
+        p_counterparty_id: input.counterpartyId ?? null,
+        p_order_id: input.orderId ?? null,
+        p_manager_id: input.managerId ?? null,
+        p_document_no: input.documentNo ?? null,
+        p_shipped_at: input.shippedAt ?? null,
+        p_note: input.note ?? null,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, { orgId }) => {
+      for (const key of [
+        'sklad-batch-page',
+        'sklad-batches',
+        'sklad-issuable',
+        'sklad-stock',
+        'sklad-order-summary',
+        'sklad-shipments',
+      ]) {
+        void queryClient.invalidateQueries({ queryKey: [key, orgId] });
+      }
+      void queryClient.invalidateQueries({ queryKey: ['sklad-order-detail'] });
     },
   });
 }

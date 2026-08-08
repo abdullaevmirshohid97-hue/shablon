@@ -37,11 +37,11 @@ const COLUMNS: Column[] = [
     width: 'w-40',
   },
   { field: 'kod', labelKey: 'sklad.item.kodLabel', width: 'w-24' },
-  { field: 'artikul', labelKey: 'sklad.item.artikulLabel', width: 'w-24' },
   { field: 'name', labelKey: 'sklad.item.nameLabel', width: 'w-44' },
   { field: 'gsm', labelKey: 'sklad.item.gsmLabel', numeric: true, width: 'w-20' },
   { field: 'yarnType', labelKey: 'sklad.item.yarnTypeLabel', lookupKind: 'ip_turi', width: 'w-28' },
-  { field: 'size', labelKey: 'sklad.item.sizeLabel', lookupKind: 'olcham', width: 'w-28' },
+  { field: 'length', labelKey: 'sklad.item.lengthLabel', numeric: true, width: 'w-20' },
+  { field: 'width', labelKey: 'sklad.item.widthLabel', numeric: true, width: 'w-20' },
   { field: 'sort', labelKey: 'sklad.item.sortLabel', lookupKind: 'sort', width: 'w-20' },
   { field: 'color', labelKey: 'sklad.item.colorLabel', lookupKind: 'rang', width: 'w-28' },
   { field: 'pantone', labelKey: 'sklad.item.pantoneLabel', lookupKind: 'pantone', width: 'w-28' },
@@ -49,7 +49,7 @@ const COLUMNS: Column[] = [
   { field: 'netto', labelKey: 'sklad.batch.nettoLabel', numeric: true, width: 'w-24' },
   { field: 'dona', labelKey: 'sklad.batch.donaLabel', numeric: true, width: 'w-20' },
   { field: 'nabor', labelKey: 'sklad.batch.naborLabel', numeric: true, width: 'w-20' },
-  { field: 'pallet', labelKey: 'sklad.batch.palletLabel', numeric: true, width: 'w-20' },
+  { field: 'qop', labelKey: 'sklad.batch.qopLabel', numeric: true, width: 'w-20' },
   { field: 'notes', labelKey: 'sklad.batch.notesLabel', width: 'w-40' },
   {
     field: 'pricePerKg',
@@ -391,7 +391,7 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
       </Card>
 
       {/* One datalist per lookup kind, shared by every cell in that column. */}
-      {['mahsulot_turi', 'ip_turi', 'olcham', 'sort', 'rang', 'pantone'].map((kind) => (
+      {['mahsulot_turi', 'ip_turi', 'sort', 'rang', 'pantone'].map((kind) => (
         <datalist key={kind} id={`sklad-suggest-${kind}`}>
           {(suggestions.get(kind) ?? []).map((name) => (
             <option key={name} value={name} />

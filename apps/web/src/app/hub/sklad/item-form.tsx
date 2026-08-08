@@ -23,13 +23,13 @@ export function ItemForm({
   const createItem = useCreateSkladItem(supabase);
   const updateItem = useUpdateSkladItem(supabase);
 
-  const [artikul, setArtikul] = useState(item?.artikul ?? '');
   const [kod, setKod] = useState(item?.kod ?? '');
   const [name, setName] = useState(item?.name ?? '');
   const [gsm, setGsm] = useState(item?.gsm != null ? String(item.gsm) : '');
+  const [width, setWidth] = useState(item?.widthCm != null ? String(item.widthCm) : '');
+  const [length, setLength] = useState(item?.lengthCm != null ? String(item.lengthCm) : '');
   const [productTypeId, setProductTypeId] = useState(item?.productTypeId ?? '');
   const [yarnTypeId, setYarnTypeId] = useState(item?.yarnTypeId ?? '');
-  const [sizeId, setSizeId] = useState(item?.sizeId ?? '');
   const [sortId, setSortId] = useState(item?.sortId ?? '');
   const [colorId, setColorId] = useState(item?.colorId ?? '');
   const [pantoneId, setPantoneId] = useState(item?.pantoneId ?? '');
@@ -47,13 +47,13 @@ export function ItemForm({
 
     const input = {
       orgId,
-      artikul: artikul || null,
       kod: kod || null,
       name: name.trim(),
       productTypeId: productTypeId || null,
       yarnTypeId: yarnTypeId || null,
       gsm: gsm ? Number(gsm) : null,
-      sizeId: sizeId || null,
+      widthCm: width ? Number(width) : null,
+      lengthCm: length ? Number(length) : null,
       sortId: sortId || null,
       colorId: colorId || null,
       pantoneId: pantoneId || null,
@@ -77,15 +77,9 @@ export function ItemForm({
         <h2 className="mb-4 text-base font-semibold text-slate-900">{t('sklad.item.title')}</h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>{t('sklad.item.artikulLabel')}</Label>
-              <Input type="text" value={artikul} onChange={(e) => setArtikul(e.target.value)} />
-            </div>
-            <div>
-              <Label>{t('sklad.item.kodLabel')}</Label>
-              <Input type="text" value={kod} onChange={(e) => setKod(e.target.value)} />
-            </div>
+          <div>
+            <Label>{t('sklad.item.kodLabel')}</Label>
+            <Input type="text" value={kod} onChange={(e) => setKod(e.target.value)} />
           </div>
 
           <div>
@@ -121,15 +115,22 @@ export function ItemForm({
               <Input type="number" value={gsm} onChange={(e) => setGsm(e.target.value)} />
             </div>
             <div>
-              <Label>{t('sklad.item.sizeLabel')}</Label>
-              <Select value={sizeId} onChange={(e) => setSizeId(e.target.value)}>
-                <option value=""></option>
-                {optionsFor('olcham').map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-              </Select>
+              <Label>{t('sklad.item.lengthLabel')}</Label>
+              <Input
+                type="number"
+                step="0.1"
+                value={length}
+                onChange={(e) => setLength(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>{t('sklad.item.widthLabel')}</Label>
+              <Input
+                type="number"
+                step="0.1"
+                value={width}
+                onChange={(e) => setWidth(e.target.value)}
+              />
             </div>
             <div>
               <Label>{t('sklad.item.sortLabel')}</Label>

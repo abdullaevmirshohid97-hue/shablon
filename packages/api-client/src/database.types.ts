@@ -229,13 +229,13 @@ export interface Database {
         Row: {
           id: string;
           org_id: string;
-          kind: 'mahsulot_turi' | 'ip_turi' | 'olcham' | 'sort' | 'rang' | 'pantone';
+          kind: 'mahsulot_turi' | 'ip_turi' | 'sort' | 'rang' | 'pantone';
           name: string;
           created_at: string;
         };
         Insert: Partial<Database['public']['Tables']['sklad_lookups']['Row']> & {
           org_id: string;
-          kind: 'mahsulot_turi' | 'ip_turi' | 'olcham' | 'sort' | 'rang' | 'pantone';
+          kind: 'mahsulot_turi' | 'ip_turi' | 'sort' | 'rang' | 'pantone';
           name: string;
         };
         Update: Partial<Database['public']['Tables']['sklad_lookups']['Row']>;
@@ -245,13 +245,14 @@ export interface Database {
         Row: {
           id: string;
           org_id: string;
-          artikul: string | null;
           kod: string | null;
           name: string;
           product_type_id: string | null;
           yarn_type_id: string | null;
           gsm: number | null;
-          size_id: string | null;
+          // 0026: two numbers instead of a "70x130" lookup.
+          width_cm: number | null;
+          length_cm: number | null;
           sort_id: string | null;
           color_id: string | null;
           pantone_id: string | null;
@@ -297,7 +298,7 @@ export interface Database {
           tara_kg: number | null;
           dona_soni: number | null;
           nabor_soni: number | null;
-          pallet_soni: number | null;
+          qop_soni: number | null;
           piece_weight_kg: number | null;
           qoldiq_dona: number | null;
           ishlab_chiqarilgan_sana: string | null;
@@ -723,9 +724,10 @@ export interface Database {
           p_product_type_id?: string | null;
           p_color_id?: string | null;
           p_pantone_id?: string | null;
-          p_size_id?: string | null;
           p_sort_id?: string | null;
           p_gsm?: number | null;
+          p_width_cm?: number | null;
+          p_length_cm?: number | null;
           p_order_id?: string | null;
           p_counterparty_id?: string | null;
           // text at the database boundary, enum-valued in practice.
@@ -740,12 +742,12 @@ export interface Database {
           id: string;
           item_id: string;
           order_id: string | null;
-          artikul: string | null;
           kod: string | null;
           item_name: string;
           product_type: string | null;
           yarn_type: string | null;
-          size_name: string | null;
+          width_cm: number | null;
+          length_cm: number | null;
           sort_name: string | null;
           color_name: string | null;
           pantone_code: string | null;
@@ -756,7 +758,7 @@ export interface Database {
           piece_weight_kg: number | null;
           dona_soni: number | null;
           nabor_soni: number | null;
-          pallet_soni: number | null;
+          qop_soni: number | null;
           qoldiq_dona: number | null;
           qoldiq_kg: number | null;
           ishlab_chiqarilgan_sana: string | null;
@@ -789,6 +791,41 @@ export interface Database {
           /** Null when the filtered set mixes currencies — the sum is then
            * not a figure anyone should be shown. */
           sum_currency: string | null;
+        }[];
+      };
+      // Despatch (0026): the counterpart of sklad_receive_rows — one document,
+      // several batches, one transaction, and the stock movements recorded
+      // through the same rules as everywhere else.
+      sklad_issue_rows: {
+        Args: {
+          target_org_id: string;
+          p_rows: unknown;
+          p_counterparty_id?: string | null;
+          p_order_id?: string | null;
+          p_manager_id?: string | null;
+          p_document_no?: string | null;
+          p_shipped_at?: string | null;
+          p_note?: string | null;
+        };
+        Returns: string;
+      };
+      sklad_issuable_batches: {
+        Args: { target_org_id: string; p_search?: string | null; p_limit?: number | null };
+        Returns: {
+          batch_id: string;
+          item_id: string;
+          kod: string | null;
+          item_name: string;
+          product_type: string | null;
+          width_cm: number | null;
+          length_cm: number | null;
+          color_name: string | null;
+          sort_name: string | null;
+          qoldiq_dona: number;
+          piece_weight_kg: number | null;
+          order_id: string | null;
+          order_no: string | null;
+          omborga_kirgan_sana: string;
         }[];
       };
       record_sklad_movement: {
@@ -837,7 +874,7 @@ export interface Database {
           line_position: number;
           description: string | null;
           item_name: string | null;
-          artikul: string | null;
+          kod: string | null;
           size_text: string | null;
           color_text: string | null;
           planned_dona: number | null;
@@ -939,7 +976,7 @@ export interface Database {
           changed_at: string;
           changed_by_name: string | null;
           item_name: string | null;
-          artikul: string | null;
+          kod: string | null;
           old_row: Record<string, unknown> | null;
           new_row: Record<string, unknown> | null;
         }[];
@@ -948,10 +985,11 @@ export interface Database {
         Args: { target_org_id: string };
         Returns: {
           item_id: string;
-          artikul: string | null;
+          kod: string | null;
           item_name: string;
           product_type: string | null;
-          size_name: string | null;
+          width_cm: number | null;
+          length_cm: number | null;
           color_name: string | null;
           batch_count: number;
           total_dona: number;

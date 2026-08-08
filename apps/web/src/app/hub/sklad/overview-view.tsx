@@ -282,7 +282,7 @@ export function OverviewView({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin:
                 {(stock ?? []).map((s) => (
                   <tr key={s.itemId} className="border-b border-slate-100">
                     <td className="py-1.5 pr-3">
-                      {s.artikul ? `${s.artikul} — ` : ''}
+                      {s.kod ? `${s.kod} — ` : ''}
                       {s.itemName}
                     </td>
                     <td className="py-1.5 pr-3 text-right font-medium tabular-nums">

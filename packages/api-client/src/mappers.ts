@@ -87,13 +87,13 @@ export function toSkladItem(row: SkladItemRow): SkladItem {
   return {
     id: row.id,
     orgId: row.org_id,
-    artikul: row.artikul,
     kod: row.kod,
     name: row.name,
     productTypeId: row.product_type_id,
     yarnTypeId: row.yarn_type_id,
     gsm: row.gsm,
-    sizeId: row.size_id,
+    widthCm: num(row.width_cm),
+    lengthCm: num(row.length_cm),
     sortId: row.sort_id,
     colorId: row.color_id,
     pantoneId: row.pantone_id,
@@ -177,7 +177,7 @@ export function toSkladBatchPrice(row: SkladBatchPriceRow): SkladBatchPrice {
  * file carries no Relationships metadata for supabase-js to infer cardinality from; PostgREST
  * actually sends an object for each of them, which is why they are read through `one()`. */
 export type SkladBatchEmbeddedRow = SkladBatchTableRow & {
-  sklad_items: { name: string; artikul: string | null }[] | null;
+  sklad_items: { name: string; kod: string | null }[] | null;
   sklad_orders:
     | {
         order_no: string | null;
@@ -203,7 +203,7 @@ export function toSkladBatch(row: SkladBatchEmbeddedRow): SkladBatch {
     taraKg: row.tara_kg,
     donaSoni: row.dona_soni,
     naborSoni: row.nabor_soni,
-    palletSoni: row.pallet_soni,
+    qopSoni: row.qop_soni,
     pieceWeightKg: row.piece_weight_kg,
     qoldiqDona: row.qoldiq_dona,
     ishlabChiqarilganSana: row.ishlab_chiqarilgan_sana,
@@ -220,7 +220,7 @@ export function toSkladBatch(row: SkladBatchEmbeddedRow): SkladBatch {
     locationShelf: row.location_shelf,
     createdAt: row.created_at,
     itemName: item?.name,
-    itemArtikul: item?.artikul ?? null,
+    itemKod: item?.kod ?? null,
     orderNo: order?.order_no ?? null,
     orderName: order?.order_name ?? null,
     counterpartyName: one(order?.counterparties)?.name ?? null,
@@ -256,12 +256,12 @@ export function toSkladBatchRow(row: SkladBatchPageRow): SkladBatchRow {
     id: row.id,
     itemId: row.item_id,
     orderId: row.order_id,
-    artikul: row.artikul,
     kod: row.kod,
     itemName: row.item_name,
     productType: row.product_type,
     yarnType: row.yarn_type,
-    sizeName: row.size_name,
+    widthCm: num(row.width_cm),
+    lengthCm: num(row.length_cm),
     sortName: row.sort_name,
     colorName: row.color_name,
     pantoneCode: row.pantone_code,
@@ -272,7 +272,7 @@ export function toSkladBatchRow(row: SkladBatchPageRow): SkladBatchRow {
     pieceWeightKg: num(row.piece_weight_kg),
     donaSoni: row.dona_soni,
     naborSoni: row.nabor_soni,
-    palletSoni: row.pallet_soni,
+    qopSoni: row.qop_soni,
     qoldiqDona: row.qoldiq_dona,
     qoldiqKg: num(row.qoldiq_kg),
     ishlabChiqarilganSana: row.ishlab_chiqarilgan_sana,
@@ -324,10 +324,11 @@ export function toSkladMovement(row: SkladMovementRow): SkladMovement {
 export function toSkladStockRow(row: SkladStockRpcRow): SkladStockRow {
   return {
     itemId: row.item_id,
-    artikul: row.artikul,
+    kod: row.kod,
     itemName: row.item_name,
     productType: row.product_type,
-    sizeName: row.size_name,
+    widthCm: num(row.width_cm),
+    lengthCm: num(row.length_cm),
     colorName: row.color_name,
     batchCount: Number(row.batch_count),
     totalDona: Number(row.total_dona),
@@ -345,7 +346,7 @@ export function toSkladAuditEntry(row: SkladAuditRow): SkladAuditEntry {
     changedAt: row.changed_at,
     changedByName: row.changed_by_name,
     itemName: row.item_name,
-    artikul: row.artikul,
+    kod: row.kod,
     oldRow: row.old_row,
     newRow: row.new_row,
   };

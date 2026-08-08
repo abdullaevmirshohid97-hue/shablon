@@ -18,9 +18,9 @@ set app.current_user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
 -- ---------------------------------------------------------------------
 -- Fixture: one product card and one batch of 100 pieces.
 -- ---------------------------------------------------------------------
-insert into sklad_items (id, org_id, artikul, name, gsm)
+insert into sklad_items (id, org_id, kod, name, gsm, width_cm, length_cm)
 values ('f1000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111',
-        'A-100', 'Armul maxroviy 70x130', 350);
+        'A-100', 'Armul maxroviy', 350, 70, 130);
 
 insert into sklad_orders (id, org_id, order_no, counterparty_id)
 values ('f2000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111',
@@ -142,25 +142,25 @@ begin
   perform test_report('a human edit is recorded', v_after = v_before + 1);
 end $$;
 
--- =========== 7. one artikul, one product card ===========
+-- =========== 7. one kod, one product card ===========
 do $$
 begin
-  insert into sklad_items (org_id, artikul, name)
+  insert into sklad_items (org_id, kod, name)
   values ('11111111-1111-1111-1111-111111111111', 'A-100', 'Nusxa');
-  perform test_report('a duplicate artikul is refused', false);
+  perform test_report('a duplicate kod is refused', false);
 exception when unique_violation then
-  perform test_report('a duplicate artikul is refused', true);
+  perform test_report('a duplicate kod is refused', true);
 end $$;
 
--- Blank artikuls stay free: two cards may both be waiting for one.
+-- A blank kod stays free: two cards may both be waiting for one.
 do $$
 begin
-  insert into sklad_items (org_id, artikul, name)
+  insert into sklad_items (org_id, kod, name)
   values ('11111111-1111-1111-1111-111111111111', null, 'Nomsiz 1'),
          ('11111111-1111-1111-1111-111111111111', null, 'Nomsiz 2');
-  perform test_report('cards without an artikul are still allowed', true);
+  perform test_report('cards without a kod are still allowed', true);
 exception when others then
-  perform test_report('cards without an artikul are still allowed', false);
+  perform test_report('cards without a kod are still allowed', false);
 end $$;
 
 -- ---------------------------------------------------------------------
@@ -214,17 +214,17 @@ begin
   -- Still the staff member: creating reference data is the point.
   select sklad_receive_rows(
     '11111111-1111-1111-1111-111111111111',
-    '[{"artikul":"B-200","name":"Jakkard velyur","productType":"Jakkard velyur",
-       "color":"Kulrang","size":"70x140","gsm":"500","netto":"48.5","dona":"108"},
+    '[{"kod":"B-200","name":"Jakkard velyur","productType":"Jakkard velyur",
+       "color":"Kulrang","width":"70","length":"140","gsm":"500","netto":"48.5","dona":"108"},
       {},
-      {"artikul":"B-200","netto":"12.0","dona":"27"}]'::jsonb,
+      {"kod":"B-200","netto":"12.0","dona":"27"}]'::jsonb,
     'f2000000-0000-0000-0000-000000000001'
   ) into v_count;
 
   perform test_report('blank grid rows are skipped, not rejected', v_count = 2);
 
   select id into v_item from sklad_items
-  where org_id = '11111111-1111-1111-1111-111111111111' and artikul = 'B-200';
+  where org_id = '11111111-1111-1111-1111-111111111111' and kod = 'B-200';
   perform test_report('a typed invoice line creates its product card', v_item is not null);
 
   select id into v_lookup from sklad_lookups
@@ -237,12 +237,12 @@ do $$
 declare v_cards bigint; v_batches bigint;
 begin
   select count(*) into v_cards from sklad_items
-  where org_id = '11111111-1111-1111-1111-111111111111' and artikul = 'B-200';
+  where org_id = '11111111-1111-1111-1111-111111111111' and kod = 'B-200';
   select count(*) into v_batches from sklad_batches b
   join sklad_items i on i.id = b.item_id
-  where i.artikul = 'B-200';
+  where i.kod = 'B-200';
 
-  perform test_report('a repeated artikul reuses the one card', v_cards = 1);
+  perform test_report('a repeated kod reuses the one card', v_cards = 1);
   perform test_report('but each invoice line is its own batch', v_batches = 2);
 end $$;
 
@@ -251,7 +251,7 @@ declare v_qoldiq integer;
 begin
   select qoldiq_dona into v_qoldiq from sklad_batches b
   join sklad_items i on i.id = b.item_id
-  where i.artikul = 'B-200' and b.dona_soni = 108;
+  where i.kod = 'B-200' and b.dona_soni = 108;
   perform test_report('a received batch starts with its full count in stock', v_qoldiq = 108);
 end $$;
 
@@ -261,14 +261,14 @@ declare v_prices bigint;
 begin
   perform sklad_receive_rows(
     '11111111-1111-1111-1111-111111111111',
-    '[{"artikul":"C-300","name":"Vafel","netto":"10","dona":"20",
+    '[{"kod":"C-300","name":"Vafel","netto":"10","dona":"20",
        "pricePerKg":"9.99","totalAmount":"99.90"}]'::jsonb);
 
   set role postgres;
   select count(*) into v_prices from sklad_batch_prices p
   join sklad_batches b on b.id = p.batch_id
   join sklad_items i on i.id = b.item_id
-  where i.artikul = 'C-300';
+  where i.kod = 'C-300';
   set role app_user;
 
   perform test_report('staff receiving cannot write a price, even if one is sent',
@@ -282,16 +282,105 @@ declare v_price numeric;
 begin
   perform sklad_receive_rows(
     '11111111-1111-1111-1111-111111111111',
-    '[{"artikul":"D-400","name":"Pештамал","netto":"10","dona":"20",
+    '[{"kod":"D-400","name":"Pештамал","netto":"10","dona":"20",
        "pricePerKg":"5.50","totalAmount":"55.00","currency":"USD"}]'::jsonb);
 
   select p.total_amount into v_price from sklad_batch_prices p
   join sklad_batches b on b.id = p.batch_id
   join sklad_items i on i.id = b.item_id
-  where i.artikul = 'D-400';
+  where i.kod = 'D-400';
 
   perform test_report('an admin receiving does write the price', v_price = 55.00);
 end $$;
+
+-- ---------------------------------------------------------------------
+-- 9b. Dimensions and despatch in bulk (0026).
+-- ---------------------------------------------------------------------
+do $$
+declare v_w numeric; v_l numeric;
+begin
+  select width_cm, length_cm into v_w, v_l
+  from sklad_items
+  where org_id = '11111111-1111-1111-1111-111111111111' and kod = 'B-200';
+  perform test_report('typed dimensions land on the card as two numbers',
+                      v_w = 70 and v_l = 140);
+end $$;
+
+do $$
+declare v_size text;
+begin
+  select sklad_size_text(70, 130) into v_size;
+  -- numeric(6,1) renders 70.0; the invoice says 70.
+  perform test_report('a whole measurement prints without a decimal', v_size = '70x130');
+end $$;
+
+do $$
+declare v_shipment uuid; v_qoldiq integer; v_batch uuid; v_lines bigint;
+begin
+  select b.id, b.qoldiq_dona into v_batch, v_qoldiq
+  from sklad_batches b join sklad_items i on i.id = b.item_id
+  where i.kod = 'B-200' and b.dona_soni = 108;
+
+  select sklad_issue_rows(
+    '11111111-1111-1111-1111-111111111111',
+    format('[{"batchId":"%s","dona":"8"},{"batchId":"","dona":""}]', v_batch)::jsonb,
+    'eeeeeeee-0000-0000-0000-000000000001',
+    null,
+    'aaaaaaaa-0000-0000-0000-000000000001',
+    'CH-1'
+  ) into v_shipment;
+
+  select count(*) into v_lines from sklad_shipment_lines where shipment_id = v_shipment;
+  select qoldiq_dona into v_qoldiq from sklad_batches where id = v_batch;
+
+  perform test_report('a bulk despatch skips its blank rows', v_lines = 1);
+  perform test_report('and takes the goods off the shelf', v_qoldiq = 100);
+end $$;
+
+do $$
+declare v_kind text; v_dona integer;
+begin
+  select m.kind::text, m.dona into v_kind, v_dona
+  from sklad_movements m
+  join sklad_batches b on b.id = m.batch_id
+  join sklad_items i on i.id = b.item_id
+  where i.kod = 'B-200' and m.kind = 'chiqim';
+  perform test_report('the despatch went through the stock ledger, not around it',
+                      v_kind = 'chiqim' and v_dona = -8);
+end $$;
+
+-- The whole document fails together: a line that would overdraw takes the
+-- lines before it with it, so no half-loaded truck is ever recorded.
+do $$
+declare v_batch uuid; v_before integer; v_after integer; v_shipments bigint;
+begin
+  select b.id, b.qoldiq_dona into v_batch, v_before
+  from sklad_batches b join sklad_items i on i.id = b.item_id
+  where i.kod = 'B-200' and b.dona_soni = 108;
+  select count(*) into v_shipments from sklad_shipments;
+
+  begin
+    perform sklad_issue_rows(
+      '11111111-1111-1111-1111-111111111111',
+      format('[{"batchId":"%s","dona":"5"},{"batchId":"%s","dona":"99999"}]', v_batch, v_batch)::jsonb,
+      'eeeeeeee-0000-0000-0000-000000000001');
+    perform test_report('an overdrawn line aborts the whole despatch', false);
+  exception when others then
+    perform test_report('an overdrawn line aborts the whole despatch', true);
+  end;
+
+  select qoldiq_dona into v_after from sklad_batches where id = v_batch;
+  perform test_report('and the good line before it is rolled back too', v_after = v_before);
+end $$;
+
+do $$
+declare v_rows bigint;
+begin
+  select count(*) into v_rows
+  from sklad_issuable_batches('11111111-1111-1111-1111-111111111111'::uuid, 'B-200');
+  perform test_report('the despatch picker offers only batches with stock left', v_rows = 2);
+end $$;
+
 
 -- ---------------------------------------------------------------------
 -- 10. The production chain.

@@ -20,7 +20,6 @@ const FIELD_LABELS: Record<string, string> = {
   notes: 'sklad.batch.notesLabel',
   defect_type: 'sklad.batch.defectTypeLabel',
   defect_qty: 'sklad.batch.defectQtyLabel',
-  artikul: 'sklad.item.artikulLabel',
   kod: 'sklad.item.kodLabel',
   name: 'sklad.item.nameLabel',
   gsm: 'sklad.item.gsmLabel',
@@ -123,7 +122,7 @@ export function SkladAuditLog({ orgId }: { orgId: string }) {
                     </span>
                   </td>
                   <td className="py-1.5 pr-3 text-slate-700">
-                    {entry.artikul ? `${entry.artikul} — ` : ''}
+                    {entry.kod ? `${entry.kod} — ` : ''}
                     {entry.itemName ?? '—'}
                   </td>
                   <td className="py-1.5">

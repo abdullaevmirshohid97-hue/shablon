@@ -16,7 +16,7 @@ function todayIso(): string {
 
 function lineLabel(line: SkladLineProgress): string {
   return (
-    [line.artikul, line.itemName ?? line.description, line.sizeText, line.colorText]
+    [line.kod, line.itemName ?? line.description, line.sizeText, line.colorText]
       .filter(Boolean)
       .join(' · ') || '—'
   );

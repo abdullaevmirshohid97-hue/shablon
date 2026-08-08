@@ -54,7 +54,7 @@ const kgFormat = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
 
 function lineLabel(line: SkladLineProgress): string {
   return (
-    [line.artikul, line.itemName ?? line.description, line.sizeText, line.colorText]
+    [line.kod, line.itemName ?? line.description, line.sizeText, line.colorText]
       .filter(Boolean)
       .join(' · ') || '—'
   );

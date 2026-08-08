@@ -97,7 +97,7 @@ export function MovementForm({
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-5 shadow-popover">
         <h2 className="text-base font-semibold text-slate-900">{t('sklad.movement.title')}</h2>
         <p className="mt-0.5 text-sm text-slate-500">
-          {batch.artikul ? `${batch.artikul} — ` : ''}
+          {batch.kod ? `${batch.kod} — ` : ''}
           {batch.itemName}
         </p>
 

@@ -106,6 +106,32 @@ export function clampShipmentQty(input: string, remaining: number): string {
   return String(Math.min(Math.max(parsed, 0), Math.max(remaining, 0)));
 }
 
+/**
+ * A dimension the way the invoice writes it: 70, not 70.0 — but 70.5 when it
+ * really is a half. The column is numeric(6,1), so every whole number arrives
+ * with a decimal that nobody wants to read.
+ */
+export function formatDimension(value: number | string | null | undefined): string {
+  if (value == null || value === '') return '';
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return '';
+  // A JS number carries no trailing zeros, so 70.0 already prints as "70".
+  // The parse is what matters: numeric columns can arrive over the wire as
+  // strings, and "70.0" concatenated raw is what put the .0 on screen.
+  return String(parsed);
+}
+
+/** "70x130", or an em dash when the card has not been measured. */
+export function formatSize(
+  width: number | string | null | undefined,
+  length: number | string | null | undefined,
+): string {
+  const w = formatDimension(width);
+  const l = formatDimension(length);
+  if (!w || !l) return w || l || '—';
+  return `${w}x${l}`;
+}
+
 /** Progress as a whole percent, never above 100 and never dividing by zero. */
 export function completionPercent(value: number, total: number): number {
   if (!(total > 0)) return 0;

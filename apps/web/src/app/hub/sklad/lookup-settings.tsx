@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Segmented } from '@/components/ui/Segmented';
 
-const KINDS: SkladLookupKind[] = ['mahsulot_turi', 'ip_turi', 'olcham', 'sort', 'rang', 'pantone'];
+const KINDS: SkladLookupKind[] = ['mahsulot_turi', 'ip_turi', 'sort', 'rang', 'pantone'];
 
 function PencilIcon({ className }: { className?: string }) {
   return (
@@ -211,7 +211,6 @@ function toCamelKind(kind: SkladLookupKind): string {
   const map: Record<SkladLookupKind, string> = {
     mahsulot_turi: 'productType',
     ip_turi: 'yarnType',
-    olcham: 'size',
     sort: 'sort',
     rang: 'color',
     pantone: 'pantone',

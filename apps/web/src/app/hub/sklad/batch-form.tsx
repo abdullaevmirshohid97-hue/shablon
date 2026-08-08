@@ -75,7 +75,7 @@ export function BatchForm({
   const [netto, setNetto] = useState('');
   const [dona, setDona] = useState('');
   const [nabor, setNabor] = useState('');
-  const [pallet, setPallet] = useState('');
+  const [qop, setQop] = useState('');
 
   const [producedAt, setProducedAt] = useState('');
   const [receivedAt, setReceivedAt] = useState(todayIso());
@@ -137,7 +137,7 @@ export function BatchForm({
     setNetto(batch.nettoKg != null ? String(batch.nettoKg) : '');
     setDona(batch.donaSoni != null ? String(batch.donaSoni) : '');
     setNabor(batch.naborSoni != null ? String(batch.naborSoni) : '');
-    setPallet(batch.palletSoni != null ? String(batch.palletSoni) : '');
+    setQop(batch.qopSoni != null ? String(batch.qopSoni) : '');
     setProducedAt(batch.ishlabChiqarilganSana ?? '');
     setReceivedAt(batch.omborgaKirganSana);
     setStatus(batch.status);
@@ -203,7 +203,7 @@ export function BatchForm({
       nettoKg: nettoNum,
       donaSoni: donaNum,
       naborSoni: nabor ? Number(nabor) : null,
-      palletSoni: pallet ? Number(pallet) : null,
+      qopSoni: qop ? Number(qop) : null,
       ishlabChiqarilganSana: producedAt || null,
       omborgaKirganSana: receivedAt || undefined,
       status,
@@ -272,7 +272,7 @@ export function BatchForm({
               </option>
               {(items ?? []).map((i) => (
                 <option key={i.id} value={i.id}>
-                  {i.artikul ? `${i.artikul} — ${i.name}` : i.name}
+                  {i.kod ? `${i.kod} — ${i.name}` : i.name}
                 </option>
               ))}
             </Select>
@@ -319,8 +319,8 @@ export function BatchForm({
               <Input type="number" value={nabor} onChange={(e) => setNabor(e.target.value)} />
             </div>
             <div>
-              <Label>{t('sklad.batch.palletLabel')}</Label>
-              <Input type="number" value={pallet} onChange={(e) => setPallet(e.target.value)} />
+              <Label>{t('sklad.batch.qopLabel')}</Label>
+              <Input type="number" value={qop} onChange={(e) => setQop(e.target.value)} />
             </div>
             <div>
               <Label>{t('sklad.batch.qoldiqLabel')}</Label>

@@ -5,7 +5,7 @@ import type { Database } from '../database.types';
 import { toSkladBatch, type SkladBatchEmbeddedRow } from '../mappers';
 
 const EMBEDDED_SELECT =
-  '*, sklad_items(name, artikul), sklad_orders(order_no, order_name, counterparties(name)), sklad_batch_prices(*)';
+  '*, sklad_items(name, kod), sklad_orders(order_no, order_name, counterparties(name)), sklad_batch_prices(*)';
 
 /** One request, embedding item/order/counterparty/price — see SkladBatchEmbeddedRow in mappers.ts. */
 export function useSkladBatches(supabase: SupabaseClient<Database>, orgId: string | undefined) {
@@ -58,7 +58,7 @@ type SkladBatchInput = {
   nettoKg?: number | null;
   donaSoni?: number | null;
   naborSoni?: number | null;
-  palletSoni?: number | null;
+  qopSoni?: number | null;
   ishlabChiqarilganSana?: string | null;
   omborgaKirganSana?: string;
   status?: SkladBatchStatus;
@@ -80,7 +80,7 @@ function toRow(input: SkladBatchInput) {
     netto_kg: input.nettoKg,
     dona_soni: input.donaSoni,
     nabor_soni: input.naborSoni,
-    pallet_soni: input.palletSoni,
+    qop_soni: input.qopSoni,
     // qoldiq_dona is deliberately absent: since 0022 it is the sum of the
     // batch's movements, maintained by trigger. Writing it here would be
     // overwritten on the next movement anyway, and silently disagree with the

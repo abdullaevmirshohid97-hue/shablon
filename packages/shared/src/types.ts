@@ -140,7 +140,7 @@ export interface PeriodStats {
 // Sklad (warehouse) — Phase 1: product card + reference data + batches
 // ---------------------------------------------------------------------
 
-export type SkladLookupKind = 'mahsulot_turi' | 'ip_turi' | 'olcham' | 'sort' | 'rang' | 'pantone';
+export type SkladLookupKind = 'mahsulot_turi' | 'ip_turi' | 'sort' | 'rang' | 'pantone';
 
 /** One admin-managed dropdown value (product type / yarn type / size / sort / color / pantone). */
 export interface SkladLookup {
@@ -155,13 +155,15 @@ export interface SkladLookup {
 export interface SkladItem {
   id: string;
   orgId: string;
-  artikul?: string | null;
   kod?: string | null;
   name: string;
   productTypeId?: string | null;
   yarnTypeId?: string | null;
   gsm?: number | null;
-  sizeId?: string | null;
+  /** Centimetres. Two numbers rather than a "70x130" lookup, so the list can
+   * filter and sort on them. */
+  widthCm?: number | null;
+  lengthCm?: number | null;
   sortId?: string | null;
   colorId?: string | null;
   pantoneId?: string | null;
@@ -214,7 +216,7 @@ export interface SkladBatch {
   taraKg?: number | null;
   donaSoni?: number | null;
   naborSoni?: number | null;
-  palletSoni?: number | null;
+  qopSoni?: number | null;
   /** Generated column (netto / dona) — never set directly. */
   pieceWeightKg?: number | null;
   /** Derived from the batch's movements by trigger (0022) — never written by
@@ -235,7 +237,7 @@ export interface SkladBatch {
   createdAt: string;
   // Denormalized display fields, populated via embedded selects in useSkladBatches.
   itemName?: string;
-  itemArtikul?: string | null;
+  itemKod?: string | null;
   orderNo?: string | null;
   orderName?: string | null;
   counterpartyName?: string | null;
@@ -259,12 +261,12 @@ export interface SkladBatchRow {
   id: string;
   itemId: string;
   orderId?: string | null;
-  artikul?: string | null;
   kod?: string | null;
   itemName: string;
   productType?: string | null;
   yarnType?: string | null;
-  sizeName?: string | null;
+  widthCm?: number | null;
+  lengthCm?: number | null;
   sortName?: string | null;
   colorName?: string | null;
   pantoneCode?: string | null;
@@ -275,7 +277,7 @@ export interface SkladBatchRow {
   pieceWeightKg?: number | null;
   donaSoni?: number | null;
   naborSoni?: number | null;
-  palletSoni?: number | null;
+  qopSoni?: number | null;
   qoldiqDona?: number | null;
   /** pieceWeightKg x qoldiqDona, computed in the database. */
   qoldiqKg?: number | null;
@@ -336,10 +338,11 @@ export interface SkladMovement {
 /** Current stock per product card, across all its batches. */
 export interface SkladStockRow {
   itemId: string;
-  artikul?: string | null;
+  kod?: string | null;
   itemName: string;
   productType?: string | null;
-  sizeName?: string | null;
+  widthCm?: number | null;
+  lengthCm?: number | null;
   colorName?: string | null;
   batchCount: number;
   totalDona: number;
@@ -402,7 +405,7 @@ export interface SkladLineProgress {
   position: number;
   description?: string | null;
   itemName?: string | null;
-  artikul?: string | null;
+  kod?: string | null;
   sizeText?: string | null;
   colorText?: string | null;
   plannedDona?: number | null;
@@ -491,12 +494,12 @@ export interface SkladShipment {
  * before it could save, which is the opposite of typing an invoice.
  */
 export interface SkladReceiveRow {
-  artikul?: string;
   kod?: string;
   name?: string;
   productType?: string;
   yarnType?: string;
-  size?: string;
+  width?: string;
+  length?: string;
   sort?: string;
   color?: string;
   pantone?: string;
@@ -505,7 +508,7 @@ export interface SkladReceiveRow {
   netto?: string;
   dona?: string;
   nabor?: string;
-  pallet?: string;
+  qop?: string;
   producedAt?: string;
   notes?: string;
   pricePerKg?: string;
@@ -514,6 +517,38 @@ export interface SkladReceiveRow {
   totalAmount?: string;
   purchaseCost?: string;
   currency?: string;
+}
+
+/** A batch with stock left on it, as the despatch grid offers it. */
+export interface SkladIssuableBatch {
+  batchId: string;
+  itemId: string;
+  kod?: string | null;
+  itemName: string;
+  productType?: string | null;
+  widthCm?: number | null;
+  lengthCm?: number | null;
+  colorName?: string | null;
+  sortName?: string | null;
+  qoldiqDona: number;
+  pieceWeightKg?: number | null;
+  orderId?: string | null;
+  orderNo?: string | null;
+  omborgaKirganSana: string;
+}
+
+/**
+ * One line of a despatch, on its way to sklad_issue_rows.
+ *
+ * Strings for the same reason SkladReceiveRow uses them: these are what the
+ * storekeeper typed, and the database does the parsing.
+ */
+export interface SkladIssueRow {
+  batchId?: string;
+  orderLineId?: string;
+  dona?: string;
+  kg?: string;
+  note?: string;
 }
 
 export type SkladAuditEntity =
@@ -527,7 +562,7 @@ export interface SkladAuditEntry {
   changedAt: string;
   changedByName?: string | null;
   itemName?: string | null;
-  artikul?: string | null;
+  kod?: string | null;
   oldRow: Record<string, unknown> | null;
   newRow: Record<string, unknown> | null;
 }

@@ -10,9 +10,10 @@ export interface SkladBatchFilters {
   productTypeId?: string;
   colorId?: string;
   pantoneId?: string;
-  sizeId?: string;
   sortId?: string;
   gsm?: string;
+  widthCm?: string;
+  lengthCm?: string;
   orderId?: string;
   counterpartyId?: string;
   status?: SkladBatchStatus | '';
@@ -58,9 +59,10 @@ export function useSkladBatchPage(
         p_product_type_id: nullable(filters.productTypeId),
         p_color_id: nullable(filters.colorId),
         p_pantone_id: nullable(filters.pantoneId),
-        p_size_id: nullable(filters.sizeId),
         p_sort_id: nullable(filters.sortId),
         p_gsm: filters.gsm ? Number(filters.gsm) : null,
+        p_width_cm: filters.widthCm ? Number(filters.widthCm) : null,
+        p_length_cm: filters.lengthCm ? Number(filters.lengthCm) : null,
         p_order_id: nullable(filters.orderId),
         p_counterparty_id: nullable(filters.counterpartyId),
         p_status: filters.status ? filters.status : null,

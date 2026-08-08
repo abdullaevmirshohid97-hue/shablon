@@ -7,7 +7,7 @@ import {
   useSkladStock,
   useDeleteSkladItem,
 } from '@mubosher/api-client';
-import type { SkladItem } from '@mubosher/shared';
+import { formatSize, type SkladItem } from '@mubosher/shared';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
@@ -28,7 +28,7 @@ const FK_VIOLATION = '23503';
  * each.
  *
  * A card was creatable and never editable: ItemForm has taken an `item` prop
- * since it was written, but nothing ever passed one, so a mistyped artikul was
+ * since it was written, but nothing ever passed one, so a mistyped code was
  * permanent. The stock columns come from sklad_stock_by_item (0023) — the
  * question a manager asks before any of the batch detail is "how much of this
  * do we have".
@@ -57,9 +57,7 @@ export function ItemsList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return items ?? [];
-    return (items ?? []).filter((i) =>
-      `${i.artikul ?? ''} ${i.kod ?? ''} ${i.name}`.toLowerCase().includes(q),
-    );
+    return (items ?? []).filter((i) => `${i.kod ?? ''} ${i.name}`.toLowerCase().includes(q));
   }, [items, search]);
 
   async function handleDelete(item: SkladItem) {
@@ -103,7 +101,6 @@ export function ItemsList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
           <table className="w-full min-w-[900px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-                <th className="py-1.5 pr-3 font-medium">{t('sklad.item.artikulLabel')}</th>
                 <th className="py-1.5 pr-3 font-medium">{t('sklad.item.kodLabel')}</th>
                 <th className="py-1.5 pr-3 font-medium">{t('sklad.item.nameLabel')}</th>
                 <th className="py-1.5 pr-3 font-medium">{t('sklad.item.productTypeLabel')}</th>
@@ -123,12 +120,13 @@ export function ItemsList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
                 const s = stockByItem.get(i.id);
                 return (
                   <tr key={i.id} className="border-b border-slate-100">
-                    <td className="py-1.5 pr-3">{i.artikul ?? '—'}</td>
-                    <td className="py-1.5 pr-3 text-slate-500">{i.kod ?? '—'}</td>
+                    <td className="py-1.5 pr-3 font-medium">{i.kod ?? '—'}</td>
                     <td className="py-1.5 pr-3">{i.name}</td>
                     <td className="py-1.5 pr-3">{lookupName(i.productTypeId)}</td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">{i.gsm ?? '—'}</td>
-                    <td className="py-1.5 pr-3">{lookupName(i.sizeId)}</td>
+                    <td className="py-1.5 pr-3 tabular-nums">
+                      {formatSize(i.widthCm, i.lengthCm)}
+                    </td>
                     <td className="py-1.5 pr-3">{lookupName(i.colorId)}</td>
                     <td className="py-1.5 pr-3 text-right font-medium tabular-nums">
                       {s ? qtyFormat.format(s.totalDona) : '0'}

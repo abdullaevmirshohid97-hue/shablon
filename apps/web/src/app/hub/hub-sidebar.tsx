@@ -60,6 +60,18 @@ function InboundIcon({ className }: { className?: string }) {
   );
 }
 
+function OutboundIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
+      <path
+        fillRule="evenodd"
+        d="M10 15a1 1 0 01-1-1V6.414L6.707 8.707a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 6.414V14a1 1 0 01-1 1zm-7 2a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 function ClientsIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
@@ -163,7 +175,16 @@ export function HubSidebar({
         { href: '/hub/sklad', label: t('sklad.nav.overview'), Icon: OverviewIcon },
         { href: '/hub/sklad/orders', label: t('sklad.nav.orders'), Icon: OrdersIcon },
         { href: '/hub/sklad/stock', label: t('sklad.nav.stock'), Icon: SkladIcon },
+      ],
+    },
+    // Goods in and goods out are the two things a storekeeper actually does,
+    // and they are done from a page each rather than a dialog. Their own group,
+    // so they read as the day's work and not as another report.
+    {
+      title: t('sklad.nav.operations'),
+      items: [
         { href: '/hub/sklad/kirim', label: t('sklad.nav.receiving'), Icon: InboundIcon },
+        { href: '/hub/sklad/chiqim', label: t('sklad.nav.issuing'), Icon: OutboundIcon },
       ],
     },
     ...(isOrgAdmin

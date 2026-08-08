@@ -23,13 +23,13 @@ export function useSkladItems(supabase: SupabaseClient<Database>, orgId: string 
 
 type SkladItemInput = {
   orgId: string;
-  artikul?: string | null;
   kod?: string | null;
   name: string;
   productTypeId?: string | null;
   yarnTypeId?: string | null;
   gsm?: number | null;
-  sizeId?: string | null;
+  widthCm?: number | null;
+  lengthCm?: number | null;
   sortId?: string | null;
   colorId?: string | null;
   pantoneId?: string | null;
@@ -37,13 +37,13 @@ type SkladItemInput = {
 
 function toRow(input: SkladItemInput) {
   return {
-    artikul: input.artikul,
     kod: input.kod,
     name: input.name,
     product_type_id: input.productTypeId,
     yarn_type_id: input.yarnTypeId,
     gsm: input.gsm,
-    size_id: input.sizeId,
+    width_cm: input.widthCm,
+    length_cm: input.lengthCm,
     sort_id: input.sortId,
     color_id: input.colorId,
     pantone_id: input.pantoneId,
