@@ -66,18 +66,60 @@ drop policy if exists sklad_stages_write on sklad_stages;
 create policy sklad_stages_write on sklad_stages
   for all using (is_org_admin(org_id)) with check (is_org_admin(org_id));
 
-insert into sklad_stages (org_id, name, position, is_final)
-select o.id, s.name, s.position, s.is_final
-from organizations o
-cross join (values
-  ('To''qish', 10, false),
-  ('Bo''yoqxona', 20, false),
-  ('Quritish', 30, false),
-  ('Tikuv', 40, false),
-  ('Qadoqlash', 50, false),
-  ('Tayyor mahsulot ombori', 60, true)
-) as s(name, position, is_final)
-on conflict (org_id, name) do nothing;
+/**
+ * The default route, in one place so the backfill below and the trigger for
+ * organisations created afterwards cannot drift apart.
+ *
+ * Seeding only the orgs that existed when this migration ran was the first
+ * version, and it left every organisation created after it with no stages at
+ * all — an order screen with nowhere to record anything, and no error to say
+ * why. Onboarding is exactly where a system gets judged.
+ */
+create or replace function seed_sklad_stages(target_org_id uuid)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  insert into sklad_stages (org_id, name, position, is_final)
+  select target_org_id, s.name, s.position, s.is_final
+  from (values
+    ('To''qish', 10, false),
+    ('Bo''yoqxona', 20, false),
+    ('Quritish', 30, false),
+    ('Tikuv', 40, false),
+    ('Qadoqlash', 50, false),
+    ('Tayyor mahsulot ombori', 60, true)
+  ) as s(name, position, is_final)
+  on conflict (org_id, name) do nothing;
+$$;
+
+create or replace function seed_sklad_stages_on_org_create()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform seed_sklad_stages(new.id);
+  return new;
+end;
+$$;
+
+drop trigger if exists on_organization_created_seed_stages on organizations;
+create trigger on_organization_created_seed_stages
+  after insert on organizations
+  for each row execute function seed_sklad_stages_on_org_create();
+
+-- Backfill for the organisations that already exist.
+do $seed$
+declare
+  v_org uuid;
+begin
+  for v_org in select id from organizations loop
+    perform seed_sklad_stages(v_org);
+  end loop;
+end $seed$;
 
 
 -- ---------------------------------------------------------------------

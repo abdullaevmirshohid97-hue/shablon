@@ -1,7 +1,9 @@
 import { requireSkladAccess } from './access';
-import { SkladList } from './sklad-list';
+import { OverviewView } from './overview-view';
 
+/** The warehouse landing page is the overview, the way an ERP module's is:
+ * where every order stands before anyone drills into one. */
 export default async function SkladPage() {
   const { orgId, isOrgAdmin } = await requireSkladAccess();
-  return <SkladList orgId={orgId} isOrgAdmin={isOrgAdmin} />;
+  return <OverviewView orgId={orgId} isOrgAdmin={isOrgAdmin} />;
 }

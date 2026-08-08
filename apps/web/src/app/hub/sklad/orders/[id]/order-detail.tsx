@@ -12,7 +12,14 @@ import {
   useSkladOrderDetail,
   useCounterparties,
 } from '@mubosher/api-client';
-import type { SkladLineProgress, SkladOrderStatus } from '@mubosher/shared';
+import {
+  indexStageCells,
+  stageCellKey,
+  sumStageOutput,
+  summariseOrderProgress,
+  type SkladLineProgress,
+  type SkladOrderStatus,
+} from '@mubosher/shared';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
@@ -105,25 +112,11 @@ export function OrderDetail({
 
   const progress = detail?.progress ?? [];
 
-  /** cell lookup keyed "lineId:stageId" — the grid reads it once per cell. */
-  const cellByKey = useMemo(() => {
-    const map = new Map<string, NonNullable<typeof detail>['cells'][number]>();
-    for (const c of detail?.cells ?? []) map.set(`${c.lineId}:${c.stageId}`, c);
-    return map;
-  }, [detail]);
+  /** Grid lookup by row and stage — one shared key helper so the writer and
+   * the reader cannot drift apart. */
+  const cellByKey = useMemo(() => indexStageCells(detail?.cells ?? []), [detail]);
 
-  const totals = useMemo(() => {
-    return progress.reduce(
-      (acc, l) => ({
-        planned: acc.planned + (l.plannedDona ?? 0),
-        ready: acc.ready + l.readyDona,
-        shipped: acc.shipped + l.shippedDona,
-        remaining: acc.remaining + l.remainingDona,
-        defect: acc.defect + l.defectDona,
-      }),
-      { planned: 0, ready: 0, shipped: 0, remaining: 0, defect: 0 },
-    );
-  }, [progress]);
+  const totals = useMemo(() => summariseOrderProgress(progress), [progress]);
 
   /** Header fields save on change — this is a shared document several people
    * are looking at, and a Save button on it means one of them is looking at
@@ -300,7 +293,7 @@ export function OrderDetail({
                     {line.plannedDona != null ? qtyFormat.format(line.plannedDona) : '—'}
                   </td>
                   {(stages ?? []).map((s) => {
-                    const cell = cellByKey.get(`${line.lineId}:${s.id}`);
+                    const cell = cellByKey.get(stageCellKey(line.lineId, s.id));
                     const done = cell?.qtyOut ?? null;
                     return (
                       <td key={s.id} className="py-0.5 pr-3 text-right">
@@ -362,9 +355,7 @@ export function OrderDetail({
                     {qtyFormat.format(totals.planned)}
                   </td>
                   {(stages ?? []).map((s) => {
-                    const sum = (detail?.cells ?? [])
-                      .filter((c) => c.stageId === s.id)
-                      .reduce((acc, c) => acc + (c.qtyOut ?? 0), 0);
+                    const sum = sumStageOutput(detail?.cells ?? [], s.id);
                     return (
                       <td key={s.id} className="py-2 pr-3 text-right tabular-nums">
                         {sum ? qtyFormat.format(sum) : '—'}

@@ -13,7 +13,7 @@ import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { ItemForm } from '../item-form';
+import { ItemForm } from './item-form';
 
 const qtyFormat = new Intl.NumberFormat('ru-RU');
 const kgFormat = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
@@ -76,9 +76,7 @@ export function ItemsList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-          {t('sklad.nav.items')}
-        </h1>
+        <p className="text-sm text-slate-500">{t('sklad.settings.itemsDescription')}</p>
         <Button
           type="button"
           onClick={() => {

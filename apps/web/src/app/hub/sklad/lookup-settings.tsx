@@ -117,12 +117,10 @@ export function LookupSettings({ orgId }: { orgId: string }) {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900">
-        {t('sklad.lookups.title')}
-      </h1>
-      <p className="mb-6 text-sm text-slate-500">{t('sklad.lookups.description')}</p>
-
+      {/* No heading of its own: this is a section of the settings screen now,
+          and the segmented control above it already names it. */}
       <Card className="p-4">
+        <p className="mb-4 text-sm text-slate-500">{t('sklad.lookups.description')}</p>
         <Segmented
           value={kind}
           onChange={(v) => {

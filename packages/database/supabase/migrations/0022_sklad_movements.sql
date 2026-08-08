@@ -121,9 +121,16 @@ create trigger sklad_movements_apply
 -- what keeps this from recursing: apply_sklad_movement() writes qoldiq_dona
 -- back onto the batch, and that update leaves dona_soni untouched.
 -- ---------------------------------------------------------------------
+-- SECURITY DEFINER, and it has to be: sklad_movements deliberately has no
+-- UPDATE policy, because a movement is a fact that happened and correcting one
+-- means recording the opposite. That rule is about people. This row is the
+-- system's own bookkeeping, and under invoker rights the UPDATE below matched
+-- nothing at all — correcting a miscounted intake silently did nothing, which
+-- is exactly the class of failure that never announces itself.
 create or replace function sync_sklad_initial_movement()
 returns trigger
 language plpgsql
+security definer
 set search_path = public
 as $$
 begin

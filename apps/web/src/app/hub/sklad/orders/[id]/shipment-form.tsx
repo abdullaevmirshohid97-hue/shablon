@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useCreateShipment, useCounterparties } from '@mubosher/api-client';
-import type { SkladLineProgress } from '@mubosher/shared';
+import { clampShipmentQty, type SkladLineProgress } from '@mubosher/shared';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Input, Label, Select } from '@/components/ui/Input';
@@ -67,8 +67,7 @@ export function ShipmentForm({
   );
 
   function setQty(lineId: string, value: string, remaining: number) {
-    const capped = Math.min(Math.max(Number(value) || 0, 0), remaining);
-    setQuantities((q) => ({ ...q, [lineId]: value === '' ? '' : String(capped) }));
+    setQuantities((q) => ({ ...q, [lineId]: clampShipmentQty(value, remaining) }));
   }
 
   async function handleSubmit(e: React.FormEvent) {

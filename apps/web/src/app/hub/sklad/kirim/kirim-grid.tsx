@@ -9,7 +9,7 @@ import {
   useCounterparties,
   useCreateSkladOrder,
 } from '@mubosher/api-client';
-import type { SkladReceiveRow } from '@mubosher/shared';
+import { isBlankReceiveRow, summariseReceiveRows, type SkladReceiveRow } from '@mubosher/shared';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
@@ -81,10 +81,6 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function isBlank(row: SkladReceiveRow): boolean {
-  return Object.values(row).every((v) => !v || !String(v).trim());
-}
-
 const cellClass =
   'w-full rounded-md border border-transparent bg-transparent px-1.5 py-1 text-sm text-slate-900 ' +
   'outline-none transition-colors hover:border-slate-200 focus:border-brand-500 focus:bg-white';
@@ -136,19 +132,9 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
     return map;
   }, [lookups]);
 
-  const filledRows = useMemo(() => rows.filter((r) => !isBlank(r)), [rows]);
+  const filledRows = useMemo(() => rows.filter((r) => !isBlankReceiveRow(r)), [rows]);
 
-  const totals = useMemo(() => {
-    let netto = 0;
-    let dona = 0;
-    let amount = 0;
-    for (const r of filledRows) {
-      netto += Number(r.netto ?? 0) || 0;
-      dona += Number(r.dona ?? 0) || 0;
-      amount += Number(r.totalAmount ?? 0) || 0;
-    }
-    return { netto, dona, amount };
-  }, [filledRows]);
+  const totals = useMemo(() => summariseReceiveRows(rows), [rows]);
 
   function setCell(rowIndex: number, field: Field, value: string) {
     setRows((current) => {
@@ -223,7 +209,7 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
           <p className="text-sm text-slate-500">{t('sklad.kirim.description')}</p>
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant="secondary" onClick={() => router.push('/hub/sklad')}>
+          <Button type="button" variant="secondary" onClick={() => router.push('/hub/sklad/stock')}>
             {t('common.cancel')}
           </Button>
           <Button type="button" disabled={receive.isPending} onClick={() => void handleSave()}>
@@ -326,7 +312,7 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
               {rows.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className={`border-b border-slate-100 ${isBlank(row) ? '' : 'bg-slate-50/40'}`}
+                  className={`border-b border-slate-100 ${isBlankReceiveRow(row) ? '' : 'bg-slate-50/40'}`}
                 >
                   <td className="px-1 py-0.5 text-center text-xs text-slate-400">{rowIndex + 1}</td>
                   {columns.map((c) => (
@@ -373,7 +359,7 @@ export function KirimGrid({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
                   {t('sklad.totals.label')}
                 </td>
                 <td className="px-1 py-2 text-right tabular-nums">
-                  {totals.netto ? totals.netto.toFixed(2) : ''}
+                  {totals.nettoKg ? totals.nettoKg.toFixed(2) : ''}
                 </td>
                 <td className="px-1 py-2 text-right tabular-nums">{totals.dona || ''}</td>
                 <td colSpan={3} />

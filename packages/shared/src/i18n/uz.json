@@ -22,7 +22,10 @@
     "modules": "Modullar",
     "settings": "Sozlamalar",
     "back": "Orqaga",
-    "menu": "Menyu"
+    "menu": "Menyu",
+    "dashboard": "Boshqaruv paneli",
+    "organization": "Tashkilot",
+    "collapse": "Yig‘ish"
   },
   "login": {
     "title": "Tizimga kirish",
@@ -262,7 +265,10 @@
       "dateTo": "Sanagacha",
       "status": "Ombor holati",
       "all": "Barchasi",
-      "inStockOnly": "Faqat omborda borlari"
+      "inStockOnly": "Faqat omborda borlari",
+      "more": "Ko‘proq filtr",
+      "less": "Filtrlarni yig‘ish",
+      "clear": "Tozalash"
     },
     "item": {
       "title": "Mahsulot kartasi",
@@ -363,7 +369,9 @@
       "items": "Mahsulot kartalari",
       "orders": "Buyurtmalar",
       "settings": "Sozlamalar",
-      "analytics": "Analitika"
+      "analytics": "Analitika",
+      "overview": "Umumiy ko‘rinish",
+      "receiving": "Kirim qilish"
     },
     "totals": {
       "label": "Jami",
@@ -495,6 +503,14 @@
       "stock": "Ombor qoldig‘i",
       "progress": "Bajarildi",
       "noStages": "Bu davrda yozuv yo‘q"
+    },
+    "settings": {
+      "description": "Ombor moduli sozlamalari va ma’lumotnomalari.",
+      "stages": "Bosqichlar",
+      "lookups": "Ma’lumotnomalar",
+      "items": "Mahsulot kartalari",
+      "audit": "O‘zgarishlar tarixi",
+      "itemsDescription": "Mahsulot kartalari va ularning joriy ombor qoldig‘i."
     }
   },
   "readOnly": {

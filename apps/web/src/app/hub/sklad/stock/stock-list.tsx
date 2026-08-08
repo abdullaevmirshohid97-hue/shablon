@@ -18,8 +18,8 @@ import { Card } from '@/components/ui/Card';
 import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Badge, ToggleChip } from '@/components/ui/Badge';
-import { BatchForm } from './batch-form';
-import { MovementForm } from './movement-form';
+import { BatchForm } from '../batch-form';
+import { MovementForm } from '../movement-form';
 
 const ALL_STATUSES: SkladBatchStatus[] = [
   'tayyor',
@@ -44,6 +44,21 @@ const STATUS_TONE: Record<
   brak: 'danger',
 };
 
+/** The filters kept behind the disclosure — everything except search, status
+ * and the in-stock toggle, which are the three used daily. */
+const EXTRA_FILTER_KEYS = [
+  'productTypeId',
+  'colorId',
+  'pantoneId',
+  'gsm',
+  'sizeId',
+  'sortId',
+  'orderId',
+  'counterpartyId',
+  'from',
+  'to',
+] as const satisfies readonly (keyof SkladBatchFilters)[];
+
 const qtyFormat = new Intl.NumberFormat('ru-RU');
 const kgFormat = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
 const moneyFormat = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
@@ -52,7 +67,7 @@ function num(value: number | null | undefined, format: Intl.NumberFormat): strin
   return value == null ? '—' : format.format(value);
 }
 
-export function SkladList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: boolean }) {
+export function StockList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: boolean }) {
   const { t, locale } = useLocale();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
   const [supabase] = useState(() => createSupabaseBrowserClient());
@@ -60,6 +75,7 @@ export function SkladList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
   const [searchInput, setSearchInput] = useState('');
   const [filters, setFilters] = useState<SkladBatchFilters>({ inStockOnly: false });
   const [page, setPage] = useState(0);
+  const [moreFilters, setMoreFilters] = useState(false);
 
   // The filters go to Postgres now, so every keystroke would be a round trip.
   // A short pause is the difference between one query and fifteen.
@@ -104,6 +120,19 @@ export function SkladList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
     setPage(0);
   }
 
+  /** How many of the hidden filters are doing something — otherwise a folded
+   * panel silently narrows the list and the count on screen looks wrong. */
+  const activeExtraFilters = EXTRA_FILTER_KEYS.filter((key) => !!filters[key]).length;
+
+  function clearExtraFilters() {
+    setFilters((f) => {
+      const next = { ...f };
+      for (const key of EXTRA_FILTER_KEYS) delete next[key];
+      return next;
+    });
+    setPage(0);
+  }
+
   const rows = data?.rows ?? [];
   const movementBatch = rows.find((r) => r.id === movementBatchId) ?? null;
   const totals = data?.totals;
@@ -143,103 +172,23 @@ export function SkladList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
         </div>
       </div>
 
+      {/* Two rows visible, the other seven behind a disclosure.
+          Eleven filters laid out at once is not power, it is a wall: the ones
+          reached for daily are search, status and stock-on-hand, and the rest
+          are for the twice-a-month question about a pantone code. */}
       <Card className="p-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex flex-wrap items-center gap-3">
           <Input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={t('sklad.searchPlaceholder')}
-            className="lg:col-span-2"
+            className="min-w-[220px] flex-1"
           />
-          <Select
-            value={filters.productTypeId ?? ''}
-            onChange={(e) => setFilter('productTypeId', e.target.value)}
-          >
-            <option value="">{t('sklad.filters.productType')}</option>
-            {(lookupsByKind.get('mahsulot_turi') ?? []).map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </Select>
-          <Select
-            value={filters.colorId ?? ''}
-            onChange={(e) => setFilter('colorId', e.target.value)}
-          >
-            <option value="">{t('sklad.filters.color')}</option>
-            {(lookupsByKind.get('rang') ?? []).map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </Select>
-          <Select
-            value={filters.pantoneId ?? ''}
-            onChange={(e) => setFilter('pantoneId', e.target.value)}
-          >
-            <option value="">{t('sklad.filters.pantone')}</option>
-            {(lookupsByKind.get('pantone') ?? []).map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </Select>
-          <Select value={filters.gsm ?? ''} onChange={(e) => setFilter('gsm', e.target.value)}>
-            <option value="">{t('sklad.filters.gsm')}</option>
-            {gsmOptions.map((g) => (
-              <option key={g} value={String(g)}>
-                {g}
-              </option>
-            ))}
-          </Select>
-          <Select
-            value={filters.sizeId ?? ''}
-            onChange={(e) => setFilter('sizeId', e.target.value)}
-          >
-            <option value="">{t('sklad.filters.size')}</option>
-            {(lookupsByKind.get('olcham') ?? []).map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </Select>
-          <Select
-            value={filters.sortId ?? ''}
-            onChange={(e) => setFilter('sortId', e.target.value)}
-          >
-            <option value="">{t('sklad.filters.sort')}</option>
-            {(lookupsByKind.get('sort') ?? []).map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </Select>
-          <Select
-            value={filters.orderId ?? ''}
-            onChange={(e) => setFilter('orderId', e.target.value)}
-          >
-            <option value="">{t('sklad.filters.order')}</option>
-            {(orders ?? []).map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.orderNo ?? o.orderName ?? t('sklad.order.untitled')}
-              </option>
-            ))}
-          </Select>
-          <Select
-            value={filters.counterpartyId ?? ''}
-            onChange={(e) => setFilter('counterpartyId', e.target.value)}
-          >
-            <option value="">{t('sklad.filters.customer')}</option>
-            {(counterparties ?? []).map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
           <Select
             value={filters.status ?? ''}
             onChange={(e) => setFilter('status', e.target.value as SkladBatchStatus | '')}
+            className="w-44"
           >
             <option value="">{t('sklad.filters.status')}</option>
             {ALL_STATUSES.map((s) => (
@@ -248,28 +197,138 @@ export function SkladList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: bo
               </option>
             ))}
           </Select>
-          <Input
-            type="date"
-            value={filters.from ?? ''}
-            onChange={(e) => setFilter('from', e.target.value)}
-            placeholder={t('sklad.filters.dateFrom')}
-          />
-          <Input
-            type="date"
-            value={filters.to ?? ''}
-            onChange={(e) => setFilter('to', e.target.value)}
-            placeholder={t('sklad.filters.dateTo')}
-          />
-        </div>
-
-        <div className="mt-3">
           <ToggleChip
             active={!!filters.inStockOnly}
             onClick={() => setFilter('inStockOnly', !filters.inStockOnly)}
           >
             {t('sklad.filters.inStockOnly')}
           </ToggleChip>
+
+          <button
+            type="button"
+            onClick={() => setMoreFilters((open) => !open)}
+            aria-expanded={moreFilters}
+            className="ml-auto rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+          >
+            {moreFilters ? t('sklad.filters.less') : t('sklad.filters.more')}
+            {activeExtraFilters > 0 && (
+              <span className="ml-1.5 rounded-full bg-brand-100 px-1.5 py-0.5 text-xs tabular-nums text-brand-700">
+                {activeExtraFilters}
+              </span>
+            )}
+          </button>
+          {activeExtraFilters > 0 && (
+            <button
+              type="button"
+              onClick={clearExtraFilters}
+              className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-400 hover:bg-slate-50 hover:text-rose-600"
+            >
+              {t('sklad.filters.clear')}
+            </button>
+          )}
         </div>
+
+        {moreFilters && (
+          <div className="mt-3 grid grid-cols-1 gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Select
+              value={filters.productTypeId ?? ''}
+              onChange={(e) => setFilter('productTypeId', e.target.value)}
+            >
+              <option value="">{t('sklad.filters.productType')}</option>
+              {(lookupsByKind.get('mahsulot_turi') ?? []).map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={filters.colorId ?? ''}
+              onChange={(e) => setFilter('colorId', e.target.value)}
+            >
+              <option value="">{t('sklad.filters.color')}</option>
+              {(lookupsByKind.get('rang') ?? []).map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={filters.pantoneId ?? ''}
+              onChange={(e) => setFilter('pantoneId', e.target.value)}
+            >
+              <option value="">{t('sklad.filters.pantone')}</option>
+              {(lookupsByKind.get('pantone') ?? []).map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+            <Select value={filters.gsm ?? ''} onChange={(e) => setFilter('gsm', e.target.value)}>
+              <option value="">{t('sklad.filters.gsm')}</option>
+              {gsmOptions.map((g) => (
+                <option key={g} value={String(g)}>
+                  {g}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={filters.sizeId ?? ''}
+              onChange={(e) => setFilter('sizeId', e.target.value)}
+            >
+              <option value="">{t('sklad.filters.size')}</option>
+              {(lookupsByKind.get('olcham') ?? []).map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={filters.sortId ?? ''}
+              onChange={(e) => setFilter('sortId', e.target.value)}
+            >
+              <option value="">{t('sklad.filters.sort')}</option>
+              {(lookupsByKind.get('sort') ?? []).map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={filters.orderId ?? ''}
+              onChange={(e) => setFilter('orderId', e.target.value)}
+            >
+              <option value="">{t('sklad.filters.order')}</option>
+              {(orders ?? []).map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.orderNo ?? o.orderName ?? t('sklad.order.untitled')}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={filters.counterpartyId ?? ''}
+              onChange={(e) => setFilter('counterpartyId', e.target.value)}
+            >
+              <option value="">{t('sklad.filters.customer')}</option>
+              {(counterparties ?? []).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+            <Input
+              type="date"
+              value={filters.from ?? ''}
+              onChange={(e) => setFilter('from', e.target.value)}
+              placeholder={t('sklad.filters.dateFrom')}
+            />
+            <Input
+              type="date"
+              value={filters.to ?? ''}
+              onChange={(e) => setFilter('to', e.target.value)}
+              placeholder={t('sklad.filters.dateTo')}
+            />
+          </div>
+        )}
       </Card>
 
       {error && <p className="text-sm text-rose-600">{(error as Error).message}</p>}

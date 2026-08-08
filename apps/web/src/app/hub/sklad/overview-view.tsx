@@ -8,7 +8,7 @@ import {
   useSkladStock,
   useCounterparties,
 } from '@mubosher/api-client';
-import type { SkladOrderStatus } from '@mubosher/shared';
+import { completionPercent, type SkladOrderStatus } from '@mubosher/shared';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
@@ -39,7 +39,7 @@ const kgFormat = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 });
 
 /** A progress bar drawn from two numbers, no chart library involved. */
 function Progress({ value, total }: { value: number; total: number }) {
-  const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
+  const pct = completionPercent(value, total);
   return (
     <div className="flex items-center gap-2">
       <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100">
@@ -56,7 +56,7 @@ function Progress({ value, total }: { value: number; total: number }) {
  * Three questions, in the order they get asked: where is every order, how much
  * has each shop put through lately, and what is sitting on the shelves.
  */
-export function SkladAnalytics({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: boolean }) {
+export function OverviewView({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: boolean }) {
   const { t, locale } = useLocale();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
   const [supabase] = useState(() => createSupabaseBrowserClient());
@@ -102,7 +102,7 @@ export function SkladAnalytics({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmi
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-        {t('sklad.nav.analytics')}
+        {t('sklad.nav.overview')}
       </h1>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
