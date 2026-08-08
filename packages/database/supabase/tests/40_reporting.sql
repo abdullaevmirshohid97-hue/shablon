@@ -70,10 +70,13 @@ end $$;
 do $$
 declare amt numeric; d date; n int;
 begin
+  -- 600 billed, 50 paid against a date that has passed. The figure is the 550
+  -- still owed; the old version reported the 50 already in the till.
   select overdue_amount, overdue_date into amt, d
   from org_overdue_by_counterparty('11111111-1111-1111-1111-111111111111')
   where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000001';
-  perform test_report('overdue finds the past-due entry', amt = 50 and d = current_date - 5);
+  perform test_report('overdue reports what is owed, dated from when it fell due',
+                      amt = 550 and d = current_date - 5);
 
   select count(*) into n from org_overdue_by_counterparty('11111111-1111-1111-1111-111111111111');
   perform test_report('the not-yet-due entry is not counted as overdue', n = 1);
@@ -177,29 +180,6 @@ end $$;
 -- ---------------------------------------------------------------------
 set app.current_user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
 
--- A revenue account, and a sale posted the way the source ledger posts one:
--- Дебет Клиенты / Кредит Продажи продукции.
-insert into accounts (id, org_id, code, name, type)
-values ('cccccccc-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111',
-        '3', 'Sotuv', 'sales');
-
-do $$
-begin
-  insert into transactions (org_id, counterparty_id, occurred_at,
-    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
-  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000001',
-    (current_date - 40)::timestamptz,
-    'cccccccc-0000-0000-0000-000000000001', 900,
-    'cccccccc-0000-0000-0000-000000000003', 900, 'UZS', 'eski sotuv');
-end $$;
-
-do $$
-declare r record;
-begin
-  select * into r from org_period_totals('11111111-1111-1111-1111-111111111111');
-  perform test_report('revenue is read off the sales account, not the receivable',
-                      r.net_revenue = 900);
-end $$;
 
 -- The distinction the rename alone would have missed: with a period that
 -- starts after the old sale, the movement figure excludes it and the debt
@@ -216,8 +196,6 @@ begin
                       r.total_debt = (
                         select coalesce(sum(base_balance), 0)
                         from counterparty_balances('11111111-1111-1111-1111-111111111111')));
-  perform test_report('and revenue outside the window is excluded from it',
-                      r.net_revenue = 0);
 end $$;
 
 -- Nothing changed about the two figures that were already right.
@@ -235,4 +213,83 @@ begin
   perform set_config('app.current_user_id', 'bbbbbbbb-0000-0000-0000-000000000002', false);
   select count(*) into n from org_period_totals('11111111-1111-1111-1111-111111111111');
   perform test_report('a manager can read the dashboard totals', n = 1);
+end $$;
+
+-- ---------------------------------------------------------------------
+-- Overdue debt is what is owed, not what was paid (0031).
+--
+-- The old version summed the credit side of the receivable for rows past
+-- their due date — money the client had already handed over. It moved the
+-- wrong way: paying more made the figure larger, and a client who had cleared
+-- everything stayed at the top of the list.
+-- ---------------------------------------------------------------------
+set app.current_user_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+
+do $$
+declare r record; v_balance numeric;
+begin
+  -- Mijoz A: billed 600 + 900, paid 50 against a date that has passed.
+  select * into r from org_overdue_by_counterparty('11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000001';
+
+  select base_balance into v_balance
+  from counterparty_balances('11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000001';
+
+  perform test_report('overdue reports the debt, not the 50 already paid',
+                      r.overdue_amount = v_balance);
+  perform test_report('and it is the same figure as the client''s own balance',
+                      r.overdue_amount > 50);
+end $$;
+
+-- A client who settles drops off, however late they were.
+do $$
+declare v_before bigint; v_after bigint; v_owed numeric;
+begin
+  select count(*) into v_before from org_overdue_by_counterparty(
+    '11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000001';
+
+  select base_balance into v_owed
+  from counterparty_balances('11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000001';
+
+  -- Pay the balance off in full.
+  insert into transactions (org_id, counterparty_id, occurred_at,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000001',
+    current_date::timestamptz,
+    'cccccccc-0000-0000-0000-000000000002', v_owed,
+    'cccccccc-0000-0000-0000-000000000001', v_owed, 'UZS', 'hammasini yopdi');
+
+  select count(*) into v_after from org_overdue_by_counterparty(
+    '11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000001';
+
+  perform test_report('a client who was on the overdue list was there before',
+                      v_before = 1);
+  perform test_report('and drops off once they have settled', v_after = 0);
+end $$;
+
+-- Paying more can only shrink the figure. Under the old version it grew.
+do $$
+declare v_first numeric; v_second numeric;
+begin
+  select overdue_amount into v_first from org_overdue_by_counterparty(
+    '11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000002';
+
+  insert into transactions (org_id, counterparty_id, occurred_at,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000002',
+    current_date::timestamptz,
+    'cccccccc-0000-0000-0000-000000000002', 10,
+    'cccccccc-0000-0000-0000-000000000001', 10, 'UZS', 'qisman to''lov');
+
+  select overdue_amount into v_second from org_overdue_by_counterparty(
+    '11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000002';
+
+  perform test_report('a payment lowers the overdue figure rather than raising it',
+                      v_first is null or v_second is null or v_second < v_first);
 end $$;

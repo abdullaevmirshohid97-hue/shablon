@@ -21,8 +21,6 @@ export interface AnalyticsData {
    * when the period filter moves, which is what the card labelled 'sof
    * aylanma' used to show. */
   totalDebt: number;
-  /** Revenue for the period, off the sales accounts. */
-  netRevenue: number;
   transactionCount: number;
   byCategory: {
     categoryName: string;
@@ -41,7 +39,6 @@ export function analyticsFromReport(report: OrgReport): AnalyticsData {
     totalKirim: report.totals.totalKirim,
     totalChiqim: report.totals.totalChiqim,
     totalDebt: report.totals.totalDebt,
-    netRevenue: report.totals.netRevenue,
     transactionCount: report.byCategory.reduce((n, c) => n + c.entryCount, 0),
     byCategory: report.byCategory,
     overdue: report.overdue.map((r) => ({
@@ -79,7 +76,6 @@ export function analyticsFromTransactions(
     // The whole ledger, not just the rows in range: this client's debt is a
     // position and does not restart with the period filter.
     totalDebt: computeTotalDebt(transactions, range.end),
-    netRevenue: stats.netRevenue,
     transactionCount: stats.transactionCount,
     byCategory: stats.byCategory,
     overdue: Object.entries(getOverdueByCounterparty(transactions, today))

@@ -53,21 +53,20 @@ export function LedgerAnalytics({
 
       {(overdueRows.length > 0 || dueSoon.length > 0) && (
         <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-rose-700">
-              {t('analytics.overdueTitle')} ({overdueRows.length})
+          {/* One cell: the figure, what it means, and who it is — rather than a
+              total floating above a list that repeated the heading. */}
+          <div className="rounded-lg border border-rose-200 bg-rose-50/50 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-rose-700">
+              {t('analytics.overdueTotal')}
             </p>
-            {overdueTotal > 0 && (
-              <div className="mb-3">
-                <p className="text-[11px] font-medium text-rose-600">
-                  {t('analytics.overdueTotal')}
-                </p>
-                <p className="text-2xl font-bold tabular-nums text-rose-700">
-                  {currencyFormatter.format(overdueTotal)}
-                </p>
-              </div>
-            )}
-            <ul className="space-y-1">
+            <p className="mt-0.5 text-2xl font-bold tabular-nums text-rose-700">
+              {currencyFormatter.format(overdueTotal)}
+            </p>
+            <p className="mt-1 text-xs leading-snug text-rose-600">
+              {t('analytics.overdueNote').replace('{n}', String(overdueRows.length))}
+            </p>
+
+            <ul className="mt-3 space-y-1 border-t border-rose-200 pt-3">
               {overdueRows.map((row) => (
                 <li key={row.id}>
                   <Link
@@ -115,7 +114,7 @@ export function LedgerAnalytics({
       {/* Three filled colour blocks side by side read as a traffic light and
           drowned the figures they were meant to present. The tone now lives in
           a 2px rule on the edge; the number itself carries the colour. */}
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard
           label={t('analytics.totalKirim')}
           value={currencyFormatter.format(stats.totalKirim)}
@@ -126,16 +125,11 @@ export function LedgerAnalytics({
           value={currencyFormatter.format(stats.totalChiqim)}
           tone="danger"
         />
-        {/* Debt is a position and does not move with the period filter; revenue
-            is a flow and does. They sat under one label until 0029, and the
-            label was the wrong one for both. */}
+        {/* Debt is a position: it does not restart when the period filter
+            moves, which is what this card showed under the wrong name. */}
         <StatCard
           label={t('analytics.totalDebt')}
           value={currencyFormatter.format(stats.totalDebt)}
-        />
-        <StatCard
-          label={t('analytics.netRevenue')}
-          value={currencyFormatter.format(stats.netRevenue)}
         />
       </div>
 

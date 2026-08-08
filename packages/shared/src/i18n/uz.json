@@ -174,8 +174,8 @@
     "noDueItems": "Muddati yaqinlashgan yoki o'tgan yozuvlar yo'q",
     "noData": "Bu davrda ma'lumot yo'q",
     "totalDebt": "Umumiy qarzdorlik",
-    "netRevenue": "Sof aylanma",
-    "debtChange": "Qarzdorlik o‘zgarishi"
+    "debtChange": "Qarzdorlik o‘zgarishi",
+    "overdueNote": "{n} ta mijoz muddatidan kechikkan. Ko‘rsatilgan summa — ularning hozirgi qarzi."
   },
   "overview": {
     "topDebtors": "Eng ko'p qarzdorlar",

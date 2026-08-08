@@ -748,8 +748,6 @@ export interface Database {
           net: number;
           /** The receivable position as of p_to — ignores p_from by design. */
           total_debt: number;
-          /** Revenue, from the sales accounts. */
-          net_revenue: number;
         }[];
       };
       reverse_transaction: {

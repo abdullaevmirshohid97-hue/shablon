@@ -134,8 +134,6 @@ export interface PeriodStats {
   /** Kirim less chiqim on the receivable: how far the clients' debt moved over
    * the period. Not revenue, and not the debt itself — see computeTotalDebt. */
   net: number;
-  /** Revenue for the period, read off the sales accounts. */
-  netRevenue: number;
   transactionCount: number;
   byCategory: CategoryBreakdown[];
 }

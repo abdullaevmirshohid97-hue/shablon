@@ -54,8 +54,6 @@ export interface OrgReport {
     net: number;
     /** Everything owed as of the period end — a position, not a flow. */
     totalDebt: number;
-    /** Revenue for the period, off the sales accounts. */
-    netRevenue: number;
   };
   byCategory: CategoryRow[];
   balances: CounterpartyBalance[];
@@ -122,7 +120,6 @@ export function useOrgReport(
         total_chiqim: 0,
         net: 0,
         total_debt: 0,
-        net_revenue: 0,
       };
 
       return {
@@ -131,7 +128,6 @@ export function useOrgReport(
           totalChiqim: Number(totalsRow.total_chiqim),
           net: Number(totalsRow.net),
           totalDebt: Number(totalsRow.total_debt),
-          netRevenue: Number(totalsRow.net_revenue),
         },
         byCategory: (categories.data ?? []).map((r) => ({
           categoryName: r.category_name,
