@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Segmented } from '@/components/ui/Segmented';
+import { PwaInstall } from '@/components/PwaInstall';
 
 export function Header() {
   const { locale, setLocale, t } = useLocale();
@@ -50,14 +51,19 @@ export function Header() {
           )}
         </div>
 
-        <Segmented
-          value={locale}
-          onChange={setLocale}
-          options={[
-            { value: 'uz', label: 'UZ' },
-            { value: 'ru', label: 'RU' },
-          ]}
-        />
+        <div className="flex items-center gap-2">
+          {/* Removes itself once the app is installed, and on browsers that
+              have no way to install anything. */}
+          <PwaInstall className="hidden sm:inline-flex" />
+          <Segmented
+            value={locale}
+            onChange={setLocale}
+            options={[
+              { value: 'uz', label: 'UZ' },
+              { value: 'ru', label: 'RU' },
+            ]}
+          />
+        </div>
       </div>
     </header>
   );

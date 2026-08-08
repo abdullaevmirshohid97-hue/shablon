@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aloqa yo'q — idaa finance</title>
+    <style>
+      /* Self-contained: the app's stylesheet is exactly what is unreachable
+         when this page is being shown. */
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fafafa;
+        color: #141417;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        text-align: center;
+        padding: 24px;
+      }
+      .mark {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: #141417;
+        margin: 0 auto 20px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 8px;
+      }
+      p {
+        font-size: 14px;
+        color: #5c5c64;
+        margin: 0 0 24px;
+        line-height: 1.5;
+      }
+      button {
+        border: 1px solid #d8d8dc;
+        background: #fff;
+        color: #2a2a30;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #f4f4f5;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div class="mark"></div>
+      <h1>Internet aloqasi yo'q</h1>
+      <p>
+        Ma'lumotlar serverdan real vaqtda o'qiladi.<br />
+        Aloqa tiklangach, sahifani qayta yuklang.
+      </p>
+      <button onclick="location.reload()">Qayta urinish</button>
+    </div>
+  </body>
+</html>

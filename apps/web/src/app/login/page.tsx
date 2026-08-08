@@ -7,6 +7,7 @@ import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Input, Label } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Segmented } from '@/components/ui/Segmented';
+import { PwaInstall } from '@/components/PwaInstall';
 
 /**
  * Full-bleed split: brand panel left, form right. The shared Header is
@@ -143,14 +144,20 @@ export default function LoginPage() {
               </h1>
               <p className="mt-1 text-sm text-slate-500">{t('login.subtitle')}</p>
             </div>
-            <Segmented
-              value={locale}
-              onChange={setLocale}
-              options={[
-                { value: 'uz', label: 'UZ' },
-                { value: 'ru', label: 'RU' },
-              ]}
-            />
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <Segmented
+                value={locale}
+                onChange={setLocale}
+                options={[
+                  { value: 'uz', label: 'UZ' },
+                  { value: 'ru', label: 'RU' },
+                ]}
+              />
+              {/* Here as well as in the header: this is where a new user lands,
+                  and it is the one screen they see before deciding whether the
+                  thing is worth keeping on their phone. */}
+              <PwaInstall />
+            </div>
           </div>
 
           {signedInAs && (

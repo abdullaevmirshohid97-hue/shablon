@@ -621,5 +621,11 @@
     "rate": "Kurs",
     "save": "Saqlash",
     "empty": "Hozircha kurs kiritilmagan"
+  },
+  "pwa": {
+    "install": "Ilovani o‘rnatish",
+    "appleTitle": "iPhone/iPad da o‘rnatish",
+    "appleStep1": "Pastdagi «Ulashish» tugmasini bosing",
+    "appleStep2": "«Bosh ekranga qo‘shish» ni tanlang"
   }
 }
