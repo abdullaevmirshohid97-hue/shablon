@@ -60,6 +60,18 @@ function InboundIcon({ className }: { className?: string }) {
   );
 }
 
+function InvoiceIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
+      <path
+        fillRule="evenodd"
+        d="M4 2a1 1 0 00-1 1v14a1 1 0 001.447.894L6 17.118l1.553.776a1 1 0 00.894 0L10 17.118l1.553.776a1 1 0 00.894 0L14 17.118l1.553.776A1 1 0 0017 17V3a1 1 0 00-1-1H4zm2 4a1 1 0 000 2h8a1 1 0 100-2H6zm0 4a1 1 0 100 2h5a1 1 0 100-2H6z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 function OutboundIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
@@ -183,6 +195,7 @@ export function HubSidebar({
     {
       title: t('sklad.nav.operations'),
       items: [
+        { href: '/hub/sklad/faktura', label: t('sklad.nav.invoices'), Icon: InvoiceIcon },
         { href: '/hub/sklad/kirim', label: t('sklad.nav.receiving'), Icon: InboundIcon },
         { href: '/hub/sklad/chiqim', label: t('sklad.nav.issuing'), Icon: OutboundIcon },
       ],

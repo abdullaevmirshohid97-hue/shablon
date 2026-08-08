@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   useIssuableBatches,
   useIssueSkladRows,
+  useInvoiceByCode,
+  useSkladInvoices,
   useSkladOrders,
   useCounterparties,
 } from '@mubosher/api-client';
@@ -14,6 +17,7 @@ import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
 import { Input, Label, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 
 const qtyFormat = new Intl.NumberFormat('ru-RU');
 const kgFormat = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
@@ -23,22 +27,33 @@ function todayIso(): string {
 }
 
 /**
- * Despatch, on a page of its own — the mirror of receiving.
+ * Despatch, driven by the paper the manager printed.
  *
- * The same shape for the same reason: goods leave on one document against a
- * dozen batches, and doing that through a dialog per batch is a dozen chances
- * to lose count. Every batch with stock on it is listed; typing a quantity
- * against a row puts it on the truck.
+ * The storekeeper scans the invoice — barcode from the desk scanner, or the QR
+ * from a phone, or the number typed by hand; all three resolve through one
+ * lookup. The client, the order and the document number come off the document,
+ * and every line that still owes goods is filled in with what it owes, capped
+ * at what the batch actually holds.
  *
- * Quantities are capped at what the batch actually holds. The database refuses
- * an overdraw anyway, but finding that out after pressing save — with the
- * whole despatch rolled back — is a worse way to learn it.
+ * Nothing about that is mandatory: a despatch with no invoice behind it is
+ * still a despatch, and the grid works exactly as it did before. But the
+ * common case — the one that used to start with a phone call to the office —
+ * is now a scan.
  */
 export function ChiqimGrid({ orgId }: { orgId: string }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
   const router = useRouter();
   const [supabase] = useState(() => createSupabaseBrowserClient());
 
+  // --- scanning -------------------------------------------------------
+  const scanRef = useRef<HTMLInputElement>(null);
+  const [scanInput, setScanInput] = useState('');
+  const [scanCode, setScanCode] = useState('');
+  const [appliedInvoiceId, setAppliedInvoiceId] = useState<string | null>(null);
+  const { data: scanned, isFetching: scanning } = useInvoiceByCode(supabase, orgId, scanCode);
+
+  // --- the grid -------------------------------------------------------
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
 
@@ -50,6 +65,7 @@ export function ChiqimGrid({ orgId }: { orgId: string }) {
   const { data: batches, isLoading } = useIssuableBatches(supabase, orgId, search);
   const { data: orders } = useSkladOrders(supabase, orgId);
   const { data: counterparties } = useCounterparties(supabase, orgId);
+  const { data: pending } = useSkladInvoices(supabase, orgId, { status: 'yangi' });
   const issue = useIssueSkladRows(supabase);
 
   const [counterpartyId, setCounterpartyId] = useState('');
@@ -63,7 +79,7 @@ export function ChiqimGrid({ orgId }: { orgId: string }) {
     { user_id: string; full_name: string | null; email: string | null }[]
   >([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [savedCount, setSavedCount] = useState<number | null>(null);
+  const [savedShipmentId, setSavedShipmentId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.rpc('list_org_roster', { target_org_id: orgId }).then(({ data }) => {
@@ -71,53 +87,109 @@ export function ChiqimGrid({ orgId }: { orgId: string }) {
     });
   }, [supabase, orgId]);
 
+  // A hardware scanner is a keyboard: it types into whatever has focus and
+  // presses Enter. Keeping this field focused is what makes it work at all.
+  useEffect(() => {
+    scanRef.current?.focus();
+  }, []);
+
   const rows = batches ?? [];
+  const batchById = useMemo(() => new Map(rows.map((b) => [b.batchId, b])), [rows]);
+
+  /**
+   * A resolved invoice fills the header and the quantities once, then leaves
+   * the storekeeper alone — they may have counted out something different from
+   * what the paper says, and the paper is not the authority on what physically
+   * went on the truck.
+   */
+  useEffect(() => {
+    if (!scanned || scanned.invoiceId === appliedInvoiceId) return;
+
+    setAppliedInvoiceId(scanned.invoiceId);
+    setCounterpartyId(scanned.counterpartyId ?? '');
+    setOrderId(scanned.orderId ?? '');
+    setDocumentNo(scanned.invoiceNo ?? '');
+
+    const next: Record<string, string> = {};
+    for (const line of scanned.lines) {
+      if (!line.batchId || line.remainingDona <= 0) continue;
+      // Capped at the shelf, not at the paper: an invoice may promise more
+      // than the batch turned out to hold.
+      const available = line.batchQoldiqDona ?? line.remainingDona;
+      next[line.batchId] = String(Math.min(line.remainingDona, available));
+    }
+    setQuantities(next);
+    setScanInput('');
+    setErrorMessage(null);
+    setSavedShipmentId(null);
+  }, [scanned, appliedInvoiceId]);
 
   const selected = useMemo(
     () =>
-      rows
-        .map((b) => ({ batch: b, dona: Number(quantities[b.batchId] ?? 0) || 0 }))
+      Object.entries(quantities)
+        .map(([batchId, value]) => ({ batchId, dona: Number(value) || 0 }))
         .filter((r) => r.dona > 0),
-    [rows, quantities],
+    [quantities],
   );
 
   const totals = useMemo(
     () =>
       selected.reduce(
-        (acc, r) => ({
-          dona: acc.dona + r.dona,
-          kg: acc.kg + (r.batch.pieceWeightKg ?? 0) * r.dona,
-        }),
+        (acc, r) => {
+          const batch = batchById.get(r.batchId);
+          return {
+            dona: acc.dona + r.dona,
+            kg: acc.kg + (batch?.pieceWeightKg ?? 0) * r.dona,
+          };
+        },
         { dona: 0, kg: 0 },
       ),
-    [selected],
+    [selected, batchById],
   );
+
+  function applyScan(code: string) {
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    // A re-scan of the same code has to re-apply, so the key is reset first.
+    setAppliedInvoiceId(null);
+    setScanCode(trimmed);
+  }
+
+  function clearInvoice() {
+    setAppliedInvoiceId(null);
+    setScanCode('');
+    setScanInput('');
+    setQuantities({});
+    setDocumentNo('');
+    scanRef.current?.focus();
+  }
 
   function setQty(batchId: string, value: string, remaining: number) {
     setQuantities((q) => ({ ...q, [batchId]: clampShipmentQty(value, remaining) }));
-    setSavedCount(null);
+    setSavedShipmentId(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage(null);
-    setSavedCount(null);
+    setSavedShipmentId(null);
 
     if (!selected.length) {
       setErrorMessage(t('sklad.chiqim.nothingSelected'));
       return;
     }
 
-    const issueRows: SkladIssueRow[] = selected.map((r) => ({
-      batchId: r.batch.batchId,
-      dona: String(r.dona),
-      // The weight follows from the batch's own per-piece figure; sending it
-      // keeps the movement's kg honest without asking anyone to weigh a pallet.
-      kg: r.batch.pieceWeightKg != null ? String(r.batch.pieceWeightKg * r.dona) : undefined,
-    }));
+    const issueRows: SkladIssueRow[] = selected.map((r) => {
+      const batch = batchById.get(r.batchId);
+      return {
+        batchId: r.batchId,
+        dona: String(r.dona),
+        kg: batch?.pieceWeightKg != null ? String(batch.pieceWeightKg * r.dona) : undefined,
+      };
+    });
 
     try {
-      await issue.mutateAsync({
+      const shipmentId = await issue.mutateAsync({
         orgId,
         rows: issueRows,
         counterpartyId: counterpartyId || null,
@@ -126,15 +198,18 @@ export function ChiqimGrid({ orgId }: { orgId: string }) {
         documentNo: documentNo || null,
         shippedAt,
         note: note || null,
+        invoiceId: appliedInvoiceId,
       });
-      setSavedCount(issueRows.length);
+      setSavedShipmentId(shipmentId);
       setQuantities({});
-      setDocumentNo('');
       setNote('');
+      clearInvoice();
     } catch (err) {
       setErrorMessage((err as Error).message);
     }
   }
+
+  const scanMissed = scanCode.length > 0 && !scanning && !scanned;
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -156,6 +231,79 @@ export function ChiqimGrid({ orgId }: { orgId: string }) {
           </Button>
         </div>
       </div>
+
+      {/* The scanner lives at the top and holds focus: it is the first thing
+          that happens at the desk, and everything below it follows. */}
+      <Card className="border-brand-200 bg-brand-50/40 p-4">
+        <Label>{t('sklad.chiqim.scanLabel')}</Label>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <Input
+            ref={scanRef}
+            type="text"
+            value={scanInput}
+            onChange={(e) => setScanInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter') return;
+              // The scanner's trailing Enter would otherwise submit the whole
+              // despatch before a single quantity had been checked.
+              e.preventDefault();
+              applyScan(scanInput);
+            }}
+            placeholder={t('sklad.chiqim.scanPlaceholder')}
+            className="min-w-[240px] flex-1 font-mono"
+            autoComplete="off"
+          />
+          <Button type="button" variant="secondary" onClick={() => applyScan(scanInput)}>
+            {t('sklad.chiqim.scanButton')}
+          </Button>
+        </div>
+
+        {scanning && <p className="mt-2 text-sm text-slate-500">{t('common.loading')}</p>}
+        {scanMissed && <p className="mt-2 text-sm text-rose-600">{t('sklad.chiqim.scanMissed')}</p>}
+
+        {scanned && appliedInvoiceId === scanned.invoiceId && (
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-white px-3 py-2 text-sm">
+            <Link
+              href={`/hub/sklad/faktura/${scanned.invoiceId}`}
+              className="font-semibold text-brand-700 hover:underline"
+            >
+              {scanned.invoiceNo}
+            </Link>
+            <span className="text-slate-900">{scanned.counterpartyName}</span>
+            <Badge tone={scanned.status === 'qisman' ? 'warning' : 'neutral'}>
+              {t(`sklad.invoiceStatus.${scanned.status}`)}
+            </Badge>
+            <span className="text-slate-500">
+              {t('sklad.order.remaining')}:{' '}
+              {qtyFormat.format(scanned.lines.reduce((n, l) => n + l.remainingDona, 0))}
+            </span>
+            <button
+              type="button"
+              onClick={clearInvoice}
+              className="ml-auto rounded-md px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 hover:text-rose-600"
+            >
+              {t('sklad.chiqim.clearInvoice')}
+            </button>
+          </div>
+        )}
+
+        {/* Invoices still owing goods, for a desk with no scanner to hand. */}
+        {!appliedInvoiceId && (pending?.length ?? 0) > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(pending ?? []).slice(0, 8).map((inv) => (
+              <button
+                key={inv.invoiceId}
+                type="button"
+                onClick={() => applyScan(inv.invoiceId)}
+                className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:border-brand-500 hover:text-brand-700"
+              >
+                {inv.invoiceNo} · {inv.counterpartyName} ·{' '}
+                {qtyFormat.format(inv.orderedDona - inv.shippedDona)}
+              </button>
+            ))}
+          </div>
+        )}
+      </Card>
 
       <Card className="p-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -214,9 +362,15 @@ export function ChiqimGrid({ orgId }: { orgId: string }) {
       {errorMessage && (
         <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{errorMessage}</p>
       )}
-      {savedCount != null && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          {t('sklad.chiqim.saved').replace('{n}', String(savedCount))}
+      {savedShipmentId && (
+        <p className="flex flex-wrap items-center gap-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          {t('sklad.chiqim.savedNote')}
+          <Link
+            href={`/hub/sklad/chiqim/${savedShipmentId}`}
+            className="font-semibold underline underline-offset-2"
+          >
+            {t('sklad.chiqim.openNote')}
+          </Link>
         </p>
       )}
 
@@ -300,6 +454,22 @@ export function ChiqimGrid({ orgId }: { orgId: string }) {
             <p className="py-6 text-center text-sm text-slate-500">{t('sklad.chiqim.empty')}</p>
           )}
         </div>
+
+        {/* A scanned line whose batch is not on this page would otherwise
+            vanish silently — say so rather than shipping short. */}
+        {appliedInvoiceId && scanned && (
+          <>
+            {scanned.lines.some((l) => l.batchId && !batchById.has(l.batchId)) && (
+              <p className="mt-3 text-sm text-amber-700">{t('sklad.chiqim.linesOffPage')}</p>
+            )}
+            {scanned.lines.some((l) => !l.batchId) && (
+              <p className="mt-1 text-sm text-slate-500">
+                {t('sklad.chiqim.linesWithoutBatch')} ·{' '}
+                {new Date(scanned.issuedAt).toLocaleDateString(dateLocale)}
+              </p>
+            )}
+          </>
+        )}
       </Card>
     </form>
   );

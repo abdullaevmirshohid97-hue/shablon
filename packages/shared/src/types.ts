@@ -551,8 +551,102 @@ export interface SkladIssueRow {
   note?: string;
 }
 
+// ---------------------------------------------------------------------
+// Sales invoices (0027): the paper a manager raises and the loading bay scans.
+// ---------------------------------------------------------------------
+
+export type SkladInvoiceStatus = 'yangi' | 'qisman' | 'bajarildi' | 'bekor';
+
+/** One line of an invoice being raised. Strings, as everywhere the user types. */
+export interface SkladInvoiceRow {
+  itemId?: string;
+  batchId?: string;
+  dona?: string;
+  kg?: string;
+  unitPrice?: string;
+  note?: string;
+}
+
+/** A row of the invoice queue on the despatch desk. */
+export interface SkladInvoiceSummary {
+  invoiceId: string;
+  invoiceNo?: string | null;
+  barcode?: string | null;
+  status: SkladInvoiceStatus;
+  issuedAt: string;
+  dueDate?: string | null;
+  counterpartyId?: string | null;
+  counterpartyName: string;
+  managerName?: string | null;
+  orderNo?: string | null;
+  currency: string;
+  lineCount: number;
+  orderedDona: number;
+  shippedDona: number;
+  totalAmount?: number | null;
+}
+
+/** One line of a scanned invoice, with what is still outstanding on it. */
+export interface SkladInvoiceLine {
+  lineId: string;
+  itemId?: string | null;
+  batchId?: string | null;
+  kod?: string | null;
+  itemName?: string | null;
+  widthCm?: number | null;
+  lengthCm?: number | null;
+  colorName?: string | null;
+  orderedDona: number;
+  shippedDona: number;
+  remainingDona: number;
+  /** What the batch the line names actually holds — null when it names none. */
+  batchQoldiqDona?: number | null;
+  unitPrice?: number | null;
+  amount?: number | null;
+}
+
+/** What a scan resolves to: the header, and the lines with their remainders. */
+export interface SkladScannedInvoice {
+  invoiceId: string;
+  invoiceNo?: string | null;
+  barcode?: string | null;
+  status: SkladInvoiceStatus;
+  issuedAt: string;
+  counterpartyId?: string | null;
+  counterpartyName: string;
+  orderId?: string | null;
+  managerId?: string | null;
+  currency: string;
+  note?: string | null;
+  lines: SkladInvoiceLine[];
+}
+
+/** A despatch note, as it prints. */
+export interface SkladShipmentNote {
+  shipmentId: string;
+  documentNo?: string | null;
+  shippedAt: string;
+  counterpartyName?: string | null;
+  managerName?: string | null;
+  orderNo?: string | null;
+  invoiceId?: string | null;
+  invoiceNo?: string | null;
+  invoiceBarcode?: string | null;
+  note?: string | null;
+  lines: {
+    lineId: string;
+    kod?: string | null;
+    itemName?: string | null;
+    widthCm?: number | null;
+    lengthCm?: number | null;
+    colorName?: string | null;
+    dona: number;
+    kg?: number | null;
+  }[];
+}
+
 export type SkladAuditEntity =
-  'batch' | 'item' | 'price' | 'order' | 'line' | 'stage_entry' | 'shipment';
+  'batch' | 'item' | 'price' | 'order' | 'line' | 'stage_entry' | 'shipment' | 'invoice';
 
 export interface SkladAuditEntry {
   id: number;

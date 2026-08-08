@@ -574,6 +574,9 @@ export function useIssueSkladRows(supabase: SupabaseClient<Database>) {
       documentNo?: string | null;
       shippedAt?: string | null;
       note?: string | null;
+      /** When the despatch answers a scanned invoice: the client, the order and
+       * the document number then come off the paper rather than the desk. */
+      invoiceId?: string | null;
     }): Promise<string> => {
       const { data, error } = await supabase.rpc('sklad_issue_rows', {
         target_org_id: input.orgId,
@@ -584,6 +587,7 @@ export function useIssueSkladRows(supabase: SupabaseClient<Database>) {
         p_document_no: input.documentNo ?? null,
         p_shipped_at: input.shippedAt ?? null,
         p_note: input.note ?? null,
+        p_invoice_id: input.invoiceId ?? null,
       });
       if (error) throw error;
       return data;
@@ -593,6 +597,7 @@ export function useIssueSkladRows(supabase: SupabaseClient<Database>) {
         'sklad-batch-page',
         'sklad-batches',
         'sklad-issuable',
+        'sklad-invoices',
         'sklad-stock',
         'sklad-order-summary',
         'sklad-shipments',

@@ -372,7 +372,8 @@
       "overview": "Umumiy ko‘rinish",
       "receiving": "Kirim qilish",
       "operations": "Ombor amallari",
-      "issuing": "Chiqim qilish"
+      "issuing": "Chiqim qilish",
+      "invoices": "Fakturalar"
     },
     "totals": {
       "label": "Jami",
@@ -448,7 +449,8 @@
       "entity_order": "Buyurtma",
       "entity_line": "Buyurtma qatori",
       "entity_stage_entry": "Bosqich yozuvi",
-      "entity_shipment": "Yuklash"
+      "entity_shipment": "Yuklash",
+      "entity_invoice": "Faktura"
     },
     "addSingleBatch": "Bitta partiya",
     "kirim": {
@@ -520,7 +522,46 @@
       "saved": "{n} ta partiya bo‘yicha chiqim yozildi",
       "nothingSelected": "Miqdor kiritilmagan",
       "nowIssuing": "Chiqyapti",
-      "empty": "Omborda qoldiq qolmagan"
+      "empty": "Omborda qoldiq qolmagan",
+      "scanLabel": "Faktura QR yoki shtrix kodini skanerlang",
+      "scanPlaceholder": "Skaner qiling yoki faktura raqamini yozing",
+      "scanButton": "Topish",
+      "scanMissed": "Bunday faktura topilmadi",
+      "clearInvoice": "Fakturani bekor qilish",
+      "savedNote": "Chiqim yozildi.",
+      "openNote": "Yuk xatini ochish",
+      "noteTitle": "Yuk xati",
+      "noteNotFound": "Yuk xati topilmadi",
+      "print": "Chop etish",
+      "signedStore": "Omborchi:",
+      "signedDriver": "Haydovchi:",
+      "linesOffPage": "Faktura qatorlaridan ba’zilari bu ro‘yxatda ko‘rinmayapti — qidiruvni tozalang.",
+      "linesWithoutBatch": "Fakturada partiyasi ko‘rsatilmagan qatorlar bor — ularni qo‘lda tanlang."
+    },
+    "invoiceStatus": {
+      "yangi": "Yangi",
+      "qisman": "Qisman yuborilgan",
+      "bajarildi": "Bajarilgan",
+      "bekor": "Bekor qilingan"
+    },
+    "faktura": {
+      "title": "Fakturalar",
+      "description": "Menejer sotuv fakturasini shu yerdan yaratadi va chop etadi.",
+      "create": "Yangi faktura",
+      "save": "Fakturani yaratish",
+      "searchPlaceholder": "Faktura raqami, shtrix kod yoki mijoz",
+      "empty": "Hozircha faktura yo‘q",
+      "notFound": "Faktura topilmadi",
+      "number": "Faktura raqami",
+      "issuedAt": "Sanasi",
+      "dueDate": "To‘lov muddati",
+      "qty": "Miqdor (dona)",
+      "unitPrice": "1 dona narxi",
+      "print": "Chop etish",
+      "needClient": "Mijozni tanlang",
+      "needLines": "Kamida bitta qator kiriting",
+      "signedManager": "Menejer:",
+      "signedClient": "Mijoz:"
     }
   },
   "readOnly": {

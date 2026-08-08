@@ -372,7 +372,8 @@
       "overview": "Обзор",
       "receiving": "Приход",
       "operations": "Складские операции",
-      "issuing": "Расход"
+      "issuing": "Расход",
+      "invoices": "Счета"
     },
     "totals": {
       "label": "Итого",
@@ -448,7 +449,8 @@
       "entity_order": "Заказ",
       "entity_line": "Строка заказа",
       "entity_stage_entry": "Запись этапа",
-      "entity_shipment": "Отгрузка"
+      "entity_shipment": "Отгрузка",
+      "entity_invoice": "Счёт"
     },
     "addSingleBatch": "Одна партия",
     "kirim": {
@@ -520,7 +522,46 @@
       "saved": "Расход записан по партиям: {n}",
       "nothingSelected": "Количество не указано",
       "nowIssuing": "Уходит",
-      "empty": "Остатков на складе нет"
+      "empty": "Остатков на складе нет",
+      "scanLabel": "Отсканируйте QR или штрихкод счёта",
+      "scanPlaceholder": "Отсканируйте или введите номер счёта",
+      "scanButton": "Найти",
+      "scanMissed": "Такой счёт не найден",
+      "clearInvoice": "Отменить счёт",
+      "savedNote": "Расход записан.",
+      "openNote": "Открыть накладную",
+      "noteTitle": "Накладная",
+      "noteNotFound": "Накладная не найдена",
+      "print": "Печать",
+      "signedStore": "Кладовщик:",
+      "signedDriver": "Водитель:",
+      "linesOffPage": "Часть строк счёта не видна в этом списке — очистите поиск.",
+      "linesWithoutBatch": "В счёте есть строки без указанной партии — выберите их вручную."
+    },
+    "invoiceStatus": {
+      "yangi": "Новый",
+      "qisman": "Частично отгружен",
+      "bajarildi": "Выполнен",
+      "bekor": "Отменён"
+    },
+    "faktura": {
+      "title": "Счета на продажу",
+      "description": "Менеджер создаёт и печатает счёт здесь.",
+      "create": "Новый счёт",
+      "save": "Создать счёт",
+      "searchPlaceholder": "Номер счёта, штрихкод или клиент",
+      "empty": "Счетов пока нет",
+      "notFound": "Счёт не найден",
+      "number": "Номер счёта",
+      "issuedAt": "Дата",
+      "dueDate": "Срок оплаты",
+      "qty": "Количество (шт)",
+      "unitPrice": "Цена за штуку",
+      "print": "Печать",
+      "needClient": "Выберите клиента",
+      "needLines": "Добавьте хотя бы одну строку",
+      "signedManager": "Менеджер:",
+      "signedClient": "Клиент:"
     }
   },
   "readOnly": {

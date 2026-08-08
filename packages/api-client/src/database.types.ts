@@ -12,6 +12,9 @@
 export type SkladBatchStatusValue =
   'tayyor' | 'qadoqlanmoqda' | 'omborda' | 'rezerv' | 'jonatildi' | 'qaytarildi' | 'brak';
 
+/** Mirrors the `sklad_invoice_status` enum (0027). */
+export type SkladInvoiceStatusValue = 'yangi' | 'qisman' | 'bajarildi' | 'bekor';
+
 /** Mirrors the `sklad_order_status` enum (0024). */
 export type SkladOrderStatusValue =
   'yangi' | 'ishlab_chiqarishda' | 'tayyor' | 'yuklandi' | 'yopilgan';
@@ -450,6 +453,7 @@ export interface Database {
           document_no: string | null;
           shipped_at: string;
           note: string | null;
+          invoice_id: string | null;
           created_by: string | null;
           created_at: string;
         };
@@ -479,11 +483,61 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['sklad_shipment_lines']['Row']>;
         Relationships: [];
       };
+      sklad_invoices: {
+        Row: {
+          id: string;
+          org_id: string;
+          invoice_no: string | null;
+          barcode: string | null;
+          counterparty_id: string;
+          manager_id: string | null;
+          order_id: string | null;
+          issued_at: string;
+          due_date: string | null;
+          status: SkladInvoiceStatusValue;
+          currency: string;
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        // invoice_no and barcode are assigned by trigger (0027); supplying
+        // them is allowed but the app never does.
+        Insert: Partial<Database['public']['Tables']['sklad_invoices']['Row']> & {
+          org_id: string;
+          counterparty_id: string;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_invoices']['Row']>;
+        Relationships: [];
+      };
+      sklad_invoice_lines: {
+        Row: {
+          id: string;
+          org_id: string;
+          invoice_id: string;
+          item_id: string | null;
+          batch_id: string | null;
+          position: number;
+          dona: number;
+          kg: number | null;
+          unit_price: number | null;
+          amount: number | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database['public']['Tables']['sklad_invoice_lines']['Row']> & {
+          org_id: string;
+          invoice_id: string;
+          dona: number;
+        };
+        Update: Partial<Database['public']['Tables']['sklad_invoice_lines']['Row']>;
+        Relationships: [];
+      };
       sklad_audit: {
         Row: {
           id: number;
           org_id: string;
-          entity: 'batch' | 'item' | 'price' | 'order' | 'line' | 'stage_entry' | 'shipment';
+          entity:
+            'batch' | 'item' | 'price' | 'order' | 'line' | 'stage_entry' | 'shipment' | 'invoice';
           entity_id: string;
           action: 'insert' | 'update' | 'delete';
           changed_by: string | null;
@@ -806,6 +860,7 @@ export interface Database {
           p_document_no?: string | null;
           p_shipped_at?: string | null;
           p_note?: string | null;
+          p_invoice_id?: string | null;
         };
         Returns: string;
       };
@@ -826,6 +881,100 @@ export interface Database {
           order_id: string | null;
           order_no: string | null;
           omborga_kirgan_sana: string;
+        }[];
+      };
+      // Sales invoices (0027).
+      sklad_create_invoice: {
+        Args: {
+          target_org_id: string;
+          p_counterparty_id: string;
+          p_rows: unknown;
+          p_order_id?: string | null;
+          p_manager_id?: string | null;
+          p_issued_at?: string | null;
+          p_due_date?: string | null;
+          p_currency?: string | null;
+          p_note?: string | null;
+        };
+        Returns: string;
+      };
+      sklad_invoice_by_code: {
+        Args: { target_org_id: string; p_code: string };
+        Returns: {
+          invoice_id: string;
+          invoice_no: string | null;
+          barcode: string | null;
+          status: SkladInvoiceStatusValue;
+          issued_at: string;
+          counterparty_id: string | null;
+          counterparty_name: string;
+          order_id: string | null;
+          manager_id: string | null;
+          currency: string;
+          note: string | null;
+          line_id: string | null;
+          item_id: string | null;
+          batch_id: string | null;
+          kod: string | null;
+          item_name: string | null;
+          width_cm: number | null;
+          length_cm: number | null;
+          color_name: string | null;
+          ordered_dona: number | null;
+          shipped_dona: number | null;
+          remaining_dona: number | null;
+          batch_qoldiq_dona: number | null;
+          unit_price: number | null;
+          amount: number | null;
+        }[];
+      };
+      sklad_invoice_page: {
+        Args: {
+          target_org_id: string;
+          p_status?: SkladInvoiceStatusValue | null;
+          p_counterparty_id?: string | null;
+          p_search?: string | null;
+          p_limit?: number | null;
+        };
+        Returns: {
+          invoice_id: string;
+          invoice_no: string | null;
+          barcode: string | null;
+          status: SkladInvoiceStatusValue;
+          issued_at: string;
+          due_date: string | null;
+          counterparty_id: string | null;
+          counterparty_name: string;
+          manager_name: string | null;
+          order_no: string | null;
+          currency: string;
+          line_count: number;
+          ordered_dona: number;
+          shipped_dona: number;
+          total_amount: number | null;
+        }[];
+      };
+      sklad_shipment_note: {
+        Args: { p_shipment_id: string };
+        Returns: {
+          shipment_id: string;
+          document_no: string | null;
+          shipped_at: string;
+          counterparty_name: string | null;
+          manager_name: string | null;
+          order_no: string | null;
+          invoice_id: string | null;
+          invoice_no: string | null;
+          invoice_barcode: string | null;
+          note: string | null;
+          line_id: string | null;
+          kod: string | null;
+          item_name: string | null;
+          width_cm: number | null;
+          length_cm: number | null;
+          color_name: string | null;
+          dona: number | null;
+          kg: number | null;
         }[];
       };
       record_sklad_movement: {
@@ -970,7 +1119,8 @@ export interface Database {
         Args: { target_org_id: string; p_limit?: number | null };
         Returns: {
           id: number;
-          entity: 'batch' | 'item' | 'price' | 'order' | 'line' | 'stage_entry' | 'shipment';
+          entity:
+            'batch' | 'item' | 'price' | 'order' | 'line' | 'stage_entry' | 'shipment' | 'invoice';
           entity_id: string;
           action: 'insert' | 'update' | 'delete';
           changed_at: string;
