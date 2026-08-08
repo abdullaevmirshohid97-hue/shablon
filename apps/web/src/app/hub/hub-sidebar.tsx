@@ -151,8 +151,10 @@ export function HubSidebar({
     {
       title: t('hub.finance'),
       items: [
-        { href: '/dashboard', label: t('nav.dashboard'), Icon: FinanceIcon },
-        { href: '/clients', label: t('nav.clients'), Icon: ClientsIcon },
+        // Same labels the Finance sidebar uses, so one product does not call
+        // the same page two different things depending on where you came from.
+        { href: '/dashboard', label: t('nav.clients'), Icon: FinanceIcon },
+        { href: '/clients', label: t('nav.allClients'), Icon: ClientsIcon },
       ],
     },
     {
