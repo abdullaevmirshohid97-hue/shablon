@@ -34,15 +34,15 @@ export function TopDebtors({ rows }: { rows: CounterpartyJournalRow[] }) {
 
   return (
     <Card className="flex flex-col p-4">
-      <h2 className="mb-3 text-base font-semibold text-slate-900">{t('overview.topDebtors')}</h2>
+      <h2 className="mb-3 text-fin-lg font-semibold text-slate-900">{t('overview.topDebtors')}</h2>
 
       {debtors.length === 0 ? (
-        <p className="text-sm text-slate-500">{t('overview.noDebtors')}</p>
+        <p className="text-fin-md text-slate-500">{t('overview.noDebtors')}</p>
       ) : (
         <div className="-mx-1 max-h-[420px] overflow-y-auto px-1">
-          <table className="w-full border-collapse text-sm">
+          <table className="w-full border-collapse text-fin-md">
             <thead className="sticky top-0 bg-white">
-              <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wide text-slate-500">
+              <tr className="border-b border-slate-200 text-left text-fin-xs uppercase tracking-wide text-slate-500">
                 <th className="py-1.5 pr-2 font-medium">{t('overview.debtorName')}</th>
                 <th className="py-1.5 pr-2 text-right font-medium">{t('overview.overdueSum')}</th>
                 <th className="py-1.5 text-right font-medium">{t('overview.totalDebtShort')}</th>
@@ -59,7 +59,7 @@ export function TopDebtors({ rows }: { rows: CounterpartyJournalRow[] }) {
                       {row.name}
                     </Link>
                     {row.overdueDate && (
-                      <span className="text-[11px] text-rose-500">
+                      <span className="text-fin-xs text-rose-500">
                         {new Date(row.overdueDate).toLocaleDateString(dateLocale)}
                       </span>
                     )}
@@ -69,7 +69,7 @@ export function TopDebtors({ rows }: { rows: CounterpartyJournalRow[] }) {
                   </td>
                   <td className="py-1.5 text-right tabular-nums text-slate-900">
                     {money.format(row.totalDebt)}
-                    <span className="ml-1 text-[11px] text-slate-400">{row.currency}</span>
+                    <span className="ml-1 text-fin-xs text-slate-400">{row.currency}</span>
                   </td>
                 </tr>
               ))}

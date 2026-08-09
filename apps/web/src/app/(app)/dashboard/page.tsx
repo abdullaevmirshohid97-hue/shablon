@@ -24,8 +24,8 @@ export default async function DashboardPage() {
   if (!org) {
     return (
       <div>
-        <h1 className="text-xl font-semibold text-slate-900">{t('dashboard.welcomeTitle')}</h1>
-        <p className="mt-2 text-sm text-slate-600">{t('dashboard.noOrgMessage')}</p>
+        <h1 className="text-fin-xl font-semibold text-slate-900">{t('dashboard.welcomeTitle')}</h1>
+        <p className="mt-2 text-fin-md text-slate-600">{t('dashboard.noOrgMessage')}</p>
       </div>
     );
   }
@@ -41,16 +41,16 @@ export default async function DashboardPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="max-w-md text-center">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-xl font-bold text-white">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-fin-xl font-bold text-white">
             M
           </span>
-          <h1 className="mt-4 text-xl font-semibold text-slate-900">
+          <h1 className="mt-4 text-fin-xl font-semibold text-slate-900">
             {t('dashboard.onboardingTitle')}
           </h1>
-          <p className="mt-2 text-sm text-slate-600">{t('dashboard.onboardingMessage')}</p>
+          <p className="mt-2 text-fin-md text-slate-600">{t('dashboard.onboardingMessage')}</p>
           <Link
             href="/clients"
-            className="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+            className="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-fin-md font-medium text-white transition-colors hover:bg-brand-700"
           >
             {t('dashboard.onboardingCta')}
           </Link>
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-slate-900">
+      <h1 className="mb-6 text-fin-2xl font-semibold tracking-tight text-slate-900">
         {t('nav.clients')}
       </h1>
 

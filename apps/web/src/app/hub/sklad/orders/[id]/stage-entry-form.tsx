@@ -83,7 +83,7 @@ export function StageEntryForm({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-scrim/50 p-4 backdrop-blur-sm">
       <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl bg-white p-5 shadow-popover">
         <h2 className="text-base font-semibold text-slate-900">{stageName}</h2>
         <p className="mt-0.5 text-sm text-slate-500">{lineLabel}</p>

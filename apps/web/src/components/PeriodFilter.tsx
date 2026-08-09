@@ -86,7 +86,7 @@ export function PeriodFilter({
             onChange={(e) => state.setCustomStart(e.target.value)}
             className="w-auto"
           />
-          <span className="text-xs text-slate-400">—</span>
+          <span className="text-fin-sm text-slate-400">—</span>
           <Input
             type="date"
             aria-label={t('analytics.to')}

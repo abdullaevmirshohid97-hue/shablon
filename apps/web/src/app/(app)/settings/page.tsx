@@ -27,8 +27,8 @@ export default async function SettingsPage() {
   if (!org) {
     return (
       <div>
-        <h1 className="text-xl font-semibold text-slate-900">{t('dashboard.welcomeTitle')}</h1>
-        <p className="mt-2 text-sm text-slate-600">{t('dashboard.noOrgMessage')}</p>
+        <h1 className="text-fin-xl font-semibold text-slate-900">{t('dashboard.welcomeTitle')}</h1>
+        <p className="mt-2 text-fin-md text-slate-600">{t('dashboard.noOrgMessage')}</p>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-slate-900">
+      <h1 className="mb-6 text-fin-2xl font-semibold tracking-tight text-slate-900">
         {t('settings.title')}
       </h1>
       <div className="flex flex-col gap-6">

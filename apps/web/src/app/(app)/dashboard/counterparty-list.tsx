@@ -109,14 +109,14 @@ export function CounterpartyList({
               <Link key={c.id} href={`/counterparty/${c.id}`}>
                 <Card className="flex items-center gap-3 p-4 transition-shadow hover:shadow-popover">
                   <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${toneFor(c.name)}`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-fin-md font-semibold ${toneFor(c.name)}`}
                   >
                     {initials(c.name)}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium text-slate-900">{c.name}</span>
                     {(c.phone || c.categories?.length) && (
-                      <span className="block truncate text-xs text-slate-500">
+                      <span className="block truncate text-fin-sm text-slate-500">
                         {[c.phone, c.categories?.join(', ')].filter(Boolean).join(' · ')}
                       </span>
                     )}
@@ -126,7 +126,7 @@ export function CounterpartyList({
                           {t('dashboard.overdue')}:{' '}
                           {new Date(debt.overdueDate).toLocaleDateString(dateLocale)}
                         </Badge>
-                        <span className="text-xs font-semibold tabular-nums text-rose-600">
+                        <span className="text-fin-sm font-semibold tabular-nums text-rose-600">
                           {currencyFormatter.format(debt.overdueAmount)}
                         </span>
                       </span>
@@ -149,7 +149,7 @@ export function CounterpartyList({
           })}
         </div>
       ) : (
-        <Card className="px-4 py-10 text-center text-sm text-slate-500">
+        <Card className="px-4 py-10 text-center text-fin-md text-slate-500">
           {t('dashboard.empty')}
         </Card>
       )}

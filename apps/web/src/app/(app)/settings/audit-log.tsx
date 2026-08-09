@@ -76,15 +76,15 @@ export function AuditLog({ orgId }: { orgId: string }) {
 
   return (
     <Card className="p-4">
-      <h2 className="text-base font-semibold text-slate-900">{t('audit.title')}</h2>
-      <p className="mt-1 text-sm text-slate-500">{t('audit.description')}</p>
+      <h2 className="text-fin-lg font-semibold text-slate-900">{t('audit.title')}</h2>
+      <p className="mt-1 text-fin-md text-slate-500">{t('audit.description')}</p>
 
-      {errorMessage && <p className="mt-3 text-sm text-rose-600">{errorMessage}</p>}
+      {errorMessage && <p className="mt-3 text-fin-md text-rose-600">{errorMessage}</p>}
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
+        <table className="w-full border-collapse text-fin-md">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+            <tr className="border-b border-slate-200 text-left text-fin-sm text-slate-500">
               <th className="py-1.5 pr-3 font-medium">{t('audit.when')}</th>
               <th className="py-1.5 pr-3 font-medium">{t('audit.who')}</th>
               <th className="py-1.5 pr-3 font-medium">{t('audit.what')}</th>
@@ -104,14 +104,14 @@ export function AuditLog({ orgId }: { orgId: string }) {
                     {t(`audit.action_${entry.action}`)}
                   </Badge>
                   {entry.document_no && (
-                    <span className="ml-1.5 text-xs text-slate-400">{entry.document_no}</span>
+                    <span className="ml-1.5 text-fin-sm text-slate-400">{entry.document_no}</span>
                   )}
                 </td>
                 <td className="py-1.5 pr-3 text-slate-700">{entry.counterparty_name ?? '—'}</td>
                 <td className="py-1.5">
                   <AmountChange entry={entry} />
                   {entry.old_description !== entry.new_description && (
-                    <span className="block text-xs text-slate-400">
+                    <span className="block text-fin-sm text-slate-400">
                       {entry.old_description ?? '—'}
                       {entry.action === 'update' && ` → ${entry.new_description ?? '—'}`}
                     </span>
@@ -122,7 +122,9 @@ export function AuditLog({ orgId }: { orgId: string }) {
           </tbody>
         </table>
 
-        {entries?.length === 0 && <p className="py-3 text-sm text-slate-500">{t('audit.empty')}</p>}
+        {entries?.length === 0 && (
+          <p className="py-3 text-fin-md text-slate-500">{t('audit.empty')}</p>
+        )}
       </div>
 
       {entries && entries.length >= limit && (

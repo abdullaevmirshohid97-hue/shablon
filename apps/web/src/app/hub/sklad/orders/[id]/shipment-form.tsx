@@ -101,7 +101,7 @@ export function ShipmentForm({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-scrim/50 p-4 backdrop-blur-sm">
       <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white p-5 shadow-popover">
         <h2 className="mb-4 text-base font-semibold text-slate-900">{t('sklad.shipment.title')}</h2>
 

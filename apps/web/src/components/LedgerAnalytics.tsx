@@ -45,8 +45,8 @@ export function LedgerAnalytics({
   return (
     <Card className={`p-4 ${forcePrintVisible ? '' : 'no-print'}`}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-slate-900">{t('analytics.title')}</h2>
-        <span className="text-xs text-slate-500">
+        <h2 className="text-fin-lg font-semibold text-slate-900">{t('analytics.title')}</h2>
+        <span className="text-fin-sm text-slate-500">
           {formatPeriodLabel(period.range, dateLocale, t('export.periodAll'))}
         </span>
       </div>
@@ -56,13 +56,13 @@ export function LedgerAnalytics({
           {/* One cell: the figure, what it means, and who it is — rather than a
               total floating above a list that repeated the heading. */}
           <div className="rounded-lg border border-rose-200 bg-rose-50/50 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-rose-700">
+            <p className="text-fin-xs font-semibold uppercase tracking-[0.04em] text-rose-700">
               {t('analytics.overdueTotal')}
             </p>
-            <p className="mt-0.5 text-2xl font-bold tabular-nums text-rose-700">
+            <p className="mt-0.5 text-fin-2xl font-bold tabular-nums text-rose-700">
               {currencyFormatter.format(overdueTotal)}
             </p>
-            <p className="mt-1 text-xs leading-snug text-rose-600">
+            <p className="mt-1 text-fin-sm leading-snug text-rose-600">
               {t('analytics.overdueNote').replace('{n}', String(overdueRows.length))}
             </p>
 
@@ -71,14 +71,14 @@ export function LedgerAnalytics({
                 <li key={row.id}>
                   <Link
                     href={`/counterparty/${row.id}`}
-                    className="flex items-center justify-between gap-2 text-sm hover:underline"
+                    className="flex items-center justify-between gap-2 text-fin hover:underline"
                   >
                     <span className="truncate font-medium text-rose-700">{row.name}</span>
                     <span className="ml-2 shrink-0 text-right">
                       <span className="block tabular-nums font-semibold text-rose-700">
                         {currencyFormatter.format(row.overdueAmount)}
                       </span>
-                      <span className="block text-xs text-rose-500">
+                      <span className="block text-fin-xs text-rose-500">
                         {new Date(row.overdueDate).toLocaleDateString(dateLocale)}
                       </span>
                     </span>
@@ -86,17 +86,17 @@ export function LedgerAnalytics({
                 </li>
               ))}
               {!overdueRows.length && (
-                <li className="text-sm text-slate-400">{t('analytics.noDueItems')}</li>
+                <li className="text-fin text-slate-500">{t('analytics.noDueItems')}</li>
               )}
             </ul>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-amber-700">
+            <p className="mb-2 text-fin-xs font-semibold uppercase tracking-[0.04em] text-amber-700">
               {t('analytics.dueSoonTitle')} ({dueSoon.length})
             </p>
             <ul className="space-y-1">
               {dueSoon.map((row) => (
-                <li key={row.id} className="flex items-center justify-between text-sm">
+                <li key={row.id} className="flex items-center justify-between text-fin">
                   <span className="truncate text-slate-700">{row.label}</span>
                   <span className="ml-2 shrink-0 tabular-nums text-amber-700">
                     {new Date(row.dueDate).toLocaleDateString(dateLocale)}
@@ -104,7 +104,7 @@ export function LedgerAnalytics({
                 </li>
               ))}
               {!dueSoon.length && (
-                <li className="text-sm text-slate-400">{t('analytics.noDueItems')}</li>
+                <li className="text-fin text-slate-500">{t('analytics.noDueItems')}</li>
               )}
             </ul>
           </div>
@@ -135,12 +135,12 @@ export function LedgerAnalytics({
 
       {stats.byCategory.length > 0 ? (
         <div className="mb-4 overflow-x-auto">
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <p className="mb-1.5 text-fin-xs font-semibold uppercase tracking-wide text-slate-500">
             {t('analytics.byCategory')}
           </p>
-          <table className="w-full border-collapse text-sm">
+          <table className="w-full border-collapse text-fin">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+              <tr className="border-b border-slate-200 text-left text-fin-sm text-slate-500">
                 <th className="py-1.5 pr-3 font-medium">{t('analytics.category')}</th>
                 <th className="py-1.5 pr-3 text-right font-medium">{t('transaction.quantity')}</th>
                 <th className="py-1.5 pr-3 font-medium">{t('analytics.unit')}</th>
@@ -172,10 +172,10 @@ export function LedgerAnalytics({
           </table>
         </div>
       ) : (
-        <p className="mb-4 text-sm text-slate-500">{t('analytics.noData')}</p>
+        <p className="mb-4 text-fin text-slate-500">{t('analytics.noData')}</p>
       )}
 
-      <p className="mt-4 text-xs text-slate-400">
+      <p className="mt-4 text-fin-sm text-slate-500">
         {t('analytics.transactionCount')}: {stats.transactionCount}
       </p>
     </Card>

@@ -6,6 +6,7 @@ import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { useOrgRole } from '@/lib/auth/OrgRoleProvider';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { MobileNav } from '@/components/ui/MobileNav';
+import { FinanceTextSizeControl } from '@/components/FinanceTextSizeControl';
 
 function ClientsIcon({ className }: { className?: string }) {
   return (
@@ -106,10 +107,14 @@ export function Sidebar({
 
   const footer = (
     <>
+      {/* Finance-only setting, and it says so. Kept in the nav rather than in
+          Sozlamalar because it is a "make this readable right now" control,
+          not an org policy — it belongs one click from the ledger. */}
+      <FinanceTextSizeControl className="mb-3 border-b border-slate-200 pb-3" />
       {orgName && <p className="truncate text-xs font-semibold text-slate-700">{orgName}</p>}
-      <p className="truncate text-xs text-slate-400">{userEmail}</p>
+      <p className="truncate text-xs text-slate-500">{userEmail}</p>
       {!canWrite && (
-        <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+        <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-500">
           <EyeIcon className="h-3 w-3" />
           {t('readOnly.badge')}
         </span>
@@ -158,7 +163,7 @@ export function Sidebar({
 
           {moduleCategories.length > 0 && (
             <div className="pt-4">
-              <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                 {t('nav.modules')}
               </p>
               {moduleCategories.map((category) => {

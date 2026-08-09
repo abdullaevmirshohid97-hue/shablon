@@ -15,6 +15,19 @@
     "title": "Finance",
     "brand": "idaa finance"
   },
+  "theme": {
+    "label": "Оформление",
+    "ice": "Лёд",
+    "light": "Светлая",
+    "dark": "Тёмная"
+  },
+  "textSize": {
+    "label": "Размер текста",
+    "decrease": "Уменьшить",
+    "increase": "Увеличить",
+    "reset": "По умолчанию",
+    "hint": "Действует только на модуль Finance"
+  },
   "nav": {
     "clients": "Общая аналитика",
     "allClients": "Клиенты",
@@ -137,7 +150,12 @@
     "reverseDate": "Дата сторно",
     "reverseReason": "Причина",
     "reverseReasonPlaceholder": "например: неверная сумма",
-    "reverseSubmit": "Сторнировать"
+    "reverseSubmit": "Сторнировать",
+    "inlineAmountRequired": "Укажите сумму прихода или расхода",
+    "inlineDescriptionHint": "Комментарий пишется после ввода данных",
+    "draftUnsaved": "Не сохранено",
+    "draftRestored": "Несохранённая запись восстановлена",
+    "draftClear": "Очистить"
   },
   "transaction": {
     "counterparty": "Контрагент",

@@ -170,7 +170,9 @@ export function TransactionEntryForm({
             {createTransaction.isPending ? t('common.saving') : t('common.save')}
           </Button>
           {createTransaction.isError && (
-            <p className="text-sm text-rose-600">{(createTransaction.error as Error).message}</p>
+            <p className="text-fin-md text-rose-600">
+              {(createTransaction.error as Error).message}
+            </p>
           )}
         </div>
       </form>

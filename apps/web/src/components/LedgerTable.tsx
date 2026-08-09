@@ -18,9 +18,14 @@ import type { Database } from '@mubosher/api-client';
 
 const currencyFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2 });
 
-const th = 'px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400';
+// Column headings used to be 10px uppercase in the lightest grey on the ramp —
+// legible on a designer's monitor, not on a laptop at arm's length. They now
+// ride the Finance type scale like everything else and sit on the secondary
+// ink, not the placeholder ink.
+const th = 'px-3 py-2.5 text-fin-xs font-semibold uppercase tracking-[0.04em] text-slate-500';
+const td = 'px-3 py-2.5 text-fin';
 const inlineInput =
-  'h-7 w-full rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-900 transition-colors hover:border-slate-400';
+  'h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-fin text-slate-900 transition-colors hover:border-slate-400';
 
 function dueDateTone(
   dueDate: string | null | undefined,
@@ -56,28 +61,101 @@ function emptyDraft() {
   };
 }
 
+type Draft = ReturnType<typeof emptyDraft>;
+
+/** Half-typed rows live here, per client, until they are saved or cleared. */
+const draftStorageKey = (counterpartyId: string) => `mubosher.ledgerDraft.${counterpartyId}`;
+
+/**
+ * The date, the currency and the fund source are always populated, so they say
+ * nothing about whether the user has actually started typing. Only the fields
+ * they fill by hand count as work worth protecting.
+ */
+function hasTypedContent(draft: Draft) {
+  return Boolean(
+    draft.description ||
+    draft.kg ||
+    draft.dona ||
+    draft.chiqimSumma ||
+    draft.kirimSumma ||
+    draft.dueDate,
+  );
+}
+
 function InlineEntryRow({
   supabase,
   orgId,
   counterpartyId,
   currencies,
+  columnCount,
 }: {
   supabase: SupabaseClient<Database>;
   orgId: string;
   counterpartyId: string;
   currencies: string[];
+  columnCount: number;
 }) {
   const { t } = useLocale();
   const { data: categories } = useCategoriesWithKind(supabase, orgId);
   const createTransaction = useCreateTransaction(supabase);
   const [draft, setDraft] = useState(emptyDraft());
   const [formError, setFormError] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
+  const storageKey = draftStorageKey(counterpartyId);
+  const isDirty = hasTypedContent(draft);
 
-  function set<K extends keyof ReturnType<typeof emptyDraft>>(
-    key: K,
-    value: ReturnType<typeof emptyDraft>[K],
-  ) {
+  // A half-filled row survives leaving the page. Switching to the warehouse
+  // module mid-entry — or closing the tab by accident — used to throw the
+  // typing away silently, because the row only existed in React state.
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(storageKey);
+      if (!stored) return;
+      const parsed = { ...emptyDraft(), ...(JSON.parse(stored) as Partial<Draft>) };
+      if (!hasTypedContent(parsed)) return;
+      setDraft(parsed);
+      setRestored(true);
+    } catch {
+      // Corrupted or unavailable storage is not worth a broken ledger.
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    try {
+      if (isDirty) window.localStorage.setItem(storageKey, JSON.stringify(draft));
+      else window.localStorage.removeItem(storageKey);
+    } catch {
+      // Storage disabled: the row still works, it just won't outlive the page.
+    }
+  }, [draft, isDirty, storageKey]);
+
+  // Closing the tab or hitting reload is the one exit the restore above cannot
+  // cover reliably, so it gets the browser's own confirmation.
+  useEffect(() => {
+    if (!isDirty) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [isDirty]);
+
+  function set<K extends keyof Draft>(key: K, value: Draft[K]) {
+    setRestored(false);
+    setFormError(null);
     setDraft((d) => ({ ...d, [key]: value }));
+  }
+
+  function discardDraft() {
+    setDraft(emptyDraft());
+    setRestored(false);
+    setFormError(null);
+    try {
+      window.localStorage.removeItem(storageKey);
+    } catch {
+      /* nothing to clean up */
+    }
   }
 
   // No mutual-exclusivity restrictions: kg and dona, kirim and chiqim can
@@ -87,10 +165,14 @@ function InlineEntryRow({
   // columns instead of being folded into the description text.
   async function handleSave() {
     setFormError(null);
+    setRestored(false);
 
     const hasKirim = draft.kirimSumma !== '';
     const hasChiqim = draft.chiqimSumma !== '';
-    if (!hasKirim && !hasChiqim) return;
+    if (!hasKirim && !hasChiqim) {
+      setFormError(t('ledger.inlineAmountRequired'));
+      return;
+    }
 
     const quantityKg = draft.kg !== '' ? Number(draft.kg) : undefined;
     const quantityDona = draft.dona !== '' ? Number(draft.dona) : undefined;
@@ -101,35 +183,43 @@ function InlineEntryRow({
       ...(hasChiqim ? [{ kind: 'chiqim' as const, amount: Number(draft.chiqimSumma) }] : []),
     ];
 
-    for (const leg of legs) {
-      const category = (categories ?? []).find((c) => c.kind === leg.kind);
-      if (!category) {
-        setFormError(t('ledger.inlineNoCategoryError'));
-        continue;
-      }
+    // A failed leg must not clear the row: whatever was typed stays on screen
+    // (and in storage) so it can be retried, rather than vanishing along with
+    // the error that caused it.
+    try {
+      for (const leg of legs) {
+        const category = (categories ?? []).find((c) => c.kind === leg.kind);
+        if (!category) {
+          setFormError(t('ledger.inlineNoCategoryError'));
+          return;
+        }
 
-      await createTransaction.mutateAsync({
-        orgId,
-        counterpartyId,
-        categoryId: category.id,
-        occurredAt: new Date(draft.occurredAt).toISOString(),
-        dueDate: leg.kind === 'chiqim' && draft.dueDate ? draft.dueDate : undefined,
-        description,
-        quantityKg,
-        quantityDona,
-        amount: leg.amount,
-        currency: draft.currency,
-        source: draft.source,
-        clientLocalId: crypto.randomUUID(),
-      });
+        await createTransaction.mutateAsync({
+          orgId,
+          counterpartyId,
+          categoryId: category.id,
+          occurredAt: new Date(draft.occurredAt).toISOString(),
+          dueDate: leg.kind === 'chiqim' && draft.dueDate ? draft.dueDate : undefined,
+          description,
+          quantityKg,
+          quantityDona,
+          amount: leg.amount,
+          currency: draft.currency,
+          source: draft.source,
+          clientLocalId: crypto.randomUUID(),
+        });
+      }
+    } catch (err) {
+      setFormError((err as Error).message);
+      return;
     }
 
-    setDraft(emptyDraft());
+    discardDraft();
   }
 
   return (
     <>
-      <tr className="border-b border-slate-200 bg-slate-50 no-print">
+      <tr className="border-b border-slate-200 bg-slate-100/70 no-print">
         <td className="px-2 py-1.5">
           <input
             type="datetime-local"
@@ -138,9 +228,25 @@ function InlineEntryRow({
             className={inlineInput}
           />
         </td>
-        <td className="px-2 py-1.5 text-center text-[10px] text-slate-400">{t('ledger.auto')}</td>
-        <td className="px-2 py-1.5 text-[10px] leading-tight text-slate-400">
-          ↓ {t('transaction.description')}
+        <td className="px-2 py-1.5 text-center text-fin-xs text-slate-500">{t('ledger.auto')}</td>
+        {/* Valyuta belongs with the figures it denominates, not down in the
+            note field where it had ended up sitting on top of the comment.
+            Anything other than the base currency is converted at the rate in
+            force on the entry's own date — see Settings > Kurslar. */}
+        <td className="px-2 py-1.5">
+          <select
+            value={draft.currency}
+            onChange={(e) => set('currency', e.target.value)}
+            aria-label={t('rates.currency')}
+            title={t('rates.currency')}
+            className={inlineInput}
+          >
+            {currencies.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </select>
         </td>
         <td className="px-2 py-1.5">
           <input
@@ -184,57 +290,68 @@ function InlineEntryRow({
           />
         </td>
         {/* Joriy saldo — yangi qator saqlangach hisoblanadi, bu yerda bo'sh */}
-        <td className="px-2 py-1.5 text-center text-[10px] text-slate-300">—</td>
+        <td className="px-2 py-1.5 text-center text-fin-xs text-slate-400">—</td>
         <td className="px-1 py-1.5">
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={createTransaction.isPending}
-              title={t('common.save')}
-              className="rounded-md bg-slate-900 p-1.5 text-white transition-colors hover:bg-slate-800 disabled:opacity-45"
-            >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                <path
-                  fillRule="evenodd"
-                  d="M16.704 5.29a1 1 0 010 1.415l-7.5 7.5a1 1 0 01-1.415 0l-3.5-3.5a1 1 0 111.415-1.414L8.5 12.086l6.79-6.795a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-          </div>
-          {(formError || createTransaction.isError) && (
-            <p className="mt-1 whitespace-normal text-[10px] text-rose-600">
-              {formError ?? (createTransaction.error as Error).message}
-            </p>
-          )}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={createTransaction.isPending}
+            title={t('common.save')}
+            aria-label={t('common.save')}
+            className="flex h-8 w-full items-center justify-center rounded-md bg-slate-900 text-white transition-colors hover:bg-slate-800 disabled:opacity-45"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path
+                fillRule="evenodd"
+                d="M16.704 5.29a1 1 0 010 1.415l-7.5 7.5a1 1 0 01-1.415 0l-3.5-3.5a1 1 0 111.415-1.414L8.5 12.086l6.79-6.795a1 1 0 011.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
         </td>
       </tr>
-      {/* Izoh — alohida to'liq kenglikdagi qator, tor ustunda emas, bemalol yoziladi */}
-      <tr className="border-b border-slate-200 bg-slate-50 no-print">
-        <td colSpan={10} className="px-2 pb-2">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={draft.description}
-              onChange={(e) => set('description', e.target.value)}
-              placeholder={`${t('transaction.description')} (izoh)`}
-              className={`${inlineInput} flex-1`}
-            />
-            {/* Anything other than the base currency is converted at the rate
-                in force on the entry's own date — see Settings > Kurslar. */}
-            <select
-              value={draft.currency}
-              onChange={(e) => set('currency', e.target.value)}
-              aria-label={t('rates.currency')}
-              className={`${inlineInput} w-24 shrink-0`}
-            >
-              {currencies.map((code) => (
-                <option key={code} value={code}>
-                  {code}
-                </option>
-              ))}
-            </select>
+      {/* Izoh — the last step, not a column. It gets the full width of the
+          table on its own line, below the figures it describes: you fill the
+          row, then say what it was. */}
+      <tr className="border-b border-slate-200 bg-slate-100/70 no-print">
+        <td colSpan={columnCount} className="px-2 pb-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex min-w-[240px] flex-1 items-center gap-2">
+              <span className="shrink-0 text-fin-xs font-medium uppercase tracking-[0.04em] text-slate-500">
+                {t('transaction.description')}
+              </span>
+              <input
+                type="text"
+                value={draft.description}
+                onChange={(e) => set('description', e.target.value)}
+                placeholder={t('ledger.inlineDescriptionHint')}
+                className={`${inlineInput} flex-1`}
+              />
+            </label>
+
+            {/* Whatever is in the row right now, and what became of it. Three
+                states share this slot so the toolbar never grows a permanent
+                strip of chrome for a transient message. */}
+            {(formError || restored || isDirty) && (
+              <div className="flex items-center gap-2">
+                {formError ? (
+                  <span className="text-fin-sm font-medium text-rose-600">{formError}</span>
+                ) : restored ? (
+                  <span className="text-fin-sm text-amber-700">{t('ledger.draftRestored')}</span>
+                ) : (
+                  <span className="text-fin-sm text-slate-500">{t('ledger.draftUnsaved')}</span>
+                )}
+                {isDirty && (
+                  <button
+                    type="button"
+                    onClick={discardDraft}
+                    className="shrink-0 text-fin-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-900 hover:underline"
+                  >
+                    {t('ledger.draftClear')}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </td>
       </tr>
@@ -313,10 +430,10 @@ export function LedgerTable({
     return map;
   }, [transactions]);
 
-  if (isLoading) return <p className="text-sm text-slate-500">{t('common.loading')}</p>;
+  if (isLoading) return <p className="text-fin text-slate-500">{t('common.loading')}</p>;
   if (error)
     return (
-      <p className="text-sm text-rose-600">
+      <p className="text-fin text-rose-600">
         {t('common.error')}: {(error as Error).message}
       </p>
     );
@@ -357,7 +474,7 @@ export function LedgerTable({
       </div>
 
       <div className="ledger-scroll max-h-[65vh] overflow-auto">
-        <table className="w-full min-w-[1060px] table-fixed border-collapse text-xs sm:text-sm">
+        <table className="w-full min-w-[1060px] table-fixed border-collapse text-fin">
           <colgroup>
             <col className="w-[12%]" />
             <col className="w-[8%]" />
@@ -391,6 +508,7 @@ export function LedgerTable({
                 orgId={orgId}
                 counterpartyId={counterpartyId}
                 currencies={currencies}
+                columnCount={columnCount}
               />
             )}
             {displayRows.map((tx) => {
@@ -403,23 +521,24 @@ export function LedgerTable({
               return (
                 <tr
                   key={tx.id}
-                  className={`border-b border-slate-200 transition-colors hover:bg-slate-50 ${
+                  // Alternating bands rather than a rule under every row: at
+                  // ten columns of figures the eye loses its line halfway
+                  // across, and a band carries it further than a hairline.
+                  className={`border-b border-slate-200 transition-colors even:bg-slate-50/70 hover:bg-slate-100 ${
                     isReversed ? 'text-slate-400 line-through' : ''
                   } ${isReversal ? 'bg-amber-50/50' : ''}`}
                 >
-                  <td className="px-3 py-2.5 text-slate-600 tabular-nums">
+                  <td className={`${td} text-slate-700 tabular-nums`}>
                     <div>{new Date(tx.occurredAt).toLocaleDateString(dateLocale)}</div>
-                    <div className="text-[10px] text-slate-400">
+                    <div className="text-fin-xs text-slate-500">
                       {new Date(tx.occurredAt).toLocaleTimeString(dateLocale, {
                         hour: '2-digit',
                         minute: '2-digit',
                       })}
                     </div>
                   </td>
-                  <td className="truncate px-3 py-2.5 text-slate-400 tabular-nums">
-                    {tx.documentNo}
-                  </td>
-                  <td className="truncate px-3 py-2.5" title={tx.description ?? undefined}>
+                  <td className={`${td} truncate text-slate-500 tabular-nums`}>{tx.documentNo}</td>
+                  <td className={`${td} truncate`} title={tx.description ?? undefined}>
                     <span className={isReversed ? '' : 'text-slate-900'}>{tx.description}</span>
                     {(isReversed || isReversal) && (
                       <Badge
@@ -430,17 +549,17 @@ export function LedgerTable({
                       </Badge>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">{kg ?? ''}</td>
-                  <td className="px-3 py-2.5 text-right tabular-nums">{dona ?? ''}</td>
-                  <td className="px-3 py-2.5 text-right tabular-nums text-rose-600">
+                  <td className={`${td} text-right tabular-nums`}>{kg ?? ''}</td>
+                  <td className={`${td} text-right tabular-nums`}>{dona ?? ''}</td>
+                  <td className={`${td} text-right font-medium tabular-nums text-rose-600`}>
                     {isChiqim ? currencyFormatter.format(tx.creditAmount) : ''}
                   </td>
-                  <td className="px-3 py-2.5 text-right tabular-nums text-emerald-600">
+                  <td className={`${td} text-right font-medium tabular-nums text-emerald-600`}>
                     {tx.debitAccountType === 'receivable'
                       ? currencyFormatter.format(tx.debitAmount)
                       : ''}
                   </td>
-                  <td className="truncate px-3 py-2.5">
+                  <td className={`${td} truncate`}>
                     {isChiqim && tx.dueDate ? (
                       <Badge tone={tone ?? 'neutral'}>
                         {new Date(tx.dueDate).toLocaleDateString(dateLocale)}
@@ -449,7 +568,7 @@ export function LedgerTable({
                       ''
                     )}
                   </td>
-                  <td className="bg-slate-50/60 px-3 py-2.5 text-right font-semibold tabular-nums">
+                  <td className={`${td} bg-slate-50/60 text-right font-semibold tabular-nums`}>
                     {(() => {
                       const bal = balanceById.get(tx.id);
                       if (!bal) return '';
@@ -506,7 +625,7 @@ export function LedgerTable({
             })}
             {!transactions?.length && (
               <tr>
-                <td colSpan={columnCount} className="py-10 text-center text-sm text-slate-500">
+                <td colSpan={columnCount} className="py-10 text-center text-fin text-slate-500">
                   {t('ledger.empty')}
                 </td>
               </tr>

@@ -24,7 +24,7 @@ function RosterAvatar({ entry, className }: { entry: RosterEntry; className: str
   const initial = (entry.full_name ?? entry.email ?? '?').trim().charAt(0).toUpperCase();
   return (
     <span
-      className={`${className} flex items-center justify-center rounded-full bg-brand-100 text-lg font-semibold text-brand-700`}
+      className={`${className} flex items-center justify-center rounded-full bg-brand-100 text-fin-xl font-semibold text-brand-700`}
     >
       {initial}
     </span>
@@ -137,7 +137,7 @@ export function FinanceAccessGate({
             <button
               type="button"
               onClick={reset}
-              className="mb-3 text-sm text-slate-500 hover:text-slate-700"
+              className="mb-3 text-fin-md text-slate-500 hover:text-slate-700"
             >
               ← {t('nav.back')}
             </button>
@@ -147,11 +147,11 @@ export function FinanceAccessGate({
                 <p className="truncate font-semibold text-slate-900">
                   {selected.full_name ?? selected.email}
                 </p>
-                <p className="truncate text-xs text-slate-400">{selected.email}</p>
+                <p className="truncate text-fin-sm text-slate-400">{selected.email}</p>
               </div>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-              <p className="text-sm text-slate-500">
+              <p className="text-fin-md text-slate-500">
                 {t(usePin ? 'financeAccess.pinPrompt' : 'financeAccess.passwordPrompt')}
               </p>
               <Input
@@ -161,7 +161,7 @@ export function FinanceAccessGate({
                 minLength={usePin ? 4 : undefined}
                 maxLength={usePin ? 10 : undefined}
                 autoComplete={usePin ? 'off' : 'current-password'}
-                className={usePin ? 'text-center text-lg tracking-[0.4em]' : undefined}
+                className={usePin ? 'text-center text-fin-xl tracking-[0.4em]' : undefined}
                 value={secret}
                 onChange={(e) => {
                   setSecret(e.target.value);
@@ -174,10 +174,10 @@ export function FinanceAccessGate({
               {/* Picking a colleague is a real sign-in, not a peek — say so
                   before they wonder why the short code stopped working. */}
               {!usePin && selected.user_id !== currentUserId && (
-                <p className="text-xs text-slate-400">{t('financeAccess.otherPersonHint')}</p>
+                <p className="text-fin-sm text-slate-400">{t('financeAccess.otherPersonHint')}</p>
               )}
               {status === 'wrong' && (
-                <p className="text-sm text-rose-600">
+                <p className="text-fin-md text-rose-600">
                   {t(usePin ? 'financeAccess.pinIncorrect' : 'financeAccess.incorrect')}
                 </p>
               )}
@@ -188,7 +188,7 @@ export function FinanceAccessGate({
           </>
         ) : (
           <>
-            <h1 className="mb-4 text-lg font-semibold text-slate-900">
+            <h1 className="mb-4 text-fin-xl font-semibold text-slate-900">
               {t('financeAccess.pickPrompt')}
             </h1>
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -200,14 +200,14 @@ export function FinanceAccessGate({
                   className="flex flex-col items-center gap-1.5 rounded-lg p-2 text-center hover:bg-slate-50"
                 >
                   <RosterAvatar entry={entry} className="h-14 w-14" />
-                  <span className="w-full truncate text-xs font-medium text-slate-700">
+                  <span className="w-full truncate text-fin-sm font-medium text-slate-700">
                     {entry.full_name ?? entry.email}
                   </span>
                 </button>
               ))}
             </div>
             {roster?.length === 0 && (
-              <p className="text-sm text-slate-500">{t('financeAccess.empty')}</p>
+              <p className="text-fin-md text-slate-500">{t('financeAccess.empty')}</p>
             )}
           </>
         )}

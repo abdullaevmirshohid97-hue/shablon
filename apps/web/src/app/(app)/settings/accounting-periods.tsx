@@ -91,8 +91,8 @@ export function AccountingPeriods({ orgId }: { orgId: string }) {
     <Card className="p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-slate-900">{t('periods.title')}</h2>
-          <p className="mt-1 text-sm text-slate-500">{t('periods.description')}</p>
+          <h2 className="text-fin-lg font-semibold text-slate-900">{t('periods.title')}</h2>
+          <p className="mt-1 text-fin-md text-slate-500">{t('periods.description')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Select
@@ -119,12 +119,12 @@ export function AccountingPeriods({ orgId }: { orgId: string }) {
         </div>
       </div>
 
-      {errorMessage && <p className="mt-3 text-sm text-rose-600">{errorMessage}</p>}
+      {errorMessage && <p className="mt-3 text-fin-md text-rose-600">{errorMessage}</p>}
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
+        <table className="w-full border-collapse text-fin-md">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+            <tr className="border-b border-slate-200 text-left text-fin-sm text-slate-500">
               <th className="py-1.5 pr-3 font-medium">{t('periods.period')}</th>
               <th className="py-1.5 pr-3 font-medium">{t('periods.status')}</th>
               <th className="py-1.5 pr-3 text-right font-medium">{t('export.entryCount')}</th>
@@ -142,7 +142,7 @@ export function AccountingPeriods({ orgId }: { orgId: string }) {
                     {t(p.status === 'closed' ? 'periods.closed' : 'periods.open')}
                   </Badge>
                   {p.closed_by_name && (
-                    <span className="ml-1.5 text-xs text-slate-400">
+                    <span className="ml-1.5 text-fin-sm text-slate-400">
                       {p.closed_by_name}
                       {p.closed_at && `, ${new Date(p.closed_at).toLocaleDateString(dateLocale)}`}
                     </span>
@@ -151,7 +151,7 @@ export function AccountingPeriods({ orgId }: { orgId: string }) {
                 <td className="py-1.5 pr-3 text-right tabular-nums">
                   {p.entry_count}
                   {p.draft_count > 0 && (
-                    <span className="ml-1 text-xs text-amber-600">
+                    <span className="ml-1 text-fin-sm text-amber-600">
                       (+{p.draft_count} {t('periods.drafts')})
                     </span>
                   )}
@@ -196,7 +196,7 @@ export function AccountingPeriods({ orgId }: { orgId: string }) {
         </table>
 
         {periods?.length === 0 && (
-          <p className="py-3 text-sm text-slate-500">{t('periods.empty')}</p>
+          <p className="py-3 text-fin-md text-slate-500">{t('periods.empty')}</p>
         )}
       </div>
     </Card>

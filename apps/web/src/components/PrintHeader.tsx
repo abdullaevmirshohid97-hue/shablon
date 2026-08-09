@@ -30,9 +30,9 @@ export function PrintHeader({
 
   return (
     <div className="print-only mb-3 border-b border-slate-300 pb-2">
-      <h1 className="text-base font-bold text-slate-900">{title}</h1>
-      {subtitle && <p className="text-xs text-slate-600">{subtitle}</p>}
-      <p className="text-[10px] text-slate-500">
+      <h1 className="text-fin-lg font-bold text-slate-900">{title}</h1>
+      {subtitle && <p className="text-fin-sm text-slate-600">{subtitle}</p>}
+      <p className="text-fin-xs text-slate-500">
         {period && (
           <>
             {t('export.period')}: {period}

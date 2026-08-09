@@ -139,12 +139,13 @@ export function Calculator({
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
-  const btn = 'rounded-md bg-slate-100 py-2 text-sm font-medium hover:bg-slate-200';
-  const btnOp = 'rounded-md bg-slate-800 py-2 text-sm font-medium text-white hover:bg-slate-700';
+  const btn = 'rounded-md bg-slate-100 py-2 text-fin-md font-medium hover:bg-slate-200';
+  const btnOp =
+    'rounded-md bg-slate-800 py-2 text-fin-md font-medium text-white hover:bg-slate-700';
 
   return (
     <div className="absolute right-0 top-full z-20 mt-1 w-56 rounded-xl border border-slate-200 bg-white p-3 shadow-popover">
-      <div className="mb-2 rounded-md bg-slate-50 px-2 py-2 text-right font-mono text-lg tabular-nums">
+      <div className="mb-2 rounded-md bg-slate-50 px-2 py-2 text-right font-mono text-fin-xl tabular-nums">
         {display}
       </div>
       <div className="grid grid-cols-4 gap-1.5">
@@ -186,7 +187,7 @@ export function Calculator({
         ))}
         <button
           type="button"
-          className="row-span-2 rounded-md bg-brand-600 text-sm font-medium text-white hover:bg-brand-700"
+          className="row-span-2 rounded-md bg-brand-600 text-fin-md font-medium text-white hover:bg-brand-700"
           onClick={equals}
         >
           =
@@ -201,7 +202,7 @@ export function Calculator({
       </div>
 
       {operator && (
-        <p className="mt-1 text-center text-xs text-slate-400">
+        <p className="mt-1 text-center text-fin-sm text-slate-400">
           {prevValue} {OPERATOR_LABEL[operator]}
         </p>
       )}
@@ -209,14 +210,14 @@ export function Calculator({
       <div className="mt-2 flex gap-1.5">
         <button
           type="button"
-          className="flex-1 rounded-md bg-brand-600 py-1.5 text-sm text-white hover:bg-brand-700"
+          className="flex-1 rounded-md bg-brand-600 py-1.5 text-fin-md text-white hover:bg-brand-700"
           onClick={() => onApply(parseFloat(display) || 0)}
         >
           {t('common.apply')}
         </button>
         <button
           type="button"
-          className="rounded-md bg-slate-100 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200"
+          className="rounded-md bg-slate-100 px-3 py-1.5 text-fin-md text-slate-600 hover:bg-slate-200"
           onClick={onClose}
         >
           {t('common.close')}

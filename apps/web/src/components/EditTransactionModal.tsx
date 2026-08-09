@@ -80,9 +80,9 @@ export function EditTransactionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-scrim/50 p-4 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-xl bg-white p-5 shadow-popover">
-        <h2 className="mb-4 text-base font-semibold text-slate-900">{t('ledger.editTitle')}</h2>
+        <h2 className="mb-4 text-fin-lg font-semibold text-slate-900">{t('ledger.editTitle')}</h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Segmented
@@ -206,7 +206,9 @@ export function EditTransactionModal({
           </div>
 
           {updateTransaction.isError && (
-            <p className="text-sm text-rose-600">{(updateTransaction.error as Error).message}</p>
+            <p className="text-fin-md text-rose-600">
+              {(updateTransaction.error as Error).message}
+            </p>
           )}
 
           <div className="mt-1 flex gap-2">

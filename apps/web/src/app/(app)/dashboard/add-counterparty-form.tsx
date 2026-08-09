@@ -147,7 +147,7 @@ export function AddCounterpartyForm({
                     }
                   }}
                   placeholder={t('addCounterparty.addCategoryPlaceholder')}
-                  className="rounded-full border border-slate-300 px-3 py-1 text-sm focus:border-brand-500"
+                  className="rounded-full border border-slate-300 px-3 py-1 text-fin-md focus:border-brand-500"
                 />
                 <Button type="button" variant="ghost" size="sm" onClick={() => addCustomCategory()}>
                   {t('addCounterparty.addCategoryButton')}
@@ -161,7 +161,7 @@ export function AddCounterpartyForm({
           <Button type="submit" disabled={status === 'saving'}>
             {status === 'saving' ? t('common.saving') : t('addCounterparty.submit')}
           </Button>
-          {errorMessage && <p className="text-sm text-rose-600">{errorMessage}</p>}
+          {errorMessage && <p className="text-fin-md text-rose-600">{errorMessage}</p>}
         </div>
       </form>
     </Card>

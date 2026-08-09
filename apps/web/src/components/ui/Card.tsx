@@ -46,9 +46,9 @@ export function StatCard({
   return (
     <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white py-3.5 pl-4 pr-3.5 shadow-card">
       <span className={`absolute inset-y-0 left-0 w-[2px] ${rule}`} aria-hidden />
-      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className={`mt-1.5 text-xl font-semibold tabular-nums ${figure}`}>{value}</p>
-      {hint && <p className="mt-0.5 text-xs text-slate-400">{hint}</p>}
+      <p className="text-fin-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className={`mt-1.5 text-fin-xl font-semibold tabular-nums ${figure}`}>{value}</p>
+      {hint && <p className="mt-0.5 text-fin-sm text-slate-500">{hint}</p>}
     </div>
   );
 }

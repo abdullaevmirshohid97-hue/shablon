@@ -15,6 +15,19 @@
     "title": "Finance",
     "brand": "idaa finance"
   },
+  "theme": {
+    "label": "Ko'rinish",
+    "ice": "Muz",
+    "light": "Yorug'",
+    "dark": "Qorong'i"
+  },
+  "textSize": {
+    "label": "Matn o'lchami",
+    "decrease": "Kichraytirish",
+    "increase": "Kattalashtirish",
+    "reset": "Standart",
+    "hint": "Faqat Finance modulidagi matnga ta'sir qiladi"
+  },
   "nav": {
     "clients": "Umumiy analitika",
     "allClients": "Mijozlar",
@@ -137,7 +150,12 @@
     "reverseDate": "Storno sanasi",
     "reverseReason": "Sababi",
     "reverseReasonPlaceholder": "masalan: summa noto'g'ri kiritilgan",
-    "reverseSubmit": "Storno qilish"
+    "reverseSubmit": "Storno qilish",
+    "inlineAmountRequired": "Kirim yoki chiqim summasini kiriting",
+    "inlineDescriptionHint": "Ma'lumotlar kiritilgandan so'ng izoh yozing",
+    "draftUnsaved": "Saqlanmagan",
+    "draftRestored": "Saqlanmagan yozuv tiklandi",
+    "draftClear": "Tozalash"
   },
   "transaction": {
     "counterparty": "Kontragent",

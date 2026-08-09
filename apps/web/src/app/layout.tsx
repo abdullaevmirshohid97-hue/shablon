@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Providers } from './providers';
 import { LocaleProvider } from '@/lib/i18n/LocaleProvider';
+import { ThemeProvider, themeBootstrapScript } from '@/lib/prefs/ThemeProvider';
 import { Header } from '@/components/Header';
 import { getServerLocale } from '@/lib/i18n/server';
 import './globals.css';
@@ -41,13 +42,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getServerLocale();
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
+      <head>
+        {/* Sets the palette on <html> before the first paint — see
+            themeBootstrapScript. Anything later than this is a white flash. */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+      </head>
       <body>
         <Providers>
-          <LocaleProvider initialLocale={locale}>
-            <Header />
-            {children}
-          </LocaleProvider>
+          <ThemeProvider>
+            <LocaleProvider initialLocale={locale}>
+              <Header />
+              {children}
+            </LocaleProvider>
+          </ThemeProvider>
         </Providers>
       </body>
     </html>

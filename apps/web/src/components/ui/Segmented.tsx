@@ -11,7 +11,7 @@ export function Segmented<T extends string>({
 }) {
   return (
     <div
-      className={`inline-flex h-9 items-center rounded-lg border border-slate-200 bg-slate-100 p-0.5 text-sm ${className}`}
+      className={`inline-flex h-9 items-center rounded-lg border border-slate-200 bg-slate-100 p-0.5 text-fin-md ${className}`}
     >
       {options.map((opt) => (
         <button

@@ -21,7 +21,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-medium leading-4 ${tones[tone]} ${className}`}
+      className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-fin-xs font-medium leading-4 ${tones[tone]} ${className}`}
     >
       {children}
     </span>
@@ -43,7 +43,7 @@ export function ToggleChip({
     <button
       type={type}
       onClick={onClick}
-      className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
+      className={`rounded-full border px-3 py-1 text-fin-md font-medium transition-colors ${
         active
           ? 'border-brand-600 bg-brand-600 text-white'
           : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'

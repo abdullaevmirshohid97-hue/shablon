@@ -4,7 +4,7 @@ import { forwardRef } from 'react';
 // without either being nudged. Focus is handled by the global focus-visible
 // ring — a second border colour on top of it just doubled the outline.
 const baseInput =
-  'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 ' +
+  'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-fin-md text-slate-900 ' +
   'placeholder:text-slate-400 transition-colors hover:border-slate-400 ' +
   'disabled:bg-slate-100 disabled:text-slate-400';
 
@@ -32,7 +32,7 @@ export function Label({
   className?: string;
 }) {
   return (
-    <label className={`mb-1.5 block text-xs font-medium text-slate-600 ${className}`}>
+    <label className={`mb-1.5 block text-fin-sm font-medium text-slate-600 ${className}`}>
       {children}
     </label>
   );

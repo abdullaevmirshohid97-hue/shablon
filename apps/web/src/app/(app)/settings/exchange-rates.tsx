@@ -85,8 +85,8 @@ export function ExchangeRates({ orgId, baseCurrency }: { orgId: string; baseCurr
 
   return (
     <Card className="p-4">
-      <h2 className="text-base font-semibold text-slate-900">{t('rates.title')}</h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <h2 className="text-fin-lg font-semibold text-slate-900">{t('rates.title')}</h2>
+      <p className="mt-1 text-fin-md text-slate-500">
         {t('rates.description')} ({t('rates.baseCurrency')}: {baseCurrency})
       </p>
 
@@ -130,13 +130,13 @@ export function ExchangeRates({ orgId, baseCurrency }: { orgId: string; baseCurr
             {t('rates.save')}
           </Button>
         </div>
-        {errorMessage && <p className="text-sm text-rose-600 sm:col-span-4">{errorMessage}</p>}
+        {errorMessage && <p className="text-fin-md text-rose-600 sm:col-span-4">{errorMessage}</p>}
       </form>
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full border-collapse text-sm">
+        <table className="w-full border-collapse text-fin-md">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+            <tr className="border-b border-slate-200 text-left text-fin-sm text-slate-500">
               <th className="py-1.5 pr-3 font-medium">{t('rates.effectiveDate')}</th>
               <th className="py-1.5 pr-3 font-medium">{t('rates.pair')}</th>
               <th className="py-1.5 text-right font-medium">{t('rates.rate')}</th>
@@ -156,7 +156,9 @@ export function ExchangeRates({ orgId, baseCurrency }: { orgId: string; baseCurr
             ))}
           </tbody>
         </table>
-        {rates?.length === 0 && <p className="py-3 text-sm text-slate-500">{t('rates.empty')}</p>}
+        {rates?.length === 0 && (
+          <p className="py-3 text-fin-md text-slate-500">{t('rates.empty')}</p>
+        )}
       </div>
     </Card>
   );

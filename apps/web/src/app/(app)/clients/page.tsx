@@ -31,8 +31,8 @@ export default async function ClientsPage() {
   if (!org) {
     return (
       <div>
-        <h1 className="text-xl font-semibold text-slate-900">{t('dashboard.welcomeTitle')}</h1>
-        <p className="mt-2 text-sm text-slate-600">{t('dashboard.noOrgMessage')}</p>
+        <h1 className="text-fin-xl font-semibold text-slate-900">{t('dashboard.welcomeTitle')}</h1>
+        <p className="mt-2 text-fin-md text-slate-600">{t('dashboard.noOrgMessage')}</p>
       </div>
     );
   }
@@ -50,10 +50,12 @@ export default async function ClientsPage() {
     <div>
       <div className="mb-6 flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-fin-2xl font-semibold tracking-tight text-slate-900">
             {t('dashboard.title')}
           </h1>
-          <p className="mt-1 text-sm text-slate-500 tabular-nums">{counterparties?.length ?? 0}</p>
+          <p className="mt-1 text-fin-md text-slate-500 tabular-nums">
+            {counterparties?.length ?? 0}
+          </p>
         </div>
       </div>
 

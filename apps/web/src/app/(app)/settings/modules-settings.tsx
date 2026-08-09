@@ -120,8 +120,8 @@ export function ModulesSettings({ orgId }: { orgId: string }) {
 
   return (
     <Card className="p-4">
-      <h2 className="text-base font-semibold text-slate-900">{t('settings.modulesTitle')}</h2>
-      <p className="mt-1 text-sm text-slate-500">{t('settings.modulesDescription')}</p>
+      <h2 className="text-fin-lg font-semibold text-slate-900">{t('settings.modulesTitle')}</h2>
+      <p className="mt-1 text-fin-md text-slate-500">{t('settings.modulesDescription')}</p>
 
       <form onSubmit={handleCreate} className="mt-4 flex items-center gap-2">
         <Input
@@ -134,12 +134,12 @@ export function ModulesSettings({ orgId }: { orgId: string }) {
           {t('settings.addButton')}
         </Button>
       </form>
-      {errorMessage && <p className="mt-2 text-sm text-rose-600">{errorMessage}</p>}
+      {errorMessage && <p className="mt-2 text-fin-md text-rose-600">{errorMessage}</p>}
 
       <ul className="mt-4 divide-y divide-slate-100 border-t border-slate-100">
-        {isLoading && <li className="py-3 text-sm text-slate-500">{t('common.loading')}</li>}
+        {isLoading && <li className="py-3 text-fin-md text-slate-500">{t('common.loading')}</li>}
         {!isLoading && !modules?.length && (
-          <li className="py-3 text-sm text-slate-500">{t('settings.empty')}</li>
+          <li className="py-3 text-fin-md text-slate-500">{t('settings.empty')}</li>
         )}
         {modules?.map((m) => (
           <li key={m.id} className="flex items-center gap-2 py-2.5">
@@ -171,7 +171,7 @@ export function ModulesSettings({ orgId }: { orgId: string }) {
               </>
             ) : (
               <>
-                <span className="flex-1 truncate text-sm text-slate-900">{m.name}</span>
+                <span className="flex-1 truncate text-fin-md text-slate-900">{m.name}</span>
                 <button
                   type="button"
                   onClick={() => startEditing(m.id, m.name)}

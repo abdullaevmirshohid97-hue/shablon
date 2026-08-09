@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Segmented } from '@/components/ui/Segmented';
 import { PwaInstall } from '@/components/PwaInstall';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 export function Header() {
   const { locale, setLocale, t } = useLocale();
@@ -55,6 +56,7 @@ export function Header() {
           {/* Removes itself once the app is installed, and on browsers that
               have no way to install anything. */}
           <PwaInstall className="hidden sm:inline-flex" />
+          <ThemeSwitcher />
           <Segmented
             value={locale}
             onChange={setLocale}

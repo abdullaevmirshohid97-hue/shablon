@@ -80,7 +80,7 @@ export function OverviewAnalytics({
 
   if (error) {
     return (
-      <p className="mb-6 text-sm text-rose-600">
+      <p className="mb-6 text-fin-md text-rose-600">
         {t('common.error')}: {(error as Error).message}
       </p>
     );

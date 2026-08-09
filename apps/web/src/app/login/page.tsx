@@ -82,20 +82,20 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen flex-col lg:flex-row">
       {/* ---------- Brend paneli ---------- */}
-      <section className="relative flex shrink-0 flex-col justify-between overflow-hidden bg-slate-900 px-6 py-6 text-white lg:w-[44%] lg:px-12 lg:py-10">
+      <section className="relative flex shrink-0 flex-col justify-between overflow-hidden bg-ink px-6 py-6 text-paper lg:w-[44%] lg:px-12 lg:py-10">
         {/* Ohang uchun juda past kontrastli nur — panel tekis qora bo'lib
             qolmasligi uchun, lekin matnga xalaqit bermaydi. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/[0.04] blur-2xl"
+          className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-paper/[0.04] blur-2xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-white/[0.03] blur-2xl"
+          className="pointer-events-none absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-paper/[0.03] blur-2xl"
         />
 
         <div className="relative flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-base font-bold text-slate-900">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-paper text-base font-bold text-ink">
             M
           </span>
           <span className="text-base font-semibold tracking-tight">{t('header.brand')}</span>
@@ -105,17 +105,17 @@ export default function LoginPage() {
           <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-tightest">
             {t('login.heroTitle')}
           </h2>
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-paper/60">
             {t('login.heroSubtitle')}
           </p>
 
           <ul className="mt-8 flex flex-col gap-2.5">
             {['login.heroPoint1', 'login.heroPoint2', 'login.heroPoint3'].map((key) => (
-              <li key={key} className="flex items-start gap-2.5 text-sm text-slate-300">
+              <li key={key} className="flex items-start gap-2.5 text-sm text-paper/75">
                 <svg
                   viewBox="0 0 20 20"
                   fill="currentColor"
-                  className="mt-0.5 h-4 w-4 shrink-0 text-slate-500"
+                  className="mt-0.5 h-4 w-4 shrink-0 text-paper/45"
                 >
                   <path
                     fillRule="evenodd"
@@ -129,7 +129,7 @@ export default function LoginPage() {
           </ul>
         </div>
 
-        <p className="relative mt-6 hidden text-xs text-slate-500 lg:block">
+        <p className="relative mt-6 hidden text-xs text-paper/45 lg:block">
           © {new Date().getFullYear()} {t('header.brand')}
         </p>
       </section>
@@ -244,7 +244,7 @@ export default function LoginPage() {
             <p className="mt-3 text-sm text-rose-600">{errorMessage ?? t('common.errorRetry')}</p>
           )}
 
-          <p className="mt-6 text-xs leading-relaxed text-slate-400">{t('login.helpNote')}</p>
+          <p className="mt-6 text-xs leading-relaxed text-paper/60">{t('login.helpNote')}</p>
         </div>
       </section>
     </main>

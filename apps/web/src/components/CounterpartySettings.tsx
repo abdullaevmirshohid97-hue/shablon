@@ -9,7 +9,7 @@ import { Input, Label, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 
 const textareaClass =
-  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 ' +
+  'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-fin-md text-slate-900 ' +
   'placeholder:text-slate-400 transition-shadow focus:border-brand-500';
 
 /**
@@ -69,6 +69,26 @@ export function CounterpartySettings({
       .then(({ data }) => setRoster(data ?? []));
   }, [supabase, orgId]);
 
+  // Edits here are not drafted anywhere — the saved values live on the server
+  // and restoring a stale copy would quietly overwrite someone else's change.
+  // So the form says out loud that it is dirty, and the browser asks before
+  // the tab closes on top of it.
+  const isDirty =
+    currency !== (initial.currency ?? '') ||
+    managerId !== (initial.managerId ?? '') ||
+    phone !== (initial.phone ?? '') ||
+    notes !== (initial.notes ?? '');
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [isDirty]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage(null);
@@ -108,7 +128,7 @@ export function CounterpartySettings({
                 </option>
               ))}
             </Select>
-            <p className="mt-1 text-[11px] leading-snug text-slate-400">
+            <p className="mt-1 text-fin-xs leading-snug text-slate-400">
               {t('counterparty.currencyHint')}
             </p>
           </div>
@@ -150,14 +170,19 @@ export function CounterpartySettings({
           />
         </div>
 
-        {errorMessage && <p className="text-sm text-rose-600">{errorMessage}</p>}
+        {errorMessage && <p className="text-fin-md text-rose-600">{errorMessage}</p>}
 
         {canWrite && (
           <div className="flex items-center gap-3">
             <Button type="submit" size="sm" disabled={update.isPending}>
               {update.isPending ? t('common.saving') : t('common.save')}
             </Button>
-            {saved && <span className="text-sm text-emerald-700">{t('counterparty.saved')}</span>}
+            {saved && !isDirty && (
+              <span className="text-fin-md text-emerald-700">{t('counterparty.saved')}</span>
+            )}
+            {isDirty && (
+              <span className="text-fin-sm text-amber-700">{t('ledger.draftUnsaved')}</span>
+            )}
           </div>
         )}
       </form>

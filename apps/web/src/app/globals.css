@@ -2,6 +2,200 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+   Themes.
+
+   Three sets of the same variable names, so a component never asks which theme
+   is on. `light` is the paper-white original, `ice` is the same layout on a
+   cool blue canvas, and `dark` is a terminal: a flat dark grey (#1E1E1E, the
+   cmd/VS Code surface) with near-white ink rather than a blue-black.
+
+   The neutral ramp inverts in dark mode: 50 stays "canvas", 900 stays "ink",
+   and the values swap ends. That is what makes `bg-slate-900 text-white`
+   readable in all three themes without a single `dark:` variant anywhere.
+   --------------------------------------------------------------------------- */
+
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --c-white: 255 255 255; /* card surface */
+  --c-black: 0 0 0; /* deepest ink */
+  --c-shadow: 24 24 27;
+  --c-scrim: 24 24 27; /* modal backdrop — dark in every theme */
+  --c-ink: 24 24 27; /* always-dark panel */
+  --c-paper: 255 255 255; /* always-light text on it */
+
+  --c-slate-50: 250 250 250; /* page canvas — never pure white, which glares */
+  --c-slate-100: 244 244 245; /* hover fills, subtle bands */
+  --c-slate-200: 233 233 235; /* hairlines */
+  --c-slate-300: 216 216 220; /* input borders */
+  --c-slate-400: 138 138 147; /* placeholders, muted meta */
+  --c-slate-500: 92 92 100; /* secondary text */
+  --c-slate-600: 63 63 70;
+  --c-slate-700: 42 42 48;
+  --c-slate-800: 20 20 23;
+  --c-slate-900: 0 0 0; /* primary ink */
+
+  /* Graphite, not indigo. A saturated brand hue on every button and active nav
+     item is the loudest thing on the page, and it is chrome. */
+  --c-brand-50: 244 244 245;
+  --c-brand-100: 233 233 235;
+  --c-brand-200: 216 216 220;
+  --c-brand-300: 138 138 147;
+  --c-brand-400: 92 92 100;
+  --c-brand-500: 63 63 70;
+  --c-brand-600: 20 20 23;
+  --c-brand-700: 0 0 0;
+  --c-brand-800: 0 0 0;
+  --c-brand-900: 0 0 0;
+
+  /* Kirim. Desaturated forest instead of Tailwind's electric emerald. */
+  --c-emerald-50: 242 247 243;
+  --c-emerald-100: 223 235 226;
+  --c-emerald-200: 198 220 203;
+  --c-emerald-300: 156 191 165;
+  --c-emerald-400: 107 154 120;
+  --c-emerald-500: 67 122 84;
+  --c-emerald-600: 46 125 72;
+  --c-emerald-700: 35 96 56;
+  --c-emerald-800: 27 74 43;
+  --c-emerald-900: 21 58 34;
+
+  /* Chiqim. Tailwind's rose-600 is a hot pink-red and was the single biggest
+     source of glare — nearly all of it on numbers. */
+  --c-rose-50: 251 243 243;
+  --c-rose-100: 245 227 227;
+  --c-rose-200: 234 204 204;
+  --c-rose-300: 217 168 168;
+  --c-rose-400: 192 128 128;
+  --c-rose-500: 174 87 87;
+  --c-rose-600: 163 58 58;
+  --c-rose-700: 135 48 48;
+  --c-rose-800: 107 38 38;
+  --c-rose-900: 87 31 31;
+
+  /* Muddat / ogohlantirish. Ochre rather than school-bus amber. */
+  --c-amber-50: 251 247 239;
+  --c-amber-100: 244 235 217;
+  --c-amber-200: 230 214 178;
+  --c-amber-300: 210 184 126;
+  --c-amber-400: 188 151 80;
+  --c-amber-500: 164 123 44;
+  --c-amber-600: 154 107 24;
+  --c-amber-700: 124 85 20;
+  --c-amber-800: 99 67 17;
+  --c-amber-900: 79 54 15;
+}
+
+/* Ice — the same paper, held under daylight. Only the neutrals move: the
+   canvas takes a cold blue cast and the ink cools with it, so figures stay
+   the darkest thing on screen. The money colours are untouched, because a
+   kirim must be the same green in every theme. */
+:root[data-theme='ice'] {
+  color-scheme: light;
+
+  --c-white: 255 255 255;
+  --c-black: 4 12 20;
+  --c-shadow: 22 46 68;
+  --c-scrim: 10 26 40;
+  --c-ink: 10 26 40;
+  --c-paper: 255 255 255;
+
+  --c-slate-50: 233 241 248;
+  --c-slate-100: 222 233 243;
+  --c-slate-200: 203 218 232;
+  --c-slate-300: 176 196 214;
+  --c-slate-400: 106 128 149;
+  --c-slate-500: 71 93 112;
+  --c-slate-600: 45 65 83;
+  --c-slate-700: 28 44 59;
+  --c-slate-800: 15 27 38;
+  --c-slate-900: 4 12 20;
+
+  --c-brand-50: 222 233 243;
+  --c-brand-100: 203 218 232;
+  --c-brand-200: 176 196 214;
+  --c-brand-300: 106 128 149;
+  --c-brand-400: 71 93 112;
+  --c-brand-500: 45 65 83;
+  --c-brand-600: 15 27 38;
+  --c-brand-700: 4 12 20;
+  --c-brand-800: 4 12 20;
+  --c-brand-900: 4 12 20;
+}
+
+/* Dark — a terminal, not a navy dashboard. Flat neutral grey all the way
+   through; the only colour is on the money. Ink stops at #F0F0F0 rather than
+   pure white, which is what keeps a screenful of figures from vibrating. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --c-white: 30 30 30; /* card surface — cmd's own grey */
+  --c-black: 245 245 245; /* the "deepest ink" pole, inverted */
+  --c-shadow: 0 0 0;
+  --c-scrim: 0 0 0;
+  --c-ink: 20 20 20;
+  --c-paper: 240 240 240;
+
+  --c-slate-50: 22 22 22; /* page canvas, one step under the cards */
+  --c-slate-100: 42 42 42; /* hover fills */
+  --c-slate-200: 60 60 60; /* hairlines */
+  --c-slate-300: 82 82 82; /* input borders */
+  --c-slate-400: 148 148 148; /* placeholders, muted meta */
+  --c-slate-500: 179 179 179; /* secondary text */
+  --c-slate-600: 204 204 204;
+  --c-slate-700: 224 224 224;
+  --c-slate-800: 238 238 238;
+  --c-slate-900: 240 240 240; /* primary ink */
+
+  --c-brand-50: 42 42 42;
+  --c-brand-100: 60 60 60;
+  --c-brand-200: 82 82 82;
+  --c-brand-300: 148 148 148;
+  --c-brand-400: 179 179 179;
+  --c-brand-500: 210 210 210;
+  --c-brand-600: 238 238 238;
+  --c-brand-700: 245 245 245;
+  --c-brand-800: 245 245 245;
+  --c-brand-900: 245 245 245;
+
+  /* The accent ramps invert too: 50-200 become tinted fills dark enough to sit
+     on the canvas, 600-900 become the bright text/figure end. */
+  --c-emerald-50: 22 37 27;
+  --c-emerald-100: 28 51 35;
+  --c-emerald-200: 39 73 47;
+  --c-emerald-300: 62 122 77;
+  --c-emerald-400: 89 164 108;
+  --c-emerald-500: 111 190 131;
+  --c-emerald-600: 126 211 150;
+  --c-emerald-700: 147 223 168;
+  --c-emerald-800: 176 232 191;
+  --c-emerald-900: 204 241 214;
+
+  --c-rose-50: 42 26 26;
+  --c-rose-100: 58 35 35;
+  --c-rose-200: 82 48 47;
+  --c-rose-300: 138 78 76;
+  --c-rose-400: 184 107 104;
+  --c-rose-500: 212 133 131;
+  --c-rose-600: 232 154 151;
+  --c-rose-700: 240 175 172;
+  --c-rose-800: 245 198 196;
+  --c-rose-900: 250 220 219;
+
+  --c-amber-50: 42 35 19;
+  --c-amber-100: 58 47 25;
+  --c-amber-200: 78 63 34;
+  --c-amber-300: 128 106 60;
+  --c-amber-400: 173 143 79;
+  --c-amber-500: 208 172 98;
+  --c-amber-600: 227 190 116;
+  --c-amber-700: 237 206 146;
+  --c-amber-800: 242 220 178;
+  --c-amber-900: 248 236 212;
+}
+
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
   /* cv11 = single-storey 'a', ss01 = disambiguated 1/l/I — both help when the
@@ -31,9 +225,29 @@ h3 {
 }
 
 /* One focus treatment everywhere, on the ink colour rather than an accent —
-   visible against both white cards and the grey canvas. */
+   visible against both the card surface and the canvas behind it. */
 *:focus-visible {
-  @apply outline-none ring-2 ring-slate-900/70 ring-offset-2 ring-offset-slate-50;
+  @apply outline-none ring-2 ring-slate-900/70 ring-offset-2;
+  --tw-ring-offset-color: rgb(var(--c-slate-50));
+}
+
+/* The browser's own chrome inside the page: scrollbars and the native date /
+   time pickers. `color-scheme` above does most of it; this stops the ledger's
+   scrollbar from being a bright white gutter down the side of a dark table. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgb(var(--c-slate-50));
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--c-slate-300));
+  border: 2px solid rgb(var(--c-slate-50));
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--c-slate-400));
 }
 
 /* Report header — hidden on screen, printed at the top of every PDF so the
@@ -64,6 +278,9 @@ h3 {
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
+  /* Paper is always light. ThemeProvider also swaps the document to the light
+     palette on `beforeprint`, so a ledger printed from dark mode comes out as
+     black ink on white rather than white ink on nothing. */
   body {
     background: white;
   }

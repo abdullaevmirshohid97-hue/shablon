@@ -51,7 +51,7 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
     <div>
       <Link
         href="/clients"
-        className="no-print mb-3 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
+        className="no-print mb-3 inline-flex items-center gap-1 text-fin-md text-slate-500 hover:text-slate-700"
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
           <path
@@ -64,7 +64,7 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
       </Link>
       {/* On paper this heading is replaced by PrintHeader, which also carries
           the org, the period and the print timestamp. */}
-      <h1 className="no-print mb-6 text-2xl font-semibold tracking-tight text-slate-900">
+      <h1 className="no-print mb-6 text-fin-2xl font-semibold tracking-tight text-slate-900">
         {counterparty.name}
       </h1>
       <div className="mb-4">

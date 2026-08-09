@@ -83,7 +83,7 @@ export function ReverseTransactionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-scrim/50 p-4 backdrop-blur-sm">
       <div
         ref={dialogRef}
         role="dialog"
@@ -92,17 +92,17 @@ export function ReverseTransactionModal({
         tabIndex={-1}
         className="w-full max-w-md rounded-xl bg-white p-5 shadow-popover outline-none"
       >
-        <h2 className="text-base font-semibold text-slate-900">{t('ledger.reverseTitle')}</h2>
-        <p className="mt-1 text-sm text-slate-500">{t('ledger.reverseDescription')}</p>
+        <h2 className="text-fin-lg font-semibold text-slate-900">{t('ledger.reverseTitle')}</h2>
+        <p className="mt-1 text-fin-md text-slate-500">{t('ledger.reverseDescription')}</p>
 
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
+        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-fin-md">
           <div className="flex justify-between gap-3">
             <span className="text-slate-500">{transaction.documentNo}</span>
             <span className="tabular-nums font-semibold text-slate-900">
               {currencyFormatter.format(amount)}
             </span>
           </div>
-          <div className="mt-0.5 flex justify-between gap-3 text-xs text-slate-500">
+          <div className="mt-0.5 flex justify-between gap-3 text-fin-sm text-slate-500">
             <span className="truncate">{transaction.description}</span>
             <span className="shrink-0">
               {new Date(transaction.occurredAt).toLocaleDateString(dateLocale)}
@@ -130,7 +130,7 @@ export function ReverseTransactionModal({
             />
           </div>
 
-          {errorMessage && <p className="text-sm text-rose-600">{errorMessage}</p>}
+          {errorMessage && <p className="text-fin-md text-rose-600">{errorMessage}</p>}
 
           <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={submitting}>

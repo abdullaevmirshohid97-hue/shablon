@@ -79,8 +79,8 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
   return (
     <Card className="p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-slate-900">{t('overview.journalTitle')}</h2>
-        <span className="text-xs text-slate-500 tabular-nums">
+        <h2 className="text-fin-lg font-semibold text-slate-900">{t('overview.journalTitle')}</h2>
+        <span className="text-fin-sm text-slate-500 tabular-nums">
           {(rows ?? []).length} · {money.format(totals.total)}
         </span>
       </div>
@@ -134,9 +134,9 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
       {/* Fixed head, scrolling body: the column names have to survive row
           forty, which is where this table is actually read. */}
       <div className="max-h-[520px] overflow-auto rounded-lg border border-slate-200">
-        <table className="w-full min-w-[820px] border-collapse text-sm">
+        <table className="w-full min-w-[820px] border-collapse text-fin-md">
           <thead className="sticky top-0 z-10 bg-slate-50">
-            <tr className="border-b border-slate-200 text-left text-[11px] uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-slate-200 text-left text-fin-xs uppercase tracking-wide text-slate-500">
               <th className="px-3 py-2 font-medium">{t('overview.debtorName')}</th>
               <th className="px-3 py-2 font-medium">{t('overview.manager')}</th>
               <th className="px-3 py-2 text-right font-medium">{t('overview.overdueSum')}</th>
@@ -156,7 +156,7 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
                     {row.name}
                   </Link>
                   {row.phone && (
-                    <span className="block text-[11px] text-slate-400">{row.phone}</span>
+                    <span className="block text-fin-xs text-slate-400">{row.phone}</span>
                   )}
                 </td>
                 <td className="px-3 py-2 text-slate-600">{row.managerName ?? '—'}</td>
@@ -168,7 +168,7 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums text-slate-900">
                   {money.format(row.totalDebt)}
-                  <span className="ml-1 text-[11px] text-slate-400">{row.currency}</span>
+                  <span className="ml-1 text-fin-xs text-slate-400">{row.currency}</span>
                 </td>
                 <td className="px-3 py-2 tabular-nums text-slate-500">
                   {row.nextDueDate ? new Date(row.nextDueDate).toLocaleDateString(dateLocale) : '—'}
@@ -179,7 +179,7 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
           {(rows ?? []).length > 0 && (
             <tfoot className="sticky bottom-0 bg-slate-50">
               <tr className="border-t-2 border-slate-300 font-semibold">
-                <td className="px-3 py-2 text-xs uppercase text-slate-500" colSpan={2}>
+                <td className="px-3 py-2 text-fin-sm uppercase text-slate-500" colSpan={2}>
                   {t('sklad.totals.label')}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums text-rose-700">
@@ -196,10 +196,10 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
         </table>
 
         {isLoading && (
-          <p className="p-6 text-center text-sm text-slate-500">{t('common.loading')}</p>
+          <p className="p-6 text-center text-fin-md text-slate-500">{t('common.loading')}</p>
         )}
         {!isLoading && (rows ?? []).length === 0 && (
-          <p className="p-6 text-center text-sm text-slate-500">{t('overview.journalEmpty')}</p>
+          <p className="p-6 text-center text-fin-md text-slate-500">{t('overview.journalEmpty')}</p>
         )}
       </div>
     </Card>

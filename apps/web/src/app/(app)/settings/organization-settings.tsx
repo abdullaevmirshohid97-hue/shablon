@@ -72,8 +72,8 @@ export function OrganizationSettings({
 
   return (
     <Card className="p-4">
-      <h2 className="text-base font-semibold text-slate-900">{t('settings.orgTitle')}</h2>
-      <p className="mt-1 text-sm text-slate-500">{t('settings.orgDescription')}</p>
+      <h2 className="text-fin-lg font-semibold text-slate-900">{t('settings.orgTitle')}</h2>
+      <p className="mt-1 text-fin-md text-slate-500">{t('settings.orgDescription')}</p>
 
       <form onSubmit={handleSave} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1">
@@ -95,9 +95,9 @@ export function OrganizationSettings({
         </Button>
       </form>
 
-      {errorMessage && <p className="mt-2 text-sm text-rose-600">{errorMessage}</p>}
+      {errorMessage && <p className="mt-2 text-fin-md text-rose-600">{errorMessage}</p>}
       {saved && !errorMessage && (
-        <p className="mt-2 text-sm text-emerald-700">{t('settings.orgNameSaved')}</p>
+        <p className="mt-2 text-fin-md text-emerald-700">{t('settings.orgNameSaved')}</p>
       )}
     </Card>
   );

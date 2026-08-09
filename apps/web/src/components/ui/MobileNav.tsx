@@ -107,7 +107,7 @@ export function MobileNav({
             type="button"
             aria-label="close"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-scrim/45 backdrop-blur-sm"
           />
           <div
             ref={panelRef}
