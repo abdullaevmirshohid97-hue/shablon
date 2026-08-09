@@ -45,7 +45,7 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       { name: 'Sklad', short_name: 'Sklad', url: '/hub/sklad' },
       { name: 'Kirim', short_name: 'Kirim', url: '/hub/sklad/kirim' },
-      { name: 'Chiqim', short_name: 'Chiqim', url: '/hub/sklad/chiqim' },
+      { name: 'Chiqim', short_name: 'Chiqim', url: '/hub/sotuv/chiqim' },
     ],
   };
 }

@@ -8,7 +8,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { DocumentCodes, PrintButton } from '../../document-codes';
+import { DocumentCodes, PrintButton } from '../../../document-codes';
 
 const STATUS_TONE: Record<
   SkladInvoiceStatus,
@@ -56,7 +56,7 @@ export function FakturaDocument({ orgId, invoiceId }: { orgId: string; invoiceId
   return (
     <div className="flex flex-col gap-4">
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
-        <Link href="/hub/sklad/faktura" className="text-sm text-slate-500 hover:text-brand-600">
+        <Link href="/hub/sotuv/faktura" className="text-sm text-slate-500 hover:text-brand-600">
           ← {t('sklad.faktura.title')}
         </Link>
         <PrintButton label={t('sklad.faktura.print')} />
@@ -80,7 +80,7 @@ export function FakturaDocument({ orgId, invoiceId }: { orgId: string; invoiceId
 
           <DocumentCodes
             barcode={invoice.barcode}
-            path={`/hub/sklad/faktura/${invoice.invoiceId}`}
+            path={`/hub/sotuv/faktura/${invoice.invoiceId}`}
           />
         </div>
 

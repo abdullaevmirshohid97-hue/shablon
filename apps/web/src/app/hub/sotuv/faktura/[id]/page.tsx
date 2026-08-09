@@ -1,4 +1,4 @@
-import { requireSkladAccess } from '../../access';
+import { requireModuleAccess } from '../../../access';
 import { FakturaDocument } from './faktura-document';
 
 export default async function SkladFakturaDocumentPage({
@@ -7,6 +7,6 @@ export default async function SkladFakturaDocumentPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { orgId } = await requireSkladAccess();
+  const { orgId } = await requireModuleAccess();
   return <FakturaDocument orgId={orgId} invoiceId={id} />;
 }

@@ -7,7 +7,7 @@ import { formatSize } from '@mubosher/shared';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
-import { DocumentCodes, PrintButton } from '../../document-codes';
+import { DocumentCodes, PrintButton } from '../../../document-codes';
 
 const qtyFormat = new Intl.NumberFormat('ru-RU');
 const kgFormat = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
@@ -41,7 +41,7 @@ export function ShipmentNote({ shipmentId }: { shipmentId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
-        <Link href="/hub/sklad/chiqim" className="text-sm text-slate-500 hover:text-brand-600">
+        <Link href="/hub/sotuv/chiqim" className="text-sm text-slate-500 hover:text-brand-600">
           ← {t('sklad.nav.issuing')}
         </Link>
         <PrintButton label={t('sklad.chiqim.print')} />
@@ -76,7 +76,7 @@ export function ShipmentNote({ shipmentId }: { shipmentId: string }) {
                   {t('sklad.faktura.number')}:{' '}
                   {note.invoiceId ? (
                     <Link
-                      href={`/hub/sklad/faktura/${note.invoiceId}`}
+                      href={`/hub/sotuv/faktura/${note.invoiceId}`}
                       className="text-brand-700 hover:underline"
                     >
                       {note.invoiceNo}
@@ -91,7 +91,7 @@ export function ShipmentNote({ shipmentId }: { shipmentId: string }) {
 
           <DocumentCodes
             barcode={note.invoiceBarcode}
-            path={`/hub/sklad/chiqim/${note.shipmentId}`}
+            path={`/hub/sotuv/chiqim/${note.shipmentId}`}
           />
         </div>
 

@@ -3,10 +3,12 @@ import { one, type OrgRole } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { OrgRoleProvider } from '@/lib/auth/OrgRoleProvider';
 import { AppShell } from './app-shell';
-import { FinanceAccessGate } from './finance-access-gate';
+import { ModuleAccessGate } from '@/components/ModuleAccessGate';
+import { getServerTranslator } from '@/lib/i18n/server';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createSupabaseServerClient();
+  const { t } = await getServerTranslator();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -37,7 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // the role of whoever actually signed in, not whoever opened the browser.
   return (
     <OrgRoleProvider role={role}>
-      <FinanceAccessGate orgId={orgId} currentUserId={user.id}>
+      <ModuleAccessGate orgId={orgId} currentUserId={user.id} moduleName={t('hub.finance')}>
         <AppShell
           orgName={orgName}
           userEmail={user.email ?? ''}
@@ -45,7 +47,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         >
           {children}
         </AppShell>
-      </FinanceAccessGate>
+      </ModuleAccessGate>
     </OrgRoleProvider>
   );
 }

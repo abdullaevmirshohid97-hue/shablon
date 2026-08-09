@@ -32,9 +32,10 @@ function RosterAvatar({ entry, className }: { entry: RosterEntry; className: str
 }
 
 /**
- * Finance sits behind a second lock, because whoever is signed into the
- * browser is not necessarily who is about to type into the ledger on a shared
- * screen. Each employee finds their own tile and confirms.
+ * A module sits behind a second lock, because whoever is signed into the
+ * browser is not necessarily who is about to type into the ledger — or move
+ * stock, or raise an invoice — on a shared screen. Each employee finds their
+ * own tile and confirms.
  *
  * What they confirm with depends on who they picked:
  *
@@ -46,15 +47,25 @@ function RosterAvatar({ entry, className }: { entry: RosterEntry; className: str
  *     previous person's name.
  *
  * The unlock is React state and nothing else — no sessionStorage — so the PIN
- * is asked again on every fresh load of the app rather than once per tab.
+ * is asked again on every fresh load of the app rather than once per tab. It
+ * is also per-module by construction: the state lives in the module layout
+ * that renders this, so leaving Sklad for Sotuv asks again, which is the whole
+ * point of locking them separately.
+ *
+ * The code itself is the employee's one PIN, issued by the admin against their
+ * membership — the same one Finance asks for. One person, one code, whichever
+ * door they are standing at.
  */
-export function FinanceAccessGate({
+export function ModuleAccessGate({
   orgId,
   currentUserId,
+  moduleName,
   children,
 }: {
   orgId: string | null;
   currentUserId: string | null;
+  /** Named on the lock screen, so it is obvious which door this is. */
+  moduleName: string;
   children: React.ReactNode;
 }) {
   const { t } = useLocale();
@@ -188,6 +199,9 @@ export function FinanceAccessGate({
           </>
         ) : (
           <>
+            <p className="mb-1 text-fin-sm font-semibold uppercase tracking-wider text-slate-500">
+              {moduleName}
+            </p>
             <h1 className="mb-4 text-fin-xl font-semibold text-slate-900">
               {t('financeAccess.pickPrompt')}
             </h1>

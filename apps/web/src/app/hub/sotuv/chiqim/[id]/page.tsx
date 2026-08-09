@@ -1,4 +1,4 @@
-import { requireSkladAccess } from '../../access';
+import { requireModuleAccess } from '../../../access';
 import { ShipmentNote } from './shipment-note';
 
 export default async function SkladShipmentNotePage({
@@ -7,6 +7,6 @@ export default async function SkladShipmentNotePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await requireSkladAccess();
+  await requireModuleAccess();
   return <ShipmentNote shipmentId={id} />;
 }

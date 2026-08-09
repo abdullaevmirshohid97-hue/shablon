@@ -1,4 +1,4 @@
-import { requireSkladAdmin } from '../access';
+import { requireSkladAdmin } from '../../access';
 import { SkladSettingsView } from './settings-view';
 
 export default async function SkladSettingsPage() {

@@ -19,7 +19,7 @@ import JsBarcode from 'jsbarcode';
 export function DocumentCodes({
   /** Numeric code for the 1D barcode — what the desk scanner reads. */
   barcode,
-  /** Path the QR should open, e.g. /hub/sklad/faktura/<id>. */
+  /** Path the QR should open, e.g. /hub/sotuv/faktura/<id>. */
   path,
   className = '',
 }: {

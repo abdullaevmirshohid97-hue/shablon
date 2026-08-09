@@ -221,7 +221,14 @@ export function ChiqimGrid({ orgId }: { orgId: string }) {
           <p className="text-sm text-slate-500">{t('sklad.chiqim.description')}</p>
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant="secondary" onClick={() => router.push('/hub/sklad/stock')}>
+          {/* Cancelling an issue returns to the invoice queue it came from.
+              It used to land on the warehouse stock report, which is now a
+              different module — and a different lock. */}
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => router.push('/hub/sotuv/faktura')}
+          >
             {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={issue.isPending || !selected.length}>
@@ -264,7 +271,7 @@ export function ChiqimGrid({ orgId }: { orgId: string }) {
         {scanned && appliedInvoiceId === scanned.invoiceId && (
           <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-white px-3 py-2 text-sm">
             <Link
-              href={`/hub/sklad/faktura/${scanned.invoiceId}`}
+              href={`/hub/sotuv/faktura/${scanned.invoiceId}`}
               className="font-semibold text-brand-700 hover:underline"
             >
               {scanned.invoiceNo}
@@ -366,7 +373,7 @@ export function ChiqimGrid({ orgId }: { orgId: string }) {
         <p className="flex flex-wrap items-center gap-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
           {t('sklad.chiqim.savedNote')}
           <Link
-            href={`/hub/sklad/chiqim/${savedShipmentId}`}
+            href={`/hub/sotuv/chiqim/${savedShipmentId}`}
             className="font-semibold underline underline-offset-2"
           >
             {t('sklad.chiqim.openNote')}

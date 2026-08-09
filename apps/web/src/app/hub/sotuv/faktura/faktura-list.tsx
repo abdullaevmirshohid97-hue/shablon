@@ -137,7 +137,7 @@ export function FakturaList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: 
       resetForm();
       // Straight to the printable copy: raising one and printing it is a
       // single act, and asking the manager to find it again is friction.
-      router.push(`/hub/sklad/faktura/${invoiceId}`);
+      router.push(`/hub/sotuv/faktura/${invoiceId}`);
     } catch (err) {
       setErrorMessage((err as Error).message);
     }
@@ -366,7 +366,7 @@ export function FakturaList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: 
                 <tr key={inv.invoiceId} className="border-b border-slate-100">
                   <td className="py-1.5 pr-3">
                     <Link
-                      href={`/hub/sklad/faktura/${inv.invoiceId}`}
+                      href={`/hub/sotuv/faktura/${inv.invoiceId}`}
                       className="font-medium text-brand-700 hover:underline"
                     >
                       {inv.invoiceNo ?? '—'}
