@@ -19,3 +19,4 @@ export * from './hooks/useSkladMovements';
 export * from './hooks/useSkladAudit';
 export * from './hooks/useSkladProduction';
 export * from './hooks/useSkladInvoices';
+export * from './hooks/useSkladPackages';

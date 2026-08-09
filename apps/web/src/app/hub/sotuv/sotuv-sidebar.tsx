@@ -3,13 +3,11 @@
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import type { NavGroup } from '@/components/ui/MobileNav';
 import { ModuleSidebar } from '../module-sidebar';
-import { InvoiceIcon, OutboundIcon } from '../nav-icons';
+import { ClientsIcon, InvoiceIcon, OutboundIcon, SkladIcon } from '../nav-icons';
 
 /**
- * Sotuv bo'limi: the invoice a manager raises, and the shipment the loading
- * bay issues against it. The two were separate entries in a warehouse rail
- * that also held stock reports; together, on their own, they read as what they
- * are — one desk's work, from order to gate.
+ * Sotuv bo'limi, in the order the work happens: who is buying, what was
+ * invoiced, what is being loaded, and what has left.
  */
 export function SotuvSidebar({
   orgName,
@@ -24,7 +22,14 @@ export function SotuvSidebar({
     {
       title: t('hub.sotuv'),
       items: [
+        { href: '/hub/sotuv', label: t('sotuv.clients'), Icon: ClientsIcon },
         { href: '/hub/sotuv/faktura', label: t('sklad.nav.invoices'), Icon: InvoiceIcon },
+      ],
+    },
+    {
+      title: t('sotuv.despatchGroup'),
+      items: [
+        { href: '/hub/sotuv/skaner', label: t('sotuv.scanTitle'), Icon: SkladIcon },
         { href: '/hub/sotuv/chiqim', label: t('sklad.nav.issuing'), Icon: OutboundIcon },
       ],
     },

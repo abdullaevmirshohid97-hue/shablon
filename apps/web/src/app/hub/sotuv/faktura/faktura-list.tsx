@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   useSkladInvoices,
   useCreateSkladInvoice,
@@ -59,7 +59,14 @@ export function FakturaList({ orgId, isOrgAdmin }: { orgId: string; isOrgAdmin: 
 
   const [status, setStatus] = useState<SkladInvoiceStatus | ''>('');
   const [search, setSearch] = useState('');
-  const { data: invoices } = useSkladInvoices(supabase, orgId, { status, search });
+  // Arrived from the client list: show that client's invoices and say so, so
+  // a short list is never mistaken for an empty one.
+  const clientFilter = useSearchParams().get('client') ?? '';
+  const { data: invoices } = useSkladInvoices(supabase, orgId, {
+    status,
+    search,
+    counterpartyId: clientFilter,
+  });
   const { data: counterparties } = useCounterparties(supabase, orgId);
   const { data: orders } = useSkladOrders(supabase, orgId);
   const createInvoice = useCreateSkladInvoice(supabase);

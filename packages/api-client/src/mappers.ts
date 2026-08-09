@@ -98,6 +98,7 @@ export function toSkladItem(row: SkladItemRow): SkladItem {
     sortId: row.sort_id,
     colorId: row.color_id,
     pantoneId: row.pantone_id,
+    barcode: row.barcode,
     createdAt: row.created_at,
   };
 }

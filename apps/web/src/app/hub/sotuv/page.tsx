@@ -1,10 +1,8 @@
-import { redirect } from 'next/navigation';
+import { requireModuleAccess } from '../access';
+import { SalesClients } from './sales-clients';
 
-/**
- * The sales desk has no dashboard of its own yet, and an empty landing page
- * between the click and the work is just a page to click through. The invoice
- * queue is where the day starts, so that is where the module opens.
- */
-export default function SotuvPage() {
-  redirect('/hub/sotuv/faktura');
+/** Sotuv bo'limi opens on the clients, and the papers are one level down. */
+export default async function SotuvPage() {
+  const { orgId } = await requireModuleAccess();
+  return <SalesClients orgId={orgId} />;
 }

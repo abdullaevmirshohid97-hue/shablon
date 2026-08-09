@@ -9,6 +9,7 @@ import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { DocumentCodes, PrintButton } from '../../../document-codes';
+import { InvoicePackages } from './invoice-packages';
 
 const STATUS_TONE: Record<
   SkladInvoiceStatus,
@@ -152,6 +153,11 @@ export function FakturaDocument({ orgId, invoiceId }: { orgId: string; invoiceId
           <span>{t('sklad.faktura.signedClient')} ______________________</span>
         </div>
       </Card>
+
+      {/* The sacks this invoice travels in, each with the label that goes on
+          it. Printed with the invoice on purpose: the sheet and the labels
+          leave the office together. */}
+      <InvoicePackages orgId={orgId} invoice={invoice} />
     </div>
   );
 }

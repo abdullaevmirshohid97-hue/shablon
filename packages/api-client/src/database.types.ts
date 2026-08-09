@@ -15,6 +15,9 @@ export type SkladBatchStatusValue =
 /** Mirrors the `sklad_invoice_status` enum (0027). */
 export type SkladInvoiceStatusValue = 'yangi' | 'qisman' | 'bajarildi' | 'bekor';
 
+/** Mirrors the `sklad_package_status` enum (0033). */
+export type SkladPackageStatusValue = 'tayyor' | 'jonatilgan' | 'bekor';
+
 /** Mirrors the `sklad_order_status` enum (0024). */
 export type SkladOrderStatusValue =
   'yangi' | 'ishlab_chiqarishda' | 'tayyor' | 'yuklandi' | 'yopilgan';
@@ -260,6 +263,9 @@ export interface Database {
           sort_id: string | null;
           color_id: string | null;
           pantone_id: string | null;
+          // 0033: assigned once by trigger, never changed — this is the code a
+          // scanner reads to tell one model/colour from another.
+          barcode: string | null;
           created_by: string | null;
           created_at: string;
         };
@@ -1195,6 +1201,127 @@ export interface Database {
           draft_count: number;
           total_kirim: number;
           total_chiqim: number;
+        }[];
+      };
+      sklad_pack_batch: {
+        Args: {
+          target_org_id: string;
+          p_batch_id: string;
+          p_per_qop: number;
+          p_total_dona?: number | null;
+          p_invoice_id?: string | null;
+          p_kg_per_qop?: number | null;
+          p_packed_at?: string | null;
+        };
+        Returns: number;
+      };
+      sklad_save_package: {
+        Args: {
+          target_org_id: string;
+          p_rows: unknown;
+          p_package_id?: string | null;
+          p_invoice_id?: string | null;
+          p_gross_kg?: number | null;
+          p_note?: string | null;
+          p_packed_at?: string | null;
+        };
+        Returns: string;
+      };
+      sklad_delete_package: {
+        Args: { target_org_id: string; p_package_id: string };
+        Returns: void;
+      };
+      sklad_package_detail: {
+        Args: { target_org_id: string; p_code: string };
+        Returns: {
+          package_id: string;
+          code: string | null;
+          barcode: string | null;
+          status: SkladPackageStatusValue;
+          packed_at: string;
+          gross_kg: number | null;
+          note: string | null;
+          invoice_id: string | null;
+          invoice_no: string | null;
+          counterparty_id: string | null;
+          counterparty_name: string | null;
+          shipment_id: string | null;
+          packed_by_name: string | null;
+          line_id: string | null;
+          item_id: string | null;
+          batch_id: string | null;
+          item_barcode: string | null;
+          kod: string | null;
+          item_name: string | null;
+          width_cm: number | null;
+          length_cm: number | null;
+          color_name: string | null;
+          dona: number | null;
+          kg: number | null;
+          batch_qoldiq_dona: number | null;
+        }[];
+      };
+      sklad_invoice_packages: {
+        Args: { target_org_id: string; p_invoice_id: string };
+        Returns: {
+          package_id: string;
+          code: string | null;
+          barcode: string | null;
+          status: SkladPackageStatusValue;
+          packed_at: string;
+          gross_kg: number | null;
+          note: string | null;
+          shipment_id: string | null;
+          total_dona: number;
+          total_kg: number | null;
+          line_count: number;
+          contents: string | null;
+        }[];
+      };
+      sklad_scan: {
+        Args: { target_org_id: string; p_code: string };
+        Returns: {
+          kind: 'faktura' | 'qop' | 'mahsulot';
+          id: string;
+          code: string | null;
+          label: string | null;
+          detail: string | null;
+          invoice_id: string | null;
+          counterparty_id: string | null;
+          counterparty_name: string | null;
+          item_id: string | null;
+          batch_id: string | null;
+          available_dona: number | null;
+          status: string | null;
+        }[];
+      };
+      sklad_issue_packages: {
+        Args: {
+          target_org_id: string;
+          p_package_ids: string[];
+          p_invoice_id?: string | null;
+          p_carrier?: string | null;
+          p_tracking_no?: string | null;
+          p_shipped_at?: string | null;
+          p_note?: string | null;
+          p_manager_id?: string | null;
+        };
+        Returns: string;
+      };
+      sklad_sales_by_counterparty: {
+        Args: { target_org_id: string; p_search?: string | null; p_limit?: number | null };
+        Returns: {
+          counterparty_id: string;
+          counterparty_name: string;
+          phone: string | null;
+          invoice_count: number;
+          open_count: number;
+          total_amount: number | null;
+          ordered_dona: number;
+          shipped_dona: number;
+          package_count: number;
+          last_issued_at: string | null;
+          currency: string | null;
         }[];
       };
     };

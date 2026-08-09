@@ -198,6 +198,8 @@ export interface SkladItem {
   sortId?: string | null;
   colorId?: string | null;
   pantoneId?: string | null;
+  /** The product barcode (0033): one per card, assigned once, never changed. */
+  barcode?: string | null;
   createdAt: string;
 }
 
@@ -671,7 +673,15 @@ export interface SkladShipmentNote {
 }
 
 export type SkladAuditEntity =
-  'batch' | 'item' | 'price' | 'order' | 'line' | 'stage_entry' | 'shipment' | 'invoice';
+  | 'batch'
+  | 'item'
+  | 'price'
+  | 'order'
+  | 'line'
+  | 'stage_entry'
+  | 'shipment'
+  | 'invoice'
+  | 'package';
 
 export interface SkladAuditEntry {
   id: number;
@@ -684,4 +694,104 @@ export interface SkladAuditEntry {
   kod?: string | null;
   oldRow: Record<string, unknown> | null;
   newRow: Record<string, unknown> | null;
+}
+
+// ---------------------------------------------------------------------------
+// Sotuv bo'limi: the sack, and the two codes that identify what is in it.
+// See 0033_sotuv_qop.sql — the barcode names the product, the QR names the sack.
+// ---------------------------------------------------------------------------
+
+export type SkladPackageStatus = 'tayyor' | 'jonatilgan' | 'bekor';
+
+/** One line of a sack: this many of this product, out of this lot. */
+export interface SkladPackageLine {
+  lineId: string;
+  itemId: string;
+  batchId: string;
+  /** The product barcode — what a scanner reads to tell red from yellow. */
+  itemBarcode?: string | null;
+  kod?: string | null;
+  itemName?: string | null;
+  widthCm?: number | null;
+  lengthCm?: number | null;
+  colorName?: string | null;
+  dona: number;
+  kg?: number | null;
+  batchQoldiqDona?: number | null;
+}
+
+/** A sack in full — what the QR on its label opens. */
+export interface SkladPackage {
+  packageId: string;
+  code?: string | null;
+  barcode?: string | null;
+  status: SkladPackageStatus;
+  packedAt: string;
+  grossKg?: number | null;
+  note?: string | null;
+  invoiceId?: string | null;
+  invoiceNo?: string | null;
+  counterpartyId?: string | null;
+  counterpartyName?: string | null;
+  shipmentId?: string | null;
+  packedByName?: string | null;
+  lines: SkladPackageLine[];
+}
+
+/** A sack as it appears in the list beside its invoice. */
+export interface SkladPackageSummary {
+  packageId: string;
+  code?: string | null;
+  barcode?: string | null;
+  status: SkladPackageStatus;
+  packedAt: string;
+  grossKg?: number | null;
+  note?: string | null;
+  shipmentId?: string | null;
+  totalDona: number;
+  totalKg?: number | null;
+  lineCount: number;
+  /** "Qizil atirgul × 50, Sariq atirgul × 20" — the label's own summary. */
+  contents?: string | null;
+}
+
+/** What a row of the sack builder holds before it is saved. */
+export interface SkladPackageRow {
+  itemId: string;
+  batchId?: string | null;
+  dona: string;
+  kg?: string;
+}
+
+export type SkladScanKind = 'faktura' | 'qop' | 'mahsulot';
+
+/** One code in, one answer out — see sklad_scan(). */
+export interface SkladScanHit {
+  kind: SkladScanKind;
+  id: string;
+  code?: string | null;
+  label?: string | null;
+  detail?: string | null;
+  invoiceId?: string | null;
+  counterpartyId?: string | null;
+  counterpartyName?: string | null;
+  itemId?: string | null;
+  batchId?: string | null;
+  availableDona?: number | null;
+  status?: string | null;
+}
+
+/** The sales desk's first screen: a client, and what they have bought. */
+export interface SkladSalesClient {
+  counterpartyId: string;
+  counterpartyName: string;
+  phone?: string | null;
+  invoiceCount: number;
+  openCount: number;
+  totalAmount?: number | null;
+  orderedDona: number;
+  shippedDona: number;
+  packageCount: number;
+  lastIssuedAt?: string | null;
+  currency?: string | null;
 }
