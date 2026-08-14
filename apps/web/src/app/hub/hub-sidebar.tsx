@@ -1,9 +1,10 @@
 'use client';
 
+import { ontology } from '@mubosher/shared';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import type { NavGroup } from '@/components/ui/MobileNav';
 import { ModuleSidebar } from './module-sidebar';
-import { FinanceIcon, SalesIcon, SettingsIcon, SkladIcon } from './nav-icons';
+import { iconFor } from './nav-icons';
 
 /**
  * The hub rail lists the business, not the screens.
@@ -12,6 +13,12 @@ import { FinanceIcon, SalesIcon, SettingsIcon, SkladIcon } from './nav-icons';
  * the product was fifteen links deep and no module owned its own navigation.
  * Now each module's pages live in that module's rail, and this one answers a
  * single question: which part of the company are you working in.
+ *
+ * The list itself is no longer written here either. It comes from the
+ * ontology's module manifests, so a new module appears in the rail by being
+ * declared rather than by being remembered — which is the failure this file
+ * kept having: three places listed the modules and any one of them could be
+ * the one that was forgotten.
  */
 export function HubSidebar({
   orgName,
@@ -24,24 +31,14 @@ export function HubSidebar({
 }) {
   const { t } = useLocale();
 
-  const groups: NavGroup[] = [
-    {
-      title: t('hub.modules'),
-      items: [
-        { href: '/dashboard', label: t('hub.finance'), Icon: FinanceIcon },
-        { href: '/hub/sklad', label: t('hub.sklad'), Icon: SkladIcon },
-        { href: '/hub/sotuv', label: t('hub.sotuv'), Icon: SalesIcon },
-      ],
-    },
-    ...(isOrgAdmin
-      ? [
-          {
-            title: t('hub.settings'),
-            items: [{ href: '/hub/settings', label: t('nav.organization'), Icon: SettingsIcon }],
-          },
-        ]
-      : []),
-  ];
+  const groups: NavGroup[] = ontology.hubGroups({ isOrgAdmin }).map((group) => ({
+    title: group.titleKey ? t(group.titleKey) : undefined,
+    items: group.items.map((item) => ({
+      href: item.href,
+      label: t(item.labelKey),
+      Icon: iconFor(item.icon),
+    })),
+  }));
 
   return (
     <ModuleSidebar groups={groups} orgName={orgName} userEmail={userEmail} title={t('nav.menu')} />

@@ -1,39 +1,35 @@
 'use client';
 
+import { ontology } from '@mubosher/shared';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import type { NavGroup } from '@/components/ui/MobileNav';
 import { ModuleSidebar } from '../module-sidebar';
-import { ClientsIcon, InvoiceIcon, OutboundIcon, SkladIcon } from '../nav-icons';
+import { iconFor } from '../nav-icons';
 
 /**
  * Sotuv bo'limi, in the order the work happens: who is buying, what was
- * invoiced, what is being loaded, and what has left.
+ * invoiced, what is being loaded, and what has left — as its manifest declares
+ * it.
  */
 export function SotuvSidebar({
   orgName,
   userEmail,
+  isOrgAdmin = false,
 }: {
   orgName: string | null;
   userEmail: string;
+  isOrgAdmin?: boolean;
 }) {
   const { t } = useLocale();
 
-  const groups: NavGroup[] = [
-    {
-      title: t('hub.sotuv'),
-      items: [
-        { href: '/hub/sotuv', label: t('sotuv.clients'), Icon: ClientsIcon },
-        { href: '/hub/sotuv/faktura', label: t('sklad.nav.invoices'), Icon: InvoiceIcon },
-      ],
-    },
-    {
-      title: t('sotuv.despatchGroup'),
-      items: [
-        { href: '/hub/sotuv/skaner', label: t('sotuv.scanTitle'), Icon: SkladIcon },
-        { href: '/hub/sotuv/chiqim', label: t('sklad.nav.issuing'), Icon: OutboundIcon },
-      ],
-    },
-  ];
+  const groups: NavGroup[] = ontology.navGroups('sotuv', { isOrgAdmin }).map((group) => ({
+    title: group.titleKey ? t(group.titleKey) : undefined,
+    items: group.items.map((item) => ({
+      href: item.href,
+      label: t(item.labelKey),
+      Icon: iconFor(item.icon),
+    })),
+  }));
 
   return (
     <ModuleSidebar

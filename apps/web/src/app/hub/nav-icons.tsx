@@ -133,3 +133,29 @@ export function BackIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+/**
+ * The ontology names an icon; this is where the name becomes a drawing.
+ *
+ * The map lives on the web side because @mubosher/shared holds no JSX — mobile
+ * and desktop read the same manifests and will each have their own glyphs. A
+ * name nobody has drawn yet falls back rather than crashing a rail: a missing
+ * icon is a cosmetic gap, and a module that cannot render its own navigation
+ * is not.
+ */
+const ICONS: Record<string, (props: { className?: string }) => React.ReactElement> = {
+  finance: FinanceIcon,
+  sklad: SkladIcon,
+  sales: SalesIcon,
+  overview: OverviewIcon,
+  orders: OrdersIcon,
+  inbound: InboundIcon,
+  outbound: OutboundIcon,
+  invoice: InvoiceIcon,
+  clients: ClientsIcon,
+  settings: SettingsIcon,
+};
+
+export function iconFor(name: string): (props: { className?: string }) => React.ReactElement {
+  return ICONS[name] ?? OverviewIcon;
+}

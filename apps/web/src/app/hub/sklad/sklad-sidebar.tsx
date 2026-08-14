@@ -1,15 +1,19 @@
 'use client';
 
+import { ontology } from '@mubosher/shared';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import type { NavGroup } from '@/components/ui/MobileNav';
 import { ModuleSidebar } from '../module-sidebar';
-import { InboundIcon, OrdersIcon, OverviewIcon, SettingsIcon, SkladIcon } from '../nav-icons';
+import { iconFor } from '../nav-icons';
 
 /**
  * The warehouse's own rail: where stock stands, what has been ordered, and the
  * one operation a storekeeper performs — booking goods in. Goods *out* left for
  * Sotuv bo'limi along with the invoice that authorises it, because issuing
  * stock is the last step of a sale, not a warehouse errand.
+ *
+ * Which is a rule about duty, so it is kept where duties are kept: the module's
+ * manifest in the ontology. This file draws whatever that says.
  */
 export function SkladSidebar({
   orgName,
@@ -22,30 +26,14 @@ export function SkladSidebar({
 }) {
   const { t } = useLocale();
 
-  const groups: NavGroup[] = [
-    {
-      title: t('hub.sklad'),
-      items: [
-        { href: '/hub/sklad', label: t('sklad.nav.overview'), Icon: OverviewIcon },
-        { href: '/hub/sklad/orders', label: t('sklad.nav.orders'), Icon: OrdersIcon },
-        { href: '/hub/sklad/stock', label: t('sklad.nav.stock'), Icon: SkladIcon },
-      ],
-    },
-    {
-      title: t('sklad.nav.operations'),
-      items: [{ href: '/hub/sklad/kirim', label: t('sklad.nav.receiving'), Icon: InboundIcon }],
-    },
-    ...(isOrgAdmin
-      ? [
-          {
-            title: t('hub.settings'),
-            items: [
-              { href: '/hub/sklad/settings', label: t('sklad.nav.settings'), Icon: SettingsIcon },
-            ],
-          },
-        ]
-      : []),
-  ];
+  const groups: NavGroup[] = ontology.navGroups('sklad', { isOrgAdmin }).map((group) => ({
+    title: group.titleKey ? t(group.titleKey) : undefined,
+    items: group.items.map((item) => ({
+      href: item.href,
+      label: t(item.labelKey),
+      Icon: iconFor(item.icon),
+    })),
+  }));
 
   return (
     <ModuleSidebar
