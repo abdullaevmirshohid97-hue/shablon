@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { OBJECT_TYPES } from './objects';
 import { LINKS } from './links';
 import { primaryKeyOf, propertyColumn, storedProperties } from './registry';
+import { ontology } from './index';
 import type { LinkDef, ObjectTypeDef } from './types';
 
 /**
@@ -150,5 +151,75 @@ describe('the ontology against the migrations', () => {
     const [table = '', column = ''] = link.foreignKey.split('.');
     expect(schema.has(table), `${table} not in the migrations`).toBe(true);
     expect(schema.get(table)?.has(column), `${link.foreignKey}`).toBe(true);
+  });
+});
+
+/**
+ * The one guard that has to know the whole graph.
+ *
+ * A client is not deleted while anything points at them, and "anything" means
+ * every inbound foreign key in the business — Moliya's own entries, Sklad's
+ * orders and movements, Sotuv's invoices and despatches. That list lives twice:
+ * once as links in the ontology, once as counted tables inside
+ * counterparty_references (0034). Two copies of a list is one copy and one
+ * mistake waiting, and the mistake here is silent: a table left out of the SQL
+ * does not fail, it lets the delete through and orphans whatever it missed.
+ *
+ * So the SQL is read back and compared. A module added later that references
+ * clients fails this test until its table is counted.
+ */
+describe('the delete guard against the ontology', () => {
+  const sql = readFileSync(join(MIGRATIONS, '0034_counterparty_delete.sql'), 'utf8');
+  /** The statements alone — the header explains what a cascade would do, and
+   * a test that reads the explanation as the code is testing prose. */
+  const statements = sql
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('--'))
+    .join('\n');
+
+  /** The tables counterparty_references() counts, read out of its body. */
+  function guardedTables(): Set<string> {
+    const body =
+      /create or replace function counterparty_references[\s\S]*?\$\$([\s\S]*?)\$\$/.exec(
+        statements,
+      )?.[1];
+    expect(body, 'counterparty_references not found in 0034').toBeDefined();
+
+    return new Set(
+      [...body!.matchAll(/from\s+(\w+)\s+where\s+org_id\s*=\s*target_org_id/g)].map(
+        (match) => match[1]!,
+      ),
+    );
+  }
+
+  /** Every table carrying a foreign key that points at a client. */
+  function referencingTables(): Set<string> {
+    return new Set(
+      ontology
+        .traversalsFrom('kontragent')
+        // The key on counterparties itself points outward — that is the client's
+        // manager, not something that would be orphaned by removing them.
+        .filter((traversal) => !traversal.foreignKeyOnSource)
+        .map((traversal) => traversal.link.foreignKey.split('.')[0]!),
+    );
+  }
+
+  it('counts every table that references a client, and no others', () => {
+    expect([...guardedTables()].sort()).toEqual([...referencingTables()].sort());
+  });
+
+  it('is checking a list worth checking', () => {
+    // Four modules point at the client register; a guard covering one table
+    // would pass an equality test against a broken ontology reading.
+    expect(referencingTables().size).toBeGreaterThanOrEqual(5);
+    expect(referencingTables()).toContain('transactions');
+    expect(referencingTables()).toContain('sklad_invoices');
+  });
+
+  it('leaves no way to delete a client with history', () => {
+    // The refusal is the whole point: a force path would be 0014's rule with
+    // an escape hatch. If one is ever added, this test should be the argument
+    // it has to get past.
+    expect(statements).not.toMatch(/force|cascade/i);
   });
 });

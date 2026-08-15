@@ -71,6 +71,8 @@ export function useUpdateCounterparty(supabase: SupabaseClient<Database>) {
       currency?: string | null;
       managerId?: string | null;
       notes?: string | null;
+      /** The module tags. Replaced wholesale — the form sends the full set. */
+      categories?: string[];
     }) => {
       const row: Record<string, unknown> = {};
       if (input.name !== undefined) row.name = input.name;
@@ -78,6 +80,7 @@ export function useUpdateCounterparty(supabase: SupabaseClient<Database>) {
       if (input.currency !== undefined) row.currency = input.currency;
       if (input.managerId !== undefined) row.manager_id = input.managerId;
       if (input.notes !== undefined) row.notes = input.notes;
+      if (input.categories !== undefined) row.categories = input.categories;
 
       const { error } = await supabase
         .from('counterparties')

@@ -667,7 +667,13 @@
     "currencyHint": "Bu mijoz bilan hisob-kitob shu valyutada yuritiladi.",
     "notesLabel": "Izohlar",
     "notesPlaceholder": "Mijoz haqida eslatma: to‘lov odati, aloqa tartibi va h.k.",
-    "saved": "Saqlandi"
+    "saved": "Saqlandi",
+    "nameRequired": "Mijoz nomi bo‘sh bo‘lishi mumkin emas",
+    "deleteTitle": "Mijozni o‘chirish",
+    "deleteHint": "Bu mijozga hech qanday yozuv bog‘lanmagan — o‘chirish mumkin. Bu qaytarilmaydi.",
+    "deleteBlocked": "O‘chirib bo‘lmaydi, chunki bog‘liq yozuvlar bor:",
+    "deleteBlockedHint": "Yozuv kiritilgan mijoz o‘chirilmaydi — nomini tuzatish yoki yozuvlarni bekor qilish kerak.",
+    "deleteConfirm": "«{name}» butunlay o‘chirilsinmi?"
   },
   "sotuv": {
     "clients": "Mijozlar",

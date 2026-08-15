@@ -114,6 +114,30 @@ export const MODULES = [
         reads: ['xodim'],
       },
       {
+        id: 'mijozni_tahrirlash',
+        title: 'Mijozni tahrirlash',
+        appliesTo: 'kontragent',
+        writes: ['kontragent'],
+        reads: ['xodim'],
+      },
+      {
+        // Only a client nothing points at. The guard counts the inbound links
+        // — Sotuv's invoices among them — but that is not Moliya reading
+        // Sotuv, and `reads` is right to stay empty: the arrow runs the other
+        // way. Sotuv depends on the client register; refusing to delete a row
+        // while something references it is what owning the register means.
+        // The tables the guard counts are checked against these very links in
+        // ontology/schema.test.ts, so a new module that starts referencing
+        // clients cannot quietly fall outside it.
+        id: 'mijozni_ochirish',
+        title: 'Mijozni o‘chirish',
+        appliesTo: 'kontragent',
+        writes: ['kontragent'],
+        reads: [],
+        adminOnly: true,
+        rpc: 'delete_counterparty',
+      },
+      {
         id: 'tranzaksiya_kiritish',
         title: 'Tranzaksiya kiritish',
         appliesTo: 'kontragent',

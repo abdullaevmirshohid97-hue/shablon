@@ -1,16 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useUpdateCounterparty } from '@mubosher/api-client';
+import { useRouter } from 'next/navigation';
+import { useModules, useUpdateCounterparty } from '@mubosher/api-client';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
 import { Input, Label, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { ToggleChip } from '@/components/ui/Badge';
 
 const textareaClass =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-fin-md text-slate-900 ' +
   'placeholder:text-slate-400 transition-shadow focus:border-brand-500';
+
+/** Tags are a set, not a list: reordering them is not an edit. */
+function sameSet(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((value) => b.includes(value));
+}
 
 /**
  * The client's own details, on their page.
@@ -25,6 +32,13 @@ const textareaClass =
  * table that nothing ever wrote to — the place where "pays late, always
  * settles" or "call the warehouse before delivering" has to live, and a
  * single-line input is not that place.
+ *
+ * The name is here too, and was the omission that mattered most: it could be
+ * set once when the client was created and never again. A client mistyped at
+ * seven in the morning stayed mistyped on every invoice, every despatch note
+ * and every ledger export from then on, and the only remedy in the product was
+ * to create a second client and leave the first one sitting there. Correcting
+ * it is one column and it belongs at the top.
  */
 export function CounterpartySettings({
   orgId,
@@ -40,13 +54,19 @@ export function CounterpartySettings({
     currency?: string | null;
     managerId?: string | null;
     notes?: string | null;
+    categories?: string[];
   };
   canWrite: boolean;
 }) {
   const { t } = useLocale();
+  const router = useRouter();
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const update = useUpdateCounterparty(supabase);
+  const { data: modules } = useModules(supabase, orgId);
 
+  const initialCategories = initial.categories ?? [];
+  const [name, setName] = useState(initial.name);
+  const [categories, setCategories] = useState<string[]>(initialCategories);
   const [currency, setCurrency] = useState(initial.currency ?? '');
   const [managerId, setManagerId] = useState(initial.managerId ?? '');
   const [phone, setPhone] = useState(initial.phone ?? '');
@@ -74,6 +94,8 @@ export function CounterpartySettings({
   // So the form says out loud that it is dirty, and the browser asks before
   // the tab closes on top of it.
   const isDirty =
+    name !== initial.name ||
+    !sameSet(categories, initialCategories) ||
     currency !== (initial.currency ?? '') ||
     managerId !== (initial.managerId ?? '') ||
     phone !== (initial.phone ?? '') ||
@@ -89,14 +111,29 @@ export function CounterpartySettings({
     return () => window.removeEventListener('beforeunload', warn);
   }, [isDirty]);
 
+  function toggleCategory(label: string) {
+    setCategories((prev) =>
+      prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label],
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage(null);
     setSaved(false);
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setErrorMessage(t('counterparty.nameRequired'));
+      return;
+    }
+
     try {
       await update.mutateAsync({
         orgId,
         counterpartyId,
+        name: trimmedName,
+        categories,
         phone: phone.trim() || null,
         // Empty means "follow the organisation's own currency", which is what
         // the journal falls back to — not a client trading in nothing.
@@ -104,7 +141,17 @@ export function CounterpartySettings({
         managerId: managerId || null,
         notes: notes.trim() || null,
       });
+      // What was sent is what was saved, so the fields hold the trimmed value
+      // too — otherwise trailing whitespace leaves the form comparing itself
+      // to the server and calling that unsaved work.
+      setName(trimmedName);
+      setPhone(phone.trim());
+      setNotes(notes.trim());
       setSaved(true);
+      // The name is printed by the page heading, the ledger header and the
+      // print header, all rendered on the server — none of which knows the
+      // form just changed it.
+      router.refresh();
     } catch (err) {
       setErrorMessage((err as Error).message);
     }
@@ -113,6 +160,17 @@ export function CounterpartySettings({
   return (
     <Card className="no-print p-4">
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <div>
+          <Label>{t('addCounterparty.nameLabel')}</Label>
+          <Input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={!canWrite}
+          />
+        </div>
+
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
             <Label>{t('counterparty.currencyLabel')}</Label>
@@ -155,6 +213,30 @@ export function CounterpartySettings({
               onChange={(e) => setPhone(e.target.value)}
               disabled={!canWrite}
             />
+          </div>
+        </div>
+
+        <div>
+          <Label>{t('addCounterparty.categoriesLabel')}</Label>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {(modules ?? []).map((m) => (
+              <ToggleChip
+                key={m.id}
+                active={categories.includes(m.name)}
+                onClick={() => canWrite && toggleCategory(m.name)}
+              >
+                {m.name}
+              </ToggleChip>
+            ))}
+            {/* A tag the client carries that no module declares any more —
+                shown so it can be taken off, rather than silently kept. */}
+            {categories
+              .filter((c) => !modules?.some((m) => m.name === c))
+              .map((c) => (
+                <ToggleChip key={c} active onClick={() => canWrite && toggleCategory(c)}>
+                  {c} ×
+                </ToggleChip>
+              ))}
           </div>
         </div>
 

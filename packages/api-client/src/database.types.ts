@@ -565,6 +565,16 @@ export interface Database {
         Args: { target_org_id: string; old_name: string; new_name: string };
         Returns: void;
       };
+      /** 0034 — what stands in the way of deleting a client. */
+      counterparty_references: {
+        Args: { target_org_id: string; target_id: string };
+        Returns: { entity: string; ref_count: number }[];
+      };
+      /** 0034 — refuses, with the reason, unless the client has no history. */
+      delete_counterparty: {
+        Args: { target_org_id: string; target_id: string };
+        Returns: void;
+      };
       remove_module_category: {
         Args: { target_org_id: string; name_to_remove: string };
         Returns: void;

@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { CounterpartySettings } from '@/components/CounterpartySettings';
+import { DeleteCounterparty } from '@/components/DeleteCounterparty';
 import { CounterpartyLedgerClient } from './ledger-client';
 
 export default async function CounterpartyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -17,7 +18,7 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
 
   const { data: counterparty, error } = await supabase
     .from('counterparties')
-    .select('id, org_id, name, phone, currency, manager_id, notes')
+    .select('id, org_id, name, phone, currency, manager_id, notes, categories')
     .eq('id', id)
     .single();
 
@@ -78,6 +79,7 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
             currency: counterparty.currency,
             managerId: counterparty.manager_id,
             notes: counterparty.notes,
+            categories: counterparty.categories ?? [],
           }}
         />
       </div>
@@ -88,6 +90,18 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
         counterpartyId={counterparty.id}
         counterpartyName={counterparty.name}
       />
+
+      {/* Below the ledger, deliberately: removing a client is the last thing
+          on the page and never the first thing the eye lands on. */}
+      {canWrite && (
+        <div className="mt-6">
+          <DeleteCounterparty
+            orgId={counterparty.org_id}
+            counterpartyId={counterparty.id}
+            counterpartyName={counterparty.name}
+          />
+        </div>
+      )}
     </div>
   );
 }
