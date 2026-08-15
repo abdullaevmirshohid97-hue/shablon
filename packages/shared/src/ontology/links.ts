@@ -32,6 +32,17 @@ export const LINKS = [
     foreignKey: 'memberships.org_id',
     inverse: 'Tashkiloti',
   },
+  {
+    // A membership says what someone may do here; the profile says who they
+    // are. Two tables because one of them is global and the other is not.
+    id: 'xodim_profili',
+    title: 'Profili',
+    from: 'xodim',
+    to: 'profil',
+    cardinality: 'one',
+    foreignKey: 'memberships.user_id',
+    inverse: 'A’zoliklari',
+  },
 
   // -- Moliya ---------------------------------------------------------------
   {

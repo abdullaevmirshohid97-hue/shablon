@@ -54,6 +54,14 @@ export interface PropertyDef {
   kind: PropertyKind;
   unit?: Unit;
   /**
+   * The column behind it. Omitted when it is the snake_case of the id, which
+   * is the convention everywhere; `null` when the property is not on the table
+   * at all — a total the database computes, a name joined in from elsewhere, a
+   * figure an RPC returns. A generic reader selects the stored ones and leaves
+   * the rest to whoever knows how to work them out.
+   */
+  column?: string | null;
+  /**
    * Hidden from staff by row-level security, not by the UI. Recorded here so a
    * screen never promises a column the database will return null for, and so
    * an export can drop it rather than emit a column of blanks.
@@ -103,6 +111,19 @@ export interface ObjectTypeDef {
   owner: ModuleId;
   /** The table behind it, so the map can be checked against the schema. */
   table: string;
+  /**
+   * The column that addresses one row. `id` almost everywhere, but not
+   * everywhere: a price is keyed by the batch it belongs to, and an employee by
+   * the user they are.
+   */
+  primaryKey?: string;
+  /**
+   * Whether the table carries `org_id`. True for all but two — the company row
+   * is identified by its own id, and a profile is global to the platform. A
+   * reader that filters on a column the table does not have gets an error, not
+   * a wider result, so this has to be stated rather than assumed.
+   */
+  orgScoped?: boolean;
   /** Which property to show when one of these has to be named in one line. */
   titleProperty: string;
   properties: readonly PropertyDef[];
@@ -157,6 +178,25 @@ export interface NavItemDef {
   icon: string;
   /** Grouped under a heading in the rail; the primary group has none. */
   groupKey?: string;
+  adminOnly?: boolean;
+}
+
+/**
+ * A screen that belongs to no one module because it is about all of them — the
+ * object explorer being the case that forced it into existence.
+ *
+ * It is deliberately not a module: a module is a duty someone in the company
+ * carries, and browsing the map is not one. Making it a module would mean
+ * inventing an owner for it and declaring a dependency on every object in the
+ * business, which would say something false about how the company works in
+ * order to make a menu entry appear.
+ */
+export interface PlatformScreenDef {
+  href: string;
+  titleKey: string;
+  descriptionKey?: string;
+  icon: string;
+  hubGroupKey: string;
   adminOnly?: boolean;
 }
 

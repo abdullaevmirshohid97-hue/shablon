@@ -6,9 +6,18 @@ import type { ObjectTypeDef } from './types';
  * The properties listed are the ones the business talks about, not every column
  * of the table — an ontology that mirrors the schema row for row is just the
  * schema again, and would have to be edited twice for every migration. What it
- * must be exact about is `owner`, `table` and the money: a property marked
- * `restricted` is one row-level security hides from staff, and a screen that
- * forgets that shows a column of blanks and calls it a bug in the database.
+ * must be exact about is three things:
+ *
+ *   `owner`     — the one module that writes it.
+ *   `table`     — plus `primaryKey` where a row is not addressed by `id`.
+ *   `column`    — omitted where it is the snake_case of the property, `null`
+ *                 where the property is not stored at all. A generic reader
+ *                 selects exactly the stored ones, so a wrong answer here is a
+ *                 failed query rather than a wrong number.
+ *
+ * `restricted` marks what row-level security hides from staff — those come back
+ * null rather than zero, and a screen that forgets it shows a column of blanks
+ * and calls it a bug in the database.
  */
 export const OBJECT_TYPES = [
   // -------------------------------------------------------------------------
@@ -21,6 +30,8 @@ export const OBJECT_TYPES = [
     plural: 'Tashkilotlar',
     owner: 'tashkilot',
     table: 'organizations',
+    // The company is not inside a company: its own id is the tenant key.
+    orgScoped: false,
     titleProperty: 'name',
     properties: [
       { id: 'name', title: 'Nomi', kind: 'text' },
@@ -35,13 +46,31 @@ export const OBJECT_TYPES = [
     plural: 'Xodimlar',
     owner: 'tashkilot',
     table: 'memberships',
+    // No id column at all: a membership is one person in one company.
+    primaryKey: 'user_id',
+    titleProperty: 'fullName',
+    properties: [
+      // The name lives on the profile, which is why the object links to one.
+      { id: 'fullName', title: 'F.I.O.', kind: 'text', column: null },
+      { id: 'role', title: 'Roli', kind: 'status' },
+      // Stored as a hash and never selectable; list_org_roster and
+      // has_finance_pin are the only honest ways to ask about it.
+      { id: 'hasPin', title: 'PIN o‘rnatilgan', kind: 'status', column: null, restricted: true },
+    ],
+  },
+  {
+    id: 'profil',
+    title: 'Profil',
+    plural: 'Profillar',
+    owner: 'tashkilot',
+    table: 'profiles',
+    // One person, one profile, whichever companies they belong to.
+    orgScoped: false,
     titleProperty: 'fullName',
     properties: [
       { id: 'fullName', title: 'F.I.O.', kind: 'text' },
-      { id: 'email', title: 'Email', kind: 'text' },
-      { id: 'role', title: 'Roli', kind: 'status' },
-      // The PIN itself is never readable — only verify_finance_pin sees it.
-      { id: 'hasPin', title: 'PIN o‘rnatilgan', kind: 'status', restricted: true },
+      { id: 'phone', title: 'Telefon', kind: 'text' },
+      { id: 'rolePlatform', title: 'Platforma roli', kind: 'status' },
     ],
   },
 
@@ -64,11 +93,14 @@ export const OBJECT_TYPES = [
       { id: 'phone', title: 'Telefon', kind: 'text' },
       { id: 'categories', title: 'Toifalari', kind: 'text' },
       { id: 'currency', title: 'Valyuta', kind: 'code' },
+      { id: 'notes', title: 'Izoh', kind: 'text' },
       { id: 'managerId', title: 'Menejeri', kind: 'ref' },
-      { id: 'totalDebt', title: 'Jami qarz', kind: 'money', derived: true },
+      // Both come out of counterparty_journal, not off the row: the balance is
+      // the ledger's answer, and it is arrived at rather than stored.
+      { id: 'totalDebt', title: 'Jami qarz', kind: 'money', column: null, derived: true },
       // Not a slice of totalDebt: what was outstanding when the deadline
-      // passed, less everything paid since. See CounterpartyJournalRow.
-      { id: 'overdueAmount', title: 'Muddati o‘tgan', kind: 'money', derived: true },
+      // passed, less everything paid since.
+      { id: 'overdueAmount', title: 'Muddati o‘tgan', kind: 'money', column: null, derived: true },
     ],
   },
   {
@@ -123,9 +155,11 @@ export const OBJECT_TYPES = [
     plural: 'Hisobot davrlari',
     owner: 'moliya',
     table: 'accounting_periods',
-    titleProperty: 'label',
+    titleProperty: 'name',
     properties: [
-      { id: 'label', title: 'Davr', kind: 'text' },
+      { id: 'name', title: 'Davr', kind: 'text' },
+      { id: 'startDate', title: 'Boshlanishi', kind: 'date' },
+      { id: 'endDate', title: 'Tugashi', kind: 'date' },
       { id: 'status', title: 'Holati', kind: 'status' },
     ],
   },
@@ -178,9 +212,9 @@ export const OBJECT_TYPES = [
     table: 'sklad_batches',
     titleProperty: 'itemName',
     properties: [
-      // A lot is named by the card it came off. Denormalised onto the row by
-      // sklad_batch_page rather than stored, which is why it is derived.
-      { id: 'itemName', title: 'Mahsuloti', kind: 'text', derived: true },
+      // A lot is named by the card it came off, which is a join away — the
+      // link to mahsulot is how a screen actually gets it.
+      { id: 'itemName', title: 'Mahsuloti', kind: 'text', column: null, derived: true },
       { id: 'bruttoKg', title: 'Brutto', kind: 'quantity', unit: 'kg' },
       { id: 'nettoKg', title: 'Netto', kind: 'quantity', unit: 'kg' },
       { id: 'taraKg', title: 'Tara', kind: 'quantity', unit: 'kg', derived: true },
@@ -192,8 +226,10 @@ export const OBJECT_TYPES = [
       // record a movement — an action that writes it directly is a bug.
       { id: 'qoldiqDona', title: 'Qoldiq', kind: 'quantity', unit: 'dona', derived: true },
       { id: 'status', title: 'Holati', kind: 'status' },
+      { id: 'ishlabChiqarilganSana', title: 'Ishlab chiqarilgan', kind: 'date' },
       { id: 'omborgaKirganSana', title: 'Omborga kirgan sana', kind: 'date' },
       { id: 'locationSector', title: 'Joylashuvi', kind: 'text' },
+      { id: 'notes', title: 'Izoh', kind: 'text' },
     ],
   },
   {
@@ -202,8 +238,10 @@ export const OBJECT_TYPES = [
     plural: 'Narxlar',
     owner: 'sklad',
     table: 'sklad_batch_prices',
+    // Keyed by the lot it prices: one price row per batch, or none.
+    primaryKey: 'batch_id',
     titleProperty: 'totalAmount',
-    // A separate table so RLS can hide it row for row; every property below is
+    // A separate table so RLS can hide it row for row; every figure below is
     // null for staff, not zero.
     properties: [
       { id: 'pricePerKg', title: 'Kg narxi', kind: 'money', restricted: true },
@@ -227,6 +265,7 @@ export const OBJECT_TYPES = [
       { id: 'dona', title: 'Dona', kind: 'quantity', unit: 'dona' },
       { id: 'kg', title: 'Og‘irligi', kind: 'quantity', unit: 'kg' },
       { id: 'occurredAt', title: 'Sanasi', kind: 'date' },
+      { id: 'isInitial', title: 'Boshlang‘ich', kind: 'status' },
       { id: 'note', title: 'Izoh', kind: 'text' },
     ],
   },
@@ -244,6 +283,7 @@ export const OBJECT_TYPES = [
       { id: 'deadline', title: 'Muddati', kind: 'date' },
       { id: 'status', title: 'Holati', kind: 'status' },
       { id: 'managerId', title: 'Mas’ul', kind: 'ref' },
+      { id: 'notes', title: 'Izoh', kind: 'text' },
     ],
   },
   {
@@ -260,6 +300,7 @@ export const OBJECT_TYPES = [
       { id: 'colorText', title: 'Rangi', kind: 'text' },
       { id: 'plannedDona', title: 'Reja', kind: 'quantity', unit: 'dona' },
       { id: 'plannedKg', title: 'Reja', kind: 'quantity', unit: 'kg' },
+      { id: 'notes', title: 'Izoh', kind: 'text' },
     ],
   },
   {
@@ -283,21 +324,22 @@ export const OBJECT_TYPES = [
     plural: 'Bosqich yozuvlari',
     owner: 'sklad',
     table: 'sklad_stage_entries',
-    titleProperty: 'occurredAt',
+    titleProperty: 'executorName',
     properties: [
+      { id: 'executorName', title: 'Bajaruvchi', kind: 'text' },
       { id: 'qtyIn', title: 'Kirdi', kind: 'quantity', unit: 'dona' },
       { id: 'qtyOut', title: 'Chiqdi', kind: 'quantity', unit: 'dona' },
       { id: 'defectQty', title: 'Brak', kind: 'quantity', unit: 'dona' },
       { id: 'kg', title: 'Og‘irligi', kind: 'quantity', unit: 'kg' },
-      { id: 'executorName', title: 'Bajaruvchi', kind: 'text' },
       { id: 'occurredAt', title: 'Sanasi', kind: 'date' },
+      { id: 'note', title: 'Izoh', kind: 'text' },
     ],
   },
 
   // -------------------------------------------------------------------------
   // Sotuv — the paper a manager raises, the sacks the floor packs against it,
-  // and the lorry it leaves on. All three write stock movements into Sklad,
-  // which is why Sotuv declares partiya as a read and never touches it itself.
+  // and the lorry it leaves on. All three end in stock movements inside Sklad,
+  // which is why Sotuv declares partiya as a read and never writes it itself.
   // -------------------------------------------------------------------------
   {
     id: 'faktura',
@@ -314,7 +356,11 @@ export const OBJECT_TYPES = [
       { id: 'issuedAt', title: 'Sanasi', kind: 'date' },
       { id: 'dueDate', title: 'To‘lov muddati', kind: 'date' },
       { id: 'currency', title: 'Valyuta', kind: 'code' },
-      { id: 'totalAmount', title: 'Jami summa', kind: 'money' },
+      { id: 'note', title: 'Izoh', kind: 'text' },
+      // Added up from the lines by sklad_invoice_page, never stored on the
+      // header — a header total and line totals that can disagree is how an
+      // invoice starts lying.
+      { id: 'totalAmount', title: 'Jami summa', kind: 'money', column: null, derived: true },
     ],
   },
   {
@@ -325,12 +371,30 @@ export const OBJECT_TYPES = [
     table: 'sklad_invoice_lines',
     titleProperty: 'itemName',
     properties: [
-      { id: 'itemName', title: 'Mahsuloti', kind: 'text', derived: true },
-      { id: 'orderedDona', title: 'Buyurtma', kind: 'quantity', unit: 'dona' },
-      { id: 'shippedDona', title: 'Jo‘natilgan', kind: 'quantity', unit: 'dona', derived: true },
-      { id: 'remainingDona', title: 'Qoldi', kind: 'quantity', unit: 'dona', derived: true },
+      { id: 'itemName', title: 'Mahsuloti', kind: 'text', column: null, derived: true },
+      { id: 'position', title: 'No', kind: 'number' },
+      { id: 'dona', title: 'Buyurtma', kind: 'quantity', unit: 'dona' },
+      { id: 'kg', title: 'Og‘irligi', kind: 'quantity', unit: 'kg' },
       { id: 'unitPrice', title: 'Narxi', kind: 'money' },
-      { id: 'amount', title: 'Summasi', kind: 'money', derived: true },
+      { id: 'amount', title: 'Summasi', kind: 'money' },
+      // What has actually gone out against this line, and what is left: both
+      // are counted from the despatches, not stored beside the order figure.
+      {
+        id: 'shippedDona',
+        title: 'Jo‘natilgan',
+        kind: 'quantity',
+        unit: 'dona',
+        column: null,
+        derived: true,
+      },
+      {
+        id: 'remainingDona',
+        title: 'Qoldi',
+        kind: 'quantity',
+        unit: 'dona',
+        column: null,
+        derived: true,
+      },
     ],
   },
   {
@@ -349,7 +413,10 @@ export const OBJECT_TYPES = [
       { id: 'status', title: 'Holati', kind: 'status' },
       { id: 'packedAt', title: 'Qadoqlangan', kind: 'date' },
       { id: 'grossKg', title: 'Brutto', kind: 'quantity', unit: 'kg' },
-      { id: 'contents', title: 'Ichida', kind: 'text', derived: true },
+      { id: 'note', title: 'Izoh', kind: 'text' },
+      // "Qizil atirgul x 50, Sariq atirgul x 20" — the label's own summary,
+      // assembled from the lines.
+      { id: 'contents', title: 'Ichida', kind: 'text', column: null, derived: true },
     ],
   },
   {
@@ -360,10 +427,10 @@ export const OBJECT_TYPES = [
     table: 'sklad_package_lines',
     titleProperty: 'itemName',
     properties: [
-      { id: 'itemName', title: 'Mahsuloti', kind: 'text', derived: true },
-      // The product barcode, repeated on the sack's line: what a scanner reads
-      // to tell the red rose from the yellow one.
-      { id: 'itemBarcode', title: 'Shtrix kod', kind: 'code', derived: true },
+      { id: 'itemName', title: 'Mahsuloti', kind: 'text', column: null, derived: true },
+      // The product barcode, reached through the line's item.
+      { id: 'itemBarcode', title: 'Shtrix kod', kind: 'code', column: null, derived: true },
+      { id: 'position', title: 'No', kind: 'number' },
       { id: 'dona', title: 'Dona', kind: 'quantity', unit: 'dona' },
       { id: 'kg', title: 'Og‘irligi', kind: 'quantity', unit: 'kg' },
     ],
@@ -388,8 +455,11 @@ export const OBJECT_TYPES = [
     plural: 'Jo‘natma qatorlari',
     owner: 'sotuv',
     table: 'sklad_shipment_lines',
-    titleProperty: 'dona',
+    titleProperty: 'note',
     properties: [
+      // The despatch line carries the sack's code as its note, so the paper
+      // that travels says which sack each figure came out of.
+      { id: 'note', title: 'Qop kodi', kind: 'code' },
       { id: 'dona', title: 'Dona', kind: 'quantity', unit: 'dona' },
       { id: 'kg', title: 'Og‘irligi', kind: 'quantity', unit: 'kg' },
     ],

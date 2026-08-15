@@ -134,6 +134,23 @@ export function BackIcon({ className }: { className?: string }) {
   );
 }
 
+/** The ontology itself: objects, and the links between them. */
+export function GraphIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" className={className}>
+      <path
+        d="M10 4.5 4.5 14.5M10 4.5 15.5 14.5M4.5 14.5h11"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        fill="none"
+      />
+      <circle cx="10" cy="4" r="2.6" fill="currentColor" />
+      <circle cx="4.5" cy="15" r="2.6" fill="currentColor" />
+      <circle cx="15.5" cy="15" r="2.6" fill="currentColor" />
+    </svg>
+  );
+}
+
 /**
  * The ontology names an icon; this is where the name becomes a drawing.
  *
@@ -154,6 +171,7 @@ const ICONS: Record<string, (props: { className?: string }) => React.ReactElemen
   invoice: InvoiceIcon,
   clients: ClientsIcon,
   settings: SettingsIcon,
+  graph: GraphIcon,
 };
 
 export function iconFor(name: string): (props: { className?: string }) => React.ReactElement {

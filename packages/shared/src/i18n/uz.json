@@ -739,5 +739,26 @@
       "qop": "Qop",
       "mahsulot": "Mahsulot"
     }
+  },
+  "ontology": {
+    "title": "Ma'lumotlar xaritasi",
+    "description": "Har bir obyekt, uning bog‘lanishlari va amallari — modullar bo‘ylab",
+    "map": "Xarita",
+    "mapIntro": "Kompaniya nimalardan tashkil topgan: har bir obyekt, uni yozadigan modul va undan chiqadigan bog‘lanishlar. Raqam — siz ko‘ra oladigan yozuvlar soni.",
+    "dependsOn": "Tayanadi",
+    "linkCount": "{n} ta bog‘lanish",
+    "searchPlaceholder": "Qidirish...",
+    "loadFailed": "O‘qib bo‘lmadi",
+    "empty": "Hozircha yozuv yo‘q",
+    "openOwnPage": "O‘z sahifasida ochish",
+    "properties": "Xossalari",
+    "references": "Bog‘liq",
+    "actions": "Amallar",
+    "actionsHint": "Bu obyektdan boshlanadigan amallar. Bajarish — tegishli modul sahifasida.",
+    "adminOnly": "faqat admin",
+    "restricted": "yopiq",
+    "truncated": "birinchi 25 tasi",
+    "crossesModule": "boshqa modul",
+    "noneOf": "Yo‘q"
   }
 }

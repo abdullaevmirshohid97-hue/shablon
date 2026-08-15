@@ -17,9 +17,10 @@ Kod [packages/shared/src/ontology](../packages/shared/src/ontology) da biznesnin
 | Fayl          | Nima e'lon qiladi                                                                                 |
 | ------------- | ------------------------------------------------------------------------------------------------- |
 | `types.ts`    | Meta-model: obyekt, xossa, bog'lanish, amal, modul manifesti                                      |
-| `objects.ts`  | 22 ta obyekt — nomi, jadvali, **egasi**, xossalari                                                |
-| `links.ts`    | 39 ta bog'lanish, har biri haqiqiy foreign key ustuni bilan                                       |
+| `objects.ts`  | 23 ta obyekt — nomi, jadvali, **egasi**, xossalari va ular yotgan ustunlar                        |
+| `links.ts`    | 40 ta bog'lanish, har biri haqiqiy foreign key ustuni bilan                                       |
 | `modules.ts`  | Har bir modulning vazifasi, tayanchlari (`reads`), amallari, navigatsiyasi                        |
+| `screens.ts`  | Hech bir modulga tegishli bo'lmagan ekranlar (obyekt ko'rinishi)                                  |
 | `registry.ts` | Tekshiradi va so'rovlarga javob beradi (`ontology.traversalsFrom`, `actionsOn`, `hubGroups`, ...) |
 
 ### Ikki qoida
@@ -35,9 +36,25 @@ tashkilot  ←  moliya  ←  sklad  ←  sotuv
 
 `buildOntology` import paytida tekshiradi va qarama-qarshilik bo'lsa **umuman ishga tushmaydi**: begona obyektni yozish, e'lon qilinmagan tayanch, ishlatilmaydigan tayanch, ikki modul bitta sahifani da'vo qilishi, mavjud bo'lmagan amalni chaqirish, modullar halqasi — hammasi bitta ro'yxat bo'lib chiqadi ([registry.test.ts](../packages/shared/src/ontology/registry.test.ts) da 26 ta test).
 
+### Sxema bilan bog'lanish
+
+Har bir xossa qaysi ustunda yotishini bilardi: `column` yozilmasa — xossaning snake_case shakli, `null` bo'lsa — u jadvalda umuman yo'q (RPC hisoblab beradi). Shu tufayli generik o'quvchi `select` ni o'zi qura oladi.
+
+Bu da'volar [schema.test.ts](../packages/shared/src/ontology/schema.test.ts) da migratsiya SQL fayllarini o'qib tekshiriladi — 133 ta test: har bir jadval, ustun, birlamchi kalit, `org_id` mavjudligi va har bir foreign key. Bazaga ulanmaydi, chunki ulanadigan test — o'tkazib yuboriladigan test.
+
+### Obyekt ko'rinishi (`/hub/obyekt`)
+
+Ontologiya ustidagi yagona ekran, 23 ta obyektning hammasiga ishlaydi:
+
+- `/hub/obyekt` — xarita: modullar, ularning obyektlari va siz ko'ra oladigan yozuvlar soni
+- `/hub/obyekt/[type]` — bitta obyekt turining ro'yxati, qidiruv bilan
+- `/hub/obyekt/[type]/[id]` — bitta obyekt: xossalari, ikkala yo'nalishdagi barcha bog'lanishlari va unga tegishli amallar
+
+O'quvchi [apps/web/src/lib/ontology/read.ts](../apps/web/src/lib/ontology/read.ts) da — unda birorta jadval nomi ham, `join` ham yozilmagan; hammasi ontologiyadan chiqadi. Barcha so'rovlar foydalanuvchining o'z sessiyasi bilan ketadi, ya'ni ruxsatni RLS hal qiladi: omborchi ko'rmasligi kerak bo'lgan narx qatori bo'sh emas, umuman kelmaydi.
+
 ### Yangi modul qo'shish
 
-`modules.ts` ga bitta manifest va `objects.ts` ga o'z obyektlari qo'shiladi, `ModuleId` ga id yoziladi. Undan keyin hub raqasi, bosh sahifa plitkalari va modulning o'z raqasi avtomatik paydo bo'ladi — mavjud modullarning birortasi ham yangisi haqida bilishi shart emas.
+`modules.ts` ga bitta manifest va `objects.ts` ga o'z obyektlari qo'shiladi, `ModuleId` ga id yoziladi. Undan keyin hub raqasi, bosh sahifa plitkalari, modulning o'z raqasi **va obyekt ko'rinishi** avtomatik paydo bo'ladi — mavjud modullarning birortasi ham yangisi haqida bilishi shart emas.
 
 ## Tenant modeli
 

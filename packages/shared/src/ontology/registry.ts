@@ -1,9 +1,42 @@
-import type { ActionDef, LinkDef, ModuleDef, ModuleId, NavItemDef, ObjectTypeDef } from './types';
+import type {
+  ActionDef,
+  LinkDef,
+  ModuleDef,
+  ModuleId,
+  NavItemDef,
+  ObjectTypeDef,
+  PlatformScreenDef,
+  PropertyDef,
+} from './types';
 
 export interface OntologyInput {
   modules: readonly ModuleDef[];
   objectTypes: readonly ObjectTypeDef[];
   links: readonly LinkDef[];
+  /** Screens that belong to no one module because they are about all of them. */
+  platformScreens?: readonly PlatformScreenDef[];
+}
+
+/**
+ * The column a property is stored in, or null when it is not stored at all.
+ *
+ * The convention across the schema is the snake_case of the property, so the
+ * declarations only have to say something where that is not true. A reader that
+ * builds a select list uses this and skips the nulls; nothing else may guess.
+ */
+export function propertyColumn(property: PropertyDef): string | null {
+  if (property.column !== undefined) return property.column;
+  return property.id.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+/** The stored properties of an object, in declaration order. */
+export function storedProperties(objectType: ObjectTypeDef): PropertyDef[] {
+  return objectType.properties.filter((p) => propertyColumn(p) !== null);
+}
+
+/** The column one row is addressed by — `id` unless the object says otherwise. */
+export function primaryKeyOf(objectType: ObjectTypeDef): string {
+  return objectType.primaryKey ?? 'id';
 }
 
 /** An action with the module that publishes it, since actions are looked up
@@ -14,22 +47,47 @@ export interface OwnedAction extends ActionDef {
   qualifiedId: string;
 }
 
-/** A link as seen from one object: where it goes and what to call the walk. */
+/**
+ * A link as seen from one object: where it goes, what to call the walk, and —
+ * the part a reader needs — which end holds the foreign key.
+ *
+ * That last one decides the query, and it is not the same question as
+ * cardinality. A batch has at most one price, but the key is on the price
+ * table, so finding it means selecting *from* prices by batch_id rather than
+ * reading a column off the batch.
+ */
 export interface Traversal {
   link: LinkDef;
   /** True when this object is the `to` end and the traversal runs backwards. */
   reverse: boolean;
   target: ObjectTypeDef;
   title: string;
+  /** How many land at the far end, counted from this side. */
   cardinality: LinkDef['cardinality'];
   /** Whether following it leaves the module that owns the source object. */
   crossesModule: boolean;
+  /** The bare column name, without its table. */
+  foreignKeyColumn: string;
+  /**
+   * True when the key sits on the source's own table: the target is fetched by
+   * its primary key, using the value in that column. False means the target
+   * table carries the key and is filtered by the source's id.
+   */
+  foreignKeyOnSource: boolean;
 }
 
 export interface NavGroupDef {
   /** i18n key; absent on the primary group, which needs no heading. */
   titleKey?: string;
   items: NavItemDef[];
+}
+
+/** A door on the hub: a module's front page, or a screen about all of them. */
+export interface HubEntry {
+  href: string;
+  titleKey: string;
+  descriptionKey?: string;
+  icon: string;
 }
 
 export class OntologyError extends Error {
@@ -205,9 +263,9 @@ export function validateOntology(input: OntologyInput): string[] {
     }
   }
 
-  // One screen, one module. Two claims on a path means the rail contradicts
-  // itself and whichever module renders last wins, which is not a rule.
-  const navOwners = new Map<string, ModuleId>();
+  // One screen, one claimant. Two claims on a path means the rail contradicts
+  // itself and whichever renders last wins, which is not a rule.
+  const navOwners = new Map<string, string>();
   for (const module of modules) {
     for (const item of module.nav) {
       const existing = navOwners.get(item.href);
@@ -218,6 +276,16 @@ export function validateOntology(input: OntologyInput): string[] {
       } else {
         navOwners.set(item.href, module.id);
       }
+    }
+  }
+  for (const screen of input.platformScreens ?? []) {
+    const existing = navOwners.get(screen.href);
+    if (existing) {
+      problems.push(
+        `"${screen.href}" sahifasini ham modul, ham platforma ekrani da'vo qilyapti: ${existing}`,
+      );
+    } else {
+      navOwners.set(screen.href, 'platform');
     }
   }
 
@@ -295,6 +363,7 @@ export class Ontology {
   readonly modules: readonly ModuleDef[];
   readonly objectTypes: readonly ObjectTypeDef[];
   readonly links: readonly LinkDef[];
+  readonly platformScreens: readonly PlatformScreenDef[];
 
   private readonly moduleIndex: Map<string, ModuleDef>;
   private readonly objectIndex: Map<string, ObjectTypeDef>;
@@ -307,6 +376,7 @@ export class Ontology {
     this.modules = input.modules;
     this.objectTypes = input.objectTypes;
     this.links = input.links;
+    this.platformScreens = input.platformScreens ?? [];
     this.moduleIndex = new Map(input.modules.map((m) => [m.id as string, m]));
     this.objectIndex = new Map(input.objectTypes.map((o) => [o.id, o]));
     this.actionIndex = new Map(
@@ -347,6 +417,8 @@ export class Ontology {
 
     const out: Traversal[] = [];
     for (const link of this.links) {
+      const [keyTable = '', keyColumn = ''] = link.foreignKey.split('.');
+
       if (link.from === objectId) {
         const target = this.objectIndex.get(link.to);
         if (!target) continue;
@@ -357,6 +429,8 @@ export class Ontology {
           title: link.title,
           cardinality: link.cardinality,
           crossesModule: target.owner !== source.owner,
+          foreignKeyColumn: keyColumn,
+          foreignKeyOnSource: keyTable === source.table,
         });
       }
       if (link.to === objectId) {
@@ -370,6 +444,8 @@ export class Ontology {
           // Walking back up a 'many' lands on exactly one row.
           cardinality: link.cardinality === 'many' ? 'one' : 'many',
           crossesModule: target.owner !== source.owner,
+          foreignKeyColumn: keyColumn,
+          foreignKeyOnSource: keyTable === source.table,
         });
       }
     }
@@ -419,15 +495,39 @@ export class Ontology {
       .sort((a, b) => b.href.length - a.href.length)[0];
   }
 
-  /** The hub rail: the business, not the screens. */
-  hubGroups(options: { isOrgAdmin: boolean }): NavGroupDef[] {
-    const visible = this.modules.filter((m) => !m.planned && (options.isOrgAdmin || !m.adminOnly));
-    return groupNav(
-      visible.map((m) => ({
+  /** Every door on the hub, modules first and platform screens after them. */
+  hubEntries(options: { isOrgAdmin: boolean }): (HubEntry & { groupKey: string })[] {
+    const fromModules = this.modules
+      .filter((m) => !m.planned && (options.isOrgAdmin || !m.adminOnly))
+      .map((m) => ({
         href: m.href,
-        labelKey: m.titleKey,
+        titleKey: m.titleKey,
+        descriptionKey: m.descriptionKey,
         icon: m.icon,
         groupKey: m.hubGroupKey,
+      }));
+
+    const fromPlatform = this.platformScreens
+      .filter((s) => options.isOrgAdmin || !s.adminOnly)
+      .map((s) => ({
+        href: s.href,
+        titleKey: s.titleKey,
+        descriptionKey: s.descriptionKey,
+        icon: s.icon,
+        groupKey: s.hubGroupKey,
+      }));
+
+    return [...fromModules, ...fromPlatform];
+  }
+
+  /** The hub rail: the business, not the screens. */
+  hubGroups(options: { isOrgAdmin: boolean }): NavGroupDef[] {
+    return groupNav(
+      this.hubEntries(options).map((entry) => ({
+        href: entry.href,
+        labelKey: entry.titleKey,
+        icon: entry.icon,
+        groupKey: entry.groupKey,
       })),
       { isOrgAdmin: options.isOrgAdmin },
     );
@@ -440,11 +540,9 @@ export class Ontology {
     return groupNav([...module.nav], options);
   }
 
-  /** The front door's tiles: the parts of the business a person may walk into. */
-  tiles(options: { isOrgAdmin: boolean }): ModuleDef[] {
-    return this.modules.filter(
-      (m) => !m.planned && !m.adminOnly && m.descriptionKey && (options.isOrgAdmin || !m.adminOnly),
-    );
+  /** The front door's tiles: everything with a sentence explaining itself. */
+  tiles(options: { isOrgAdmin: boolean }): HubEntry[] {
+    return this.hubEntries(options).filter((entry) => entry.descriptionKey);
   }
 }
 

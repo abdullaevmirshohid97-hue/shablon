@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { LINKS } from './links';
 import { MODULES } from './modules';
 import { OBJECT_TYPES } from './objects';
-import { OntologyError, buildOntology, validateOntology } from './registry';
+import {
+  OntologyError,
+  buildOntology,
+  primaryKeyOf,
+  propertyColumn,
+  storedProperties,
+  validateOntology,
+} from './registry';
+import { PLATFORM_SCREENS } from './screens';
 import { ontology } from './index';
 import type { LinkDef, ModuleDef, ObjectTypeDef } from './types';
 
@@ -12,6 +20,7 @@ function shipped() {
     modules: MODULES.map((m) => ({ ...m })) as unknown as ModuleDef[],
     objectTypes: OBJECT_TYPES.map((o) => ({ ...o })) as unknown as ObjectTypeDef[],
     links: LINKS.map((l) => ({ ...l })) as unknown as LinkDef[],
+    platformScreens: PLATFORM_SCREENS.map((s) => ({ ...s })),
   };
 }
 
@@ -100,10 +109,10 @@ describe('walking the graph', () => {
 });
 
 describe('the rails', () => {
-  it('lists the business, not the screens', () => {
+  it('lists the business, then the screens that span it', () => {
     const groups = ontology.hubGroups({ isOrgAdmin: false });
     const hrefs = groups.flatMap((g) => g.items.map((i) => i.href));
-    expect(hrefs).toEqual(['/dashboard', '/hub/sklad', '/hub/sotuv']);
+    expect(hrefs).toEqual(['/dashboard', '/hub/sklad', '/hub/sotuv', '/hub/obyekt']);
   });
 
   it('adds the settings door only for an admin', () => {
@@ -130,12 +139,62 @@ describe('the rails', () => {
     expect(ontology.moduleForPath('/login')).toBeUndefined();
   });
 
-  it('shows a tile for each part of the business a person walks into', () => {
-    expect(ontology.tiles({ isOrgAdmin: true }).map((m) => m.id)).toEqual([
-      'moliya',
-      'sklad',
-      'sotuv',
+  it('shows a tile for each door that can explain itself', () => {
+    expect(ontology.tiles({ isOrgAdmin: true }).map((entry) => entry.href)).toEqual([
+      '/dashboard',
+      '/hub/sklad',
+      '/hub/sotuv',
+      '/hub/obyekt',
     ]);
+  });
+
+  it('keeps the settings door off the tiles even for an admin', () => {
+    // It has no description because it is not a part of the business — it is
+    // where the business is configured.
+    expect(ontology.tiles({ isOrgAdmin: true }).map((e) => e.href)).not.toContain('/hub/settings');
+  });
+});
+
+describe('reading an object out of the database', () => {
+  it('assumes the snake_case column and says so only when it differs', () => {
+    const partiya = ontology.objectType('partiya')!;
+    const columns = storedProperties(partiya).map(propertyColumn);
+    expect(columns).toContain('omborga_kirgan_sana');
+    expect(columns).toContain('qoldiq_dona');
+    expect(columns).toContain('piece_weight_kg');
+  });
+
+  it('leaves out what is not on the table', () => {
+    const partiya = ontology.objectType('partiya')!;
+    // The lot's name comes off the product card, a join away.
+    expect(storedProperties(partiya).map((p) => p.id)).not.toContain('itemName');
+    expect(propertyColumn(partiya.properties.find((p) => p.id === 'itemName')!)).toBeNull();
+  });
+
+  it('knows the rows that are not addressed by id', () => {
+    expect(primaryKeyOf(ontology.objectType('narx')!)).toBe('batch_id');
+    expect(primaryKeyOf(ontology.objectType('xodim')!)).toBe('user_id');
+    expect(primaryKeyOf(ontology.objectType('faktura')!)).toBe('id');
+  });
+
+  it('says which end of a link holds the key, which is what decides the query', () => {
+    // The invoice carries counterparty_id, so the client is read by its own id.
+    const toClient = ontology.traversalsFrom('faktura').find((t) => t.target.id === 'kontragent')!;
+    expect(toClient.foreignKeyOnSource).toBe(true);
+    expect(toClient.foreignKeyColumn).toBe('counterparty_id');
+
+    // The sacks carry invoice_id, so they are found by filtering on it.
+    const toSacks = ontology.traversalsFrom('faktura').find((t) => t.target.id === 'qop')!;
+    expect(toSacks.foreignKeyOnSource).toBe(false);
+    expect(toSacks.foreignKeyColumn).toBe('invoice_id');
+  });
+
+  it('does not confuse "at most one" with "the key is here"', () => {
+    // A batch has one price row at most, but the key is on the price table.
+    const toPrice = ontology.traversalsFrom('partiya').find((t) => t.target.id === 'narx')!;
+    expect(toPrice.cardinality).toBe('one');
+    expect(toPrice.foreignKeyOnSource).toBe(false);
+    expect(toPrice.foreignKeyColumn).toBe('batch_id');
   });
 });
 
@@ -199,6 +258,16 @@ describe('the rules a new module has to satisfy', () => {
 
     expect(validateOntology(input)).toContainEqual(
       expect.stringContaining("ikkita modul da'vo qilyapti"),
+    );
+  });
+
+  it('refuses a module claiming a screen the platform already owns', () => {
+    const input = shipped();
+    const sklad = input.modules.find((m) => m.id === 'sklad')!;
+    sklad.nav = [...sklad.nav, { href: '/hub/obyekt', labelKey: 'x', icon: 'graph' }];
+
+    expect(validateOntology(input)).toContainEqual(
+      expect.stringContaining("ham modul, ham platforma ekrani da'vo qilyapti"),
     );
   });
 
