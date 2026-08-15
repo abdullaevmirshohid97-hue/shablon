@@ -9,6 +9,69 @@ export interface CounterpartyReference {
   count: number;
 }
 
+/** One line of the client register — see counterparty_directory (0035). */
+export interface CounterpartyDirectoryRow {
+  counterpartyId: string;
+  name: string;
+  phone?: string | null;
+  managerId?: string | null;
+  managerName?: string | null;
+  currency: string;
+  categories: string[];
+  /** Gross movement through the account over the selected period. */
+  turnover: number;
+  entryCount: number;
+  /**
+   * Signed, all-time, and the figure that decides whether the account can be
+   * closed: positive means the client owes, negative means the company does.
+   * `totalDebt` is this clamped at zero, which is what the column shows.
+   */
+  balance: number;
+  totalDebt: number;
+  /** Warehouse and sales documents naming this client. */
+  docCount: number;
+}
+
+/**
+ * The client register, with the period's turnover beside each account.
+ *
+ * `range` null means all time. The balance ignores it either way — an account
+ * is square or it is not, whatever window is on screen.
+ */
+export function useCounterpartyDirectory(
+  supabase: SupabaseClient<Database>,
+  orgId: string | undefined,
+  range?: { start: string; end: string } | null,
+) {
+  return useQuery({
+    queryKey: ['counterparty-directory', orgId, range?.start ?? null, range?.end ?? null],
+    enabled: !!orgId,
+    queryFn: async (): Promise<CounterpartyDirectoryRow[]> => {
+      const { data, error } = await supabase.rpc('counterparty_directory', {
+        target_org_id: orgId!,
+        p_start: range?.start ?? null,
+        p_end: range?.end ?? null,
+      });
+
+      if (error) throw error;
+      return (data ?? []).map((row) => ({
+        counterpartyId: row.counterparty_id,
+        name: row.counterparty_name,
+        phone: row.phone,
+        managerId: row.manager_id,
+        managerName: row.manager_name,
+        currency: row.currency,
+        categories: row.categories ?? [],
+        turnover: Number(row.turnover),
+        entryCount: Number(row.entry_count),
+        balance: Number(row.balance),
+        totalDebt: Number(row.total_debt),
+        docCount: Number(row.doc_count),
+      }));
+    },
+  });
+}
+
 /**
  * What would stand in the way of deleting this client.
  *
@@ -61,6 +124,7 @@ export function useDeleteCounterparty(supabase: SupabaseClient<Database>) {
     onSuccess: (_data, { orgId }) => {
       void queryClient.invalidateQueries({ queryKey: ['counterparties', orgId] });
       void queryClient.invalidateQueries({ queryKey: ['counterparty-journal', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['counterparty-directory', orgId] });
     },
   });
 }

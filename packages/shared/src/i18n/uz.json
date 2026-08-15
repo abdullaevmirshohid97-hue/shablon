@@ -670,10 +670,12 @@
     "saved": "Saqlandi",
     "nameRequired": "Mijoz nomi bo‘sh bo‘lishi mumkin emas",
     "deleteTitle": "Mijozni o‘chirish",
-    "deleteHint": "Bu mijozga hech qanday yozuv bog‘lanmagan — o‘chirish mumkin. Bu qaytarilmaydi.",
+    "deleteHint": "Hisob yopiq va bog‘liq hujjat yo‘q — mijozni o‘chirish mumkin. Uning daftar yozuvlari ham o‘chadi, bu qaytarilmaydi.",
     "deleteBlocked": "O‘chirib bo‘lmaydi, chunki bog‘liq yozuvlar bor:",
     "deleteBlockedHint": "Yozuv kiritilgan mijoz o‘chirilmaydi — nomini tuzatish yoki yozuvlarni bekor qilish kerak.",
-    "deleteConfirm": "«{name}» butunlay o‘chirilsinmi?"
+    "deleteConfirm": "«{name}» butunlay o‘chirilsinmi?",
+    "deleteHasBalance": "Hisob yopilmagan, qoldiq:",
+    "deleteHasBalanceHint": "Qoldiq nolga tenglashgach o‘chirish mumkin bo‘ladi."
   },
   "sotuv": {
     "clients": "Mijozlar",
@@ -766,5 +768,15 @@
     "truncated": "birinchi 25 tasi",
     "crossesModule": "boshqa modul",
     "noneOf": "Yo‘q"
+  },
+  "clientsAdmin": {
+    "title": "Mijozlar reestri",
+    "subtitle": "Qo‘shish, tuzatish va yopish. Hisobi 0 bo‘lgan mijozni o‘chirish mumkin.",
+    "name": "Mijoz",
+    "turnover": "Aylanma",
+    "debt": "Qoldiq",
+    "confirm": "O‘chirilsinmi?",
+    "hasDebt": "hisob yopilmagan",
+    "hasDocuments": "hujjatlari bor"
   }
 }

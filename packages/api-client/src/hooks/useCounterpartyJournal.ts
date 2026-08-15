@@ -91,6 +91,7 @@ export function useUpdateCounterparty(supabase: SupabaseClient<Database>) {
     onSuccess: (_data, { orgId, counterpartyId }) => {
       void queryClient.invalidateQueries({ queryKey: ['counterparty-journal', orgId] });
       void queryClient.invalidateQueries({ queryKey: ['counterparties', orgId] });
+      void queryClient.invalidateQueries({ queryKey: ['counterparty-directory', orgId] });
       void queryClient.invalidateQueries({ queryKey: ['counterparty', counterpartyId] });
     },
   });

@@ -216,10 +216,27 @@ describe('the delete guard against the ontology', () => {
     expect(referencingTables()).toContain('sklad_invoices');
   });
 
-  it('leaves no way to delete a client with history', () => {
-    // The refusal is the whole point: a force path would be 0014's rule with
-    // an escape hatch. If one is ever added, this test should be the argument
-    // it has to get past.
-    expect(statements).not.toMatch(/force|cascade/i);
+  it('closes an account only when it is square, in both directions', () => {
+    // 0035 replaced "no history" with "no balance". abs() is the whole rule:
+    // total_debt is clamped at zero, so a client the company owes would
+    // otherwise read as nothing owed and be deletable.
+    const purge = readFileSync(join(MIGRATIONS, '0035_counterparty_directory.sql'), 'utf8');
+    expect(purge).toMatch(/abs\(coalesce\(v_balance, 0\)\) >= 0\.01/);
+  });
+
+  it('lets nothing but the client purge past the posted-entry guard', () => {
+    // prevent_posted_delete is the rule that a posted entry is reversed and
+    // never erased. It now has one door, and this asserts the door is only
+    // opened in the one place that has checked the balance first — and opened
+    // transaction-locally, so it cannot leak into the next statement.
+    const files = readdirSync(MIGRATIONS).filter((name) => name.endsWith('.sql'));
+    const setters = files.filter((file) =>
+      /set_config\(\s*'app\.counterparty_purge'/.test(readFileSync(join(MIGRATIONS, file), 'utf8')),
+    );
+
+    expect(setters).toEqual(['0035_counterparty_directory.sql']);
+    expect(readFileSync(join(MIGRATIONS, setters[0]!), 'utf8')).toMatch(
+      /set_config\('app\.counterparty_purge', 'on', true\)/,
+    );
   });
 });

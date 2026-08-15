@@ -570,7 +570,25 @@ export interface Database {
         Args: { target_org_id: string; target_id: string };
         Returns: { entity: string; ref_count: number }[];
       };
-      /** 0034 — refuses, with the reason, unless the client has no history. */
+      /** 0035 — the client register: turnover over a period, balance all-time. */
+      counterparty_directory: {
+        Args: { target_org_id: string; p_start?: string | null; p_end?: string | null };
+        Returns: {
+          counterparty_id: string;
+          counterparty_name: string;
+          phone: string | null;
+          manager_id: string | null;
+          manager_name: string | null;
+          currency: string;
+          categories: string[];
+          turnover: number;
+          entry_count: number;
+          balance: number;
+          total_debt: number;
+          doc_count: number;
+        }[];
+      };
+      /** 0035 — closes a settled account; refuses, with the reason, otherwise. */
       delete_counterparty: {
         Args: { target_org_id: string; target_id: string };
         Returns: void;

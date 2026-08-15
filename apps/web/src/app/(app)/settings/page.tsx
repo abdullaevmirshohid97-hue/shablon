@@ -3,6 +3,7 @@ import { one } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { OrganizationSettings } from './organization-settings';
+import { CounterpartiesSettings } from './counterparties-settings';
 import { ModulesSettings } from './modules-settings';
 import { AccountingPeriods } from './accounting-periods';
 import { ExchangeRates } from './exchange-rates';
@@ -49,6 +50,7 @@ export default async function SettingsPage() {
       </h1>
       <div className="flex flex-col gap-6">
         <OrganizationSettings orgId={org.org_id} initialName={organization?.name ?? ''} />
+        <CounterpartiesSettings orgId={org.org_id} />
         <ModulesSettings orgId={org.org_id} />
         <AccountingPeriods orgId={org.org_id} />
         <ExchangeRates orgId={org.org_id} baseCurrency={baseCurrency} />
