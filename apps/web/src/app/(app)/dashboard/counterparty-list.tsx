@@ -46,9 +46,17 @@ const UNCATEGORIZED = '__uncategorized__';
 export function CounterpartyList({
   counterparties,
   debtByCounterparty = {},
+  /**
+   * The chip row above the list. On a module's own page it narrows a list that
+   * spans several tags; on the full directory it was a second navigation
+   * offering the same destinations as the rail beside it, in front of the list
+   * people came to read.
+   */
+  showCategoryFilter = true,
 }: {
   counterparties: CounterpartyRow[];
   debtByCounterparty?: Record<string, CounterpartyDebt>;
+  showCategoryFilter?: boolean;
 }) {
   const { t, locale } = useLocale();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
@@ -76,7 +84,7 @@ export function CounterpartyList({
 
   return (
     <div>
-      {allCategories.length > 0 && (
+      {showCategoryFilter && allCategories.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-1.5">
           <ToggleChip active={activeCategory === null} onClick={() => setActiveCategory(null)}>
             {t('categories.all')}

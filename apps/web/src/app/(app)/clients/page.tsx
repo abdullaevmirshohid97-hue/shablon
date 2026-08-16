@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
@@ -48,6 +49,21 @@ export default async function ClientsPage() {
 
   return (
     <div>
+      {/* The way back out, in the same place and the same shape a client's own
+          page puts it: Modullar → Mijozlar → mijoz, and back up again. */}
+      <Link
+        href="/hub"
+        className="no-print mb-3 inline-flex items-center gap-1 text-fin-md text-slate-500 hover:text-slate-700"
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+          <path
+            fillRule="evenodd"
+            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+            clipRule="evenodd"
+          />
+        </svg>
+        {t('hub.backToModules')}
+      </Link>
       <div className="mb-6 flex items-end justify-between">
         <div>
           <h1 className="text-fin-2xl font-semibold tracking-tight text-slate-900">
@@ -71,6 +87,7 @@ export default async function ClientsPage() {
       <CounterpartyList
         counterparties={counterparties ?? []}
         debtByCounterparty={debtByCounterparty}
+        showCategoryFilter={false}
       />
     </div>
   );
