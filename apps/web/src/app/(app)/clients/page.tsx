@@ -59,10 +59,12 @@ export default async function ClientsPage() {
         </div>
       </div>
 
-      {/* Managers read the directory; only owner/admin may add a client. */}
+      {/* Managers read the directory; only owner/admin may add a client. The
+          form stays behind its button: this page is a list to be read, not a
+          form to be filled. */}
       {canWrite && (
         <div className="mb-6 max-w-2xl">
-          <AddCounterpartyForm orgId={org.org_id} />
+          <AddCounterpartyForm orgId={org.org_id} collapsible />
         </div>
       )}
 

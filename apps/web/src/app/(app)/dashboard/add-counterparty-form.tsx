@@ -10,12 +10,26 @@ import { Input, Label } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ToggleChip } from '@/components/ui/Badge';
 
+/**
+ * `collapsible` puts the whole thing behind its own button.
+ *
+ * The client directory is a list people come to read, and a permanently open
+ * form above it made the first thing on the page an empty form for a client
+ * nobody is adding — three fields and a category picker standing between the
+ * heading and the list every single visit. Adding a client is occasional; the
+ * list is the page. So the form waits behind the button that names it.
+ *
+ * Off by default, so the module pages that open straight into "add a client
+ * tagged with this module" keep behaving as they do.
+ */
 export function AddCounterpartyForm({
   orgId,
   presetCategory,
+  collapsible = false,
 }: {
   orgId: string;
   presetCategory?: string;
+  collapsible?: boolean;
 }) {
   const router = useRouter();
   const { t } = useLocale();
@@ -23,6 +37,7 @@ export function AddCounterpartyForm({
   const { data: modules } = useModules(supabase, orgId);
   const createModule = useCreateModule(supabase);
 
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [categories, setCategories] = useState<string[]>(presetCategory ? [presetCategory] : []);
@@ -84,7 +99,18 @@ export function AddCounterpartyForm({
     setPhone('');
     setCategories(presetCategory ? [presetCategory] : []);
     setStatus('idle');
+    // The client is in the list now; leaving the form open invites a second
+    // one nobody meant to add.
+    setOpen(false);
     router.refresh();
+  }
+
+  if (collapsible && !open) {
+    return (
+      <Button type="button" onClick={() => setOpen(true)}>
+        {t('addCounterparty.submit')}
+      </Button>
+    );
   }
 
   return (
@@ -161,6 +187,11 @@ export function AddCounterpartyForm({
           <Button type="submit" disabled={status === 'saving'}>
             {status === 'saving' ? t('common.saving') : t('addCounterparty.submit')}
           </Button>
+          {collapsible && (
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+          )}
           {errorMessage && <p className="text-fin-md text-rose-600">{errorMessage}</p>}
         </div>
       </form>
