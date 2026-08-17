@@ -46,6 +46,7 @@ export default async function CategoryModulePage({
       .select('id, name, phone, categories')
       .eq('org_id', org.org_id)
       .contains('categories', [category])
+      .is('archived_at', null)
       .order('name'),
     getOverdueDebts(supabase, org.org_id),
   ]);

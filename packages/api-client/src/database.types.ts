@@ -51,6 +51,9 @@ export interface Database {
           notes: string | null;
           currency: string | null;
           manager_id: string | null;
+          /** 0036 — set means the client is put away, not deleted. */
+          archived_at: string | null;
+          archived_by: string | null;
           created_at: string;
         };
         Insert: Partial<Database['public']['Tables']['counterparties']['Row']> & {
@@ -570,9 +573,14 @@ export interface Database {
         Args: { target_org_id: string; target_id: string };
         Returns: { entity: string; ref_count: number }[];
       };
-      /** 0035 — the client register: turnover over a period, balance all-time. */
+      /** 0036 — the register, or the archive: turnover per period, balance all-time. */
       counterparty_directory: {
-        Args: { target_org_id: string; p_start?: string | null; p_end?: string | null };
+        Args: {
+          target_org_id: string;
+          p_start?: string | null;
+          p_end?: string | null;
+          p_archived?: boolean;
+        };
         Returns: {
           counterparty_id: string;
           counterparty_name: string;
@@ -586,10 +594,16 @@ export interface Database {
           balance: number;
           total_debt: number;
           doc_count: number;
+          archived_at: string | null;
         }[];
       };
-      /** 0035 — closes a settled account; refuses, with the reason, otherwise. */
-      delete_counterparty: {
+      /** 0036 — puts a client away; nothing is checked and nothing is destroyed. */
+      archive_counterparty: {
+        Args: { target_org_id: string; target_id: string };
+        Returns: void;
+      };
+      /** 0036 — brings one back. */
+      restore_counterparty: {
         Args: { target_org_id: string; target_id: string };
         Returns: void;
       };

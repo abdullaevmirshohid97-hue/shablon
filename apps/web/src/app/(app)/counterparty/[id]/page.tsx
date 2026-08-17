@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { CounterpartySettings } from '@/components/CounterpartySettings';
-import { DeleteCounterparty } from '@/components/DeleteCounterparty';
+import { ArchiveCounterparty } from '@/components/ArchiveCounterparty';
 import { CounterpartyLedgerClient } from './ledger-client';
 
 export default async function CounterpartyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -18,7 +18,7 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
 
   const { data: counterparty, error } = await supabase
     .from('counterparties')
-    .select('id, org_id, name, phone, currency, manager_id, notes, categories')
+    .select('id, org_id, name, phone, currency, manager_id, notes, categories, archived_at')
     .eq('id', id)
     .single();
 
@@ -95,10 +95,11 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
           on the page and never the first thing the eye lands on. */}
       {canWrite && (
         <div className="mt-6">
-          <DeleteCounterparty
+          <ArchiveCounterparty
             orgId={counterparty.org_id}
             counterpartyId={counterparty.id}
             counterpartyName={counterparty.name}
+            archivedAt={counterparty.archived_at}
           />
         </div>
       )}

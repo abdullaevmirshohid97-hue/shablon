@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  useArchiveCounterparty,
   useCounterpartyDirectory,
-  useDeleteCounterparty,
+  useRestoreCounterparty,
   useUpdateCounterparty,
   type CounterpartyDirectoryRow,
 } from '@mubosher/api-client';
@@ -14,6 +15,7 @@ import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
 import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Segmented } from '@/components/ui/Segmented';
 import { PeriodFilter, usePeriodFilter } from '@/components/PeriodFilter';
 
 const money = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 });
@@ -26,15 +28,14 @@ type Roster = { user_id: string; full_name: string | null; email: string | null 
  * The directory at /clients answers "who do we trade with"; this answers "is
  * this list right" — the same names with their manager, what went through each
  * account this period, and where the account stands. Adding, correcting and
- * closing all happen in the row rather than three screens away, because
- * tidying a register is one sitting of small edits, not one edit.
+ * putting away all happen in the row, because tidying a register is one
+ * sitting of small edits rather than one edit.
  *
- * An account can be closed when it is square: nothing owed in either
- * direction. Not "no history" — a client who traded all year and settled up is
- * exactly the one that should be able to leave the list. The balance the
- * button reads is the same figure the database re-checks before it obeys, and
- * the entries go with the client, because a ledger entry belonging to nobody
- * is not a record of anything. See 0035.
+ * Putting a client away has no conditions attached to it, and does not need
+ * any: nothing is destroyed. Their entries, invoices and despatches stay
+ * exactly where they were, the name leaves every list, and the archive brings
+ * it back with one click. The confirmation is a warning about what is being
+ * hidden — a balance, a stack of documents — not a rule being enforced.
  */
 export function CounterpartiesSettings({ orgId }: { orgId: string }) {
   const { t } = useLocale();
@@ -42,9 +43,11 @@ export function CounterpartiesSettings({ orgId }: { orgId: string }) {
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const period = usePeriodFilter('all');
 
-  const directory = useCounterpartyDirectory(supabase, orgId, period.range);
+  const [view, setView] = useState<'active' | 'archived'>('active');
+  const directory = useCounterpartyDirectory(supabase, orgId, period.range, view === 'archived');
   const update = useUpdateCounterparty(supabase);
-  const remove = useDeleteCounterparty(supabase);
+  const archive = useArchiveCounterparty(supabase);
+  const restore = useRestoreCounterparty(supabase);
 
   const [roster, setRoster] = useState<Roster>([]);
   const [search, setSearch] = useState('');
@@ -134,32 +137,64 @@ export function CounterpartiesSettings({ orgId }: { orgId: string }) {
     router.refresh();
   }
 
-  async function handleDelete(counterpartyId: string) {
+  async function run(action: 'archive' | 'restore', counterpartyId: string) {
     setSaving(true);
     setErrorMessage(null);
     try {
-      await remove.mutateAsync({ orgId, counterpartyId });
+      const mutation = action === 'archive' ? archive : restore;
+      await mutation.mutateAsync({ orgId, counterpartyId });
       setConfirming(null);
       router.refresh();
     } catch (err) {
-      // Whatever the server refuses with, it refuses in the terms of the
-      // business — 0035 writes the sentence, not this file.
       setErrorMessage((err as Error).message);
     } finally {
       setSaving(false);
     }
   }
 
+  /** What the operator is about to hide, in one line. */
+  function warningFor(row: CounterpartyDirectoryRow): string | null {
+    const parts: string[] = [];
+    if (Math.abs(row.balance) >= 0.01) {
+      parts.push(`${t('clientsAdmin.debt')}: ${money.format(row.balance)}`);
+    }
+    if (row.docCount > 0) {
+      parts.push(t('clientsAdmin.documents').replace('{n}', String(row.docCount)));
+    }
+    return parts.length > 0 ? parts.join(' · ') : null;
+  }
+
+  const archived = view === 'archived';
+
   return (
     <Card className="p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-fin-lg font-semibold text-slate-900">{t('clientsAdmin.title')}</h2>
-          <p className="mt-0.5 text-fin-sm text-slate-500">{t('clientsAdmin.subtitle')}</p>
+          <p className="mt-0.5 text-fin-sm text-slate-500">
+            {archived ? t('clientsAdmin.archiveHint') : t('clientsAdmin.subtitle')}
+          </p>
         </div>
-        <Button type="button" size="sm" onClick={() => setAddOpen((open) => !open)}>
-          {addOpen ? t('common.cancel') : t('addCounterparty.submit')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Segmented
+            value={view}
+            onChange={(value) => {
+              setView(value);
+              setEditing(null);
+              setConfirming(null);
+              setErrorMessage(null);
+            }}
+            options={[
+              { value: 'active', label: t('clientsAdmin.active') },
+              { value: 'archived', label: t('clientsAdmin.archive') },
+            ]}
+          />
+          {!archived && (
+            <Button type="button" size="sm" onClick={() => setAddOpen((open) => !open)}>
+              {addOpen ? t('common.cancel') : t('addCounterparty.submit')}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -173,7 +208,7 @@ export function CounterpartiesSettings({ orgId }: { orgId: string }) {
         />
       </div>
 
-      {addOpen && (
+      {addOpen && !archived && (
         <div className="mb-3 grid grid-cols-1 gap-2 rounded-lg border border-slate-200 p-3 sm:grid-cols-4">
           <Input
             autoFocus
@@ -208,7 +243,9 @@ export function CounterpartiesSettings({ orgId }: { orgId: string }) {
       {directory.isPending ? (
         <p className="text-fin-md text-slate-400">{t('common.loading')}</p>
       ) : rows.length === 0 ? (
-        <p className="text-fin-md text-slate-500">{t('sotuv.empty')}</p>
+        <p className="text-fin-md text-slate-500">
+          {archived ? t('clientsAdmin.archiveEmpty') : t('sotuv.empty')}
+        </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[52rem] text-fin-md">
@@ -225,10 +262,7 @@ export function CounterpartiesSettings({ orgId }: { orgId: string }) {
             <tbody>
               {rows.map((row) => {
                 const isEditing = editing === row.counterpartyId;
-                // Square in both directions, and no warehouse or sales paper
-                // naming them. Either one is a reason the server would refuse.
-                const settled = Math.abs(row.balance) < 0.01;
-                const canDelete = settled && row.docCount === 0;
+                const warning = warningFor(row);
 
                 return (
                   <tr
@@ -290,14 +324,23 @@ export function CounterpartiesSettings({ orgId }: { orgId: string }) {
                             : 'text-slate-400'
                       }`}
                     >
-                      {/* Negative is shown as it is: the company owing the
-                          client is not "no debt", and closing that account
-                          would erase an obligation. */}
+                      {/* Signed: the company owing the client is not the same
+                          as nobody owing anybody. */}
                       {money.format(row.balance)}
                     </td>
                     <td className="px-2 py-1.5">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {isEditing ? (
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
+                        {archived ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            disabled={saving}
+                            onClick={() => void run('restore', row.counterpartyId)}
+                          >
+                            {t('clientsAdmin.restore')}
+                          </Button>
+                        ) : isEditing ? (
                           <>
                             <Button
                               type="button"
@@ -320,15 +363,16 @@ export function CounterpartiesSettings({ orgId }: { orgId: string }) {
                           <>
                             <span className="text-fin-sm text-slate-600">
                               {t('clientsAdmin.confirm')}
+                              {warning && <span className="ml-1 text-amber-700">({warning})</span>}
                             </span>
                             <Button
                               type="button"
                               size="sm"
                               variant="danger"
                               disabled={saving}
-                              onClick={() => void handleDelete(row.counterpartyId)}
+                              onClick={() => void run('archive', row.counterpartyId)}
                             >
-                              {t('common.delete')}
+                              {t('clientsAdmin.archiveAction')}
                             </Button>
                             <Button
                               type="button"
@@ -349,27 +393,18 @@ export function CounterpartiesSettings({ orgId }: { orgId: string }) {
                             >
                               {t('common.edit')}
                             </Button>
-                            {canDelete ? (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="danger"
-                                onClick={() => {
-                                  setErrorMessage(null);
-                                  setConfirming(row.counterpartyId);
-                                }}
-                              >
-                                {t('common.delete')}
-                              </Button>
-                            ) : (
-                              // A disabled button with no reason beside it is
-                              // the same as a broken one.
-                              <span className="text-fin-sm text-slate-400">
-                                {settled
-                                  ? t('clientsAdmin.hasDocuments')
-                                  : t('clientsAdmin.hasDebt')}
-                              </span>
-                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="danger"
+                              onClick={() => {
+                                setErrorMessage(null);
+                                setEditing(null);
+                                setConfirming(row.counterpartyId);
+                              }}
+                            >
+                              {t('common.delete')}
+                            </Button>
                           </>
                         )}
                       </div>

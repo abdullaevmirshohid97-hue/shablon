@@ -59,6 +59,7 @@ export function toCounterparty(row: CounterpartyRow): Counterparty {
     notes: row.notes,
     currency: row.currency,
     managerId: row.manager_id,
+    archivedAt: row.archived_at,
     createdAt: row.created_at,
   };
 }

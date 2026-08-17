@@ -33,7 +33,8 @@ export default async function DashboardPage() {
   const { count: counterpartyCount } = await supabase
     .from('counterparties')
     .select('id', { count: 'exact', head: true })
-    .eq('org_id', org.org_id);
+    .eq('org_id', org.org_id)
+    .is('archived_at', null);
 
   // Brand-new org: no clients yet, so analytics would be an empty wall.
   // Point straight at the client directory where the first one is created.

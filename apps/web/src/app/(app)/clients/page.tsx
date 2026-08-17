@@ -43,6 +43,9 @@ export default async function ClientsPage() {
       .from('counterparties')
       .select('id, name, phone, categories')
       .eq('org_id', org.org_id)
+      // Archived clients are put away, not deleted (0036) — the archive in
+      // Finance settings is the one place they are meant to appear.
+      .is('archived_at', null)
       .order('name'),
     getOverdueDebts(supabase, org.org_id),
   ]);

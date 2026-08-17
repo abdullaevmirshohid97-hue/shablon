@@ -670,12 +670,11 @@
     "saved": "Saqlandi",
     "nameRequired": "Mijoz nomi bo‘sh bo‘lishi mumkin emas",
     "deleteTitle": "Mijozni o‘chirish",
-    "deleteHint": "Hisob yopiq va bog‘liq hujjat yo‘q — mijozni o‘chirish mumkin. Uning daftar yozuvlari ham o‘chadi, bu qaytarilmaydi.",
-    "deleteBlocked": "O‘chirib bo‘lmaydi, chunki bog‘liq yozuvlar bor:",
-    "deleteBlockedHint": "Yozuv kiritilgan mijoz o‘chirilmaydi — nomini tuzatish yoki yozuvlarni bekor qilish kerak.",
-    "deleteConfirm": "«{name}» butunlay o‘chirilsinmi?",
-    "deleteHasBalance": "Hisob yopilmagan, qoldiq:",
-    "deleteHasBalanceHint": "Qoldiq nolga tenglashgach o‘chirish mumkin bo‘ladi."
+    "archiveHint": "Mijoz arxivga tushadi va ro‘yxatlarda ko‘rinmaydi. Yozuvlari, fakturalari va jo‘natmalari joyida qoladi — istalgan vaqtda qaytarish mumkin.",
+    "archiveWarning": "Diqqat, bu mijozga bog‘liq:",
+    "archiveConfirm": "«{name}» arxivga tushsinmi?",
+    "archivedTitle": "Mijoz arxivda",
+    "archivedHint": "{date} sanasida arxivga tushirilgan. Ro‘yxatlarda ko‘rinmaydi."
   },
   "sotuv": {
     "clients": "Mijozlar",
@@ -775,8 +774,13 @@
     "name": "Mijoz",
     "turnover": "Aylanma",
     "debt": "Qoldiq",
-    "confirm": "O‘chirilsinmi?",
-    "hasDebt": "hisob yopilmagan",
-    "hasDocuments": "hujjatlari bor"
+    "confirm": "Arxivga tushsinmi?",
+    "active": "Faol",
+    "archive": "Arxiv",
+    "archiveAction": "Arxivga",
+    "archiveHint": "Arxivdagi mijozlar ro‘yxatlarda ko‘rinmaydi, lekin yozuvlari joyida turadi. Istalgan vaqtda qaytarish mumkin.",
+    "archiveEmpty": "Arxiv bo‘sh",
+    "restore": "Qaytarish",
+    "documents": "{n} ta hujjat"
   }
 }

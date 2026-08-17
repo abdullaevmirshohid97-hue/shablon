@@ -95,6 +95,9 @@ export const OBJECT_TYPES = [
       { id: 'currency', title: 'Valyuta', kind: 'code' },
       { id: 'notes', title: 'Izoh', kind: 'text' },
       { id: 'managerId', title: 'Menejeri', kind: 'ref' },
+      // Set means put away, not deleted (0036): out of every list, entries
+      // untouched, one click from coming back.
+      { id: 'archivedAt', title: 'Arxivga tushgan', kind: 'date' },
       // Both come out of counterparty_journal, not off the row: the balance is
       // the ledger's answer, and it is arrived at rather than stored.
       { id: 'totalDebt', title: 'Jami qarz', kind: 'money', column: null, derived: true },

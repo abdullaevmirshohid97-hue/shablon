@@ -155,20 +155,20 @@ describe('the ontology against the migrations', () => {
 });
 
 /**
- * The one guard that has to know the whole graph.
+ * The warning that has to know the whole graph.
  *
- * A client is not deleted while anything points at them, and "anything" means
- * every inbound foreign key in the business — Moliya's own entries, Sklad's
- * orders and movements, Sotuv's invoices and despatches. That list lives twice:
- * once as links in the ontology, once as counted tables inside
- * counterparty_references (0034). Two copies of a list is one copy and one
- * mistake waiting, and the mistake here is silent: a table left out of the SQL
- * does not fail, it lets the delete through and orphans whatever it missed.
+ * Archiving a client is unconditional (0036), so what counterparty_references
+ * produces is no longer a rule but a sentence: "bu mijozga bog'liq 14 ta
+ * tranzaksiya, 2 ta faktura", shown before the operator hides a year of
+ * trading. A table missing from it does not fail — it just quietly leaves
+ * something out of the warning, which is the kind of omission nobody notices
+ * until it matters.
  *
- * So the SQL is read back and compared. A module added later that references
- * clients fails this test until its table is counted.
+ * The list exists twice: once as links in the ontology, once as counted tables
+ * in the SQL. So the SQL is read back and compared, and a module added later
+ * that references clients fails this test until its table is counted.
  */
-describe('the delete guard against the ontology', () => {
+describe('the archive warning against the ontology', () => {
   const sql = readFileSync(join(MIGRATIONS, '0034_counterparty_delete.sql'), 'utf8');
   /** The statements alone — the header explains what a cascade would do, and
    * a test that reads the explanation as the code is testing prose. */
@@ -216,27 +216,33 @@ describe('the delete guard against the ontology', () => {
     expect(referencingTables()).toContain('sklad_invoices');
   });
 
-  it('closes an account only when it is square, in both directions', () => {
-    // 0035 replaced "no history" with "no balance". abs() is the whole rule:
-    // total_debt is clamped at zero, so a client the company owes would
-    // otherwise read as nothing owed and be deletable.
-    const purge = readFileSync(join(MIGRATIONS, '0035_counterparty_directory.sql'), 'utf8');
-    expect(purge).toMatch(/abs\(coalesce\(v_balance, 0\)\) >= 0\.01/);
+  it('archives rather than deletes, so nothing has to be checked', () => {
+    const archive = readFileSync(join(MIGRATIONS, '0036_counterparty_archive.sql'), 'utf8');
+
+    // No hard delete of a client survives, so no rule about when one is safe
+    // has to be argued about ever again.
+    expect(archive).toMatch(/drop function if exists delete_counterparty/);
+    expect(archive).toMatch(/set archived_at = now\(\)/);
+    expect(archive).toMatch(/create or replace function restore_counterparty/);
   });
 
-  it('lets nothing but the client purge past the posted-entry guard', () => {
-    // prevent_posted_delete is the rule that a posted entry is reversed and
-    // never erased. It now has one door, and this asserts the door is only
-    // opened in the one place that has checked the balance first — and opened
-    // transaction-locally, so it cannot leak into the next statement.
-    const files = readdirSync(MIGRATIONS).filter((name) => name.endsWith('.sql'));
-    const setters = files.filter((file) =>
-      /set_config\(\s*'app\.counterparty_purge'/.test(readFileSync(join(MIGRATIONS, file), 'utf8')),
-    );
+  it('leaves nothing that can erase a posted entry', () => {
+    // 0035 opened a door in prevent_posted_delete so a settled client could
+    // take their entries with them. Archiving removed the need, and 0036 shut
+    // it. The last definition wins, so that is the one this reads.
+    const files = readdirSync(MIGRATIONS)
+      .filter((name) => name.endsWith('.sql'))
+      .sort();
 
-    expect(setters).toEqual(['0035_counterparty_directory.sql']);
-    expect(readFileSync(join(MIGRATIONS, setters[0]!), 'utf8')).toMatch(
-      /set_config\('app\.counterparty_purge', 'on', true\)/,
-    );
+    const last = files
+      .filter((file) =>
+        /create or replace function prevent_posted_delete/.test(
+          readFileSync(join(MIGRATIONS, file), 'utf8'),
+        ),
+      )
+      .at(-1);
+
+    expect(last).toBe('0036_counterparty_archive.sql');
+    expect(readFileSync(join(MIGRATIONS, last!), 'utf8')).not.toMatch(/counterparty_purge/);
   });
 });

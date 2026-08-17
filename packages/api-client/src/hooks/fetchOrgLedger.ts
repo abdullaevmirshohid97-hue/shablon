@@ -24,8 +24,11 @@ export async function fetchOrgLedger(
   ] = await Promise.all([
     supabase
       .from('counterparties')
-      .select('id, org_id, name, phone, categories, notes, currency, manager_id, created_at')
-      .eq('org_id', orgId),
+      .select(
+        'id, org_id, name, phone, categories, notes, currency, manager_id, archived_at, archived_by, created_at',
+      )
+      .eq('org_id', orgId)
+      .is('archived_at', null),
     supabase.from('accounts').select('*').eq('org_id', orgId),
     supabase.from('transaction_categories').select('*').eq('org_id', orgId),
     supabase

@@ -37,6 +37,9 @@ export interface Counterparty {
   /** Who looks after this client (0032) — distinct from the manager on any one
    * despatch, which answers who handled that. */
   managerId?: string | null;
+  /** Set means put away rather than deleted (0036): gone from every list, with
+   * their entries, invoices and despatches untouched. */
+  archivedAt?: string | null;
   createdAt: string;
 }
 

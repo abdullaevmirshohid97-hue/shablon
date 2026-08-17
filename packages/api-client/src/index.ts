@@ -2,7 +2,7 @@ export * from './client';
 export * from './mappers';
 export * from './hooks/useCounterparties';
 export * from './hooks/useCounterpartyJournal';
-export * from './hooks/useCounterpartyDelete';
+export * from './hooks/useCounterpartyArchive';
 export * from './hooks/useTransactions';
 export * from './hooks/useCreateTransaction';
 export * from './hooks/useCategoriesWithKind';
