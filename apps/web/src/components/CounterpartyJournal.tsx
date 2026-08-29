@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useCounterpartyJournal, type CounterpartyJournalFilters } from '@mubosher/api-client';
+import type { CounterpartyJournalRow } from '@mubosher/shared';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
@@ -10,6 +11,14 @@ import { Input, Select } from '@/components/ui/Input';
 import { ToggleChip } from '@/components/ui/Badge';
 
 const money = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+
+/** The aged receivable, in the order it is always printed: youngest first. */
+const agingColumns: { key: string; pick: (row: CounterpartyJournalRow) => number }[] = [
+  { key: 'export.aging1', pick: (r) => r.overdue1To30 },
+  { key: 'export.aging2', pick: (r) => r.overdue31To60 },
+  { key: 'export.aging3', pick: (r) => r.overdue61To90 },
+  { key: 'export.aging4', pick: (r) => r.overdue90Plus },
+];
 
 /**
  * Every client on one line, as a journal.
@@ -30,6 +39,7 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
   const [supabase] = useState(() => createSupabaseBrowserClient());
 
   const [searchInput, setSearchInput] = useState('');
+  const [showAging, setShowAging] = useState(false);
   const [filters, setFilters] = useState<CounterpartyJournalFilters>({});
   const [roster, setRoster] = useState<
     { user_id: string; full_name: string | null; email: string | null }[]
@@ -63,8 +73,17 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
         (acc, row) => ({
           overdue: acc.overdue + row.overdueAmount,
           total: acc.total + row.totalDebt,
+          notYetDue: acc.notYetDue + row.notYetDue,
+          aging: Object.fromEntries(
+            agingColumns.map((col) => [col.key, (acc.aging[col.key] ?? 0) + col.pick(row)]),
+          ) as Record<string, number>,
         }),
-        { overdue: 0, total: 0 },
+        {
+          overdue: 0,
+          total: 0,
+          notYetDue: 0,
+          aging: {} as Record<string, number>,
+        },
       ),
     [rows],
   );
@@ -129,20 +148,42 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
         >
           {t('overview.onlyDebtors')}
         </ToggleChip>
+        {/* The ladder in place of the two overdue columns rather than beside
+            them: eleven columns of figures is not a wider answer to "who owes
+            what", it is a narrower one. */}
+        <ToggleChip active={showAging} onClick={() => setShowAging((v) => !v)}>
+          {t('analytics.agingTitle')}
+        </ToggleChip>
       </div>
 
       {/* Fixed head, scrolling body: the column names have to survive row
           forty, which is where this table is actually read. */}
       <div className="max-h-[520px] overflow-auto rounded-lg border border-slate-200">
-        <table className="w-full min-w-[820px] border-collapse text-fin-md">
+        <table
+          className={`w-full border-collapse text-fin-md ${
+            showAging ? 'min-w-[980px]' : 'min-w-[820px]'
+          }`}
+        >
           <thead className="sticky top-0 z-10 bg-slate-50">
             <tr className="border-b border-slate-200 text-left text-fin-xs uppercase tracking-wide text-slate-500">
               <th className="px-3 py-2 font-medium">{t('overview.debtorName')}</th>
               <th className="px-3 py-2 font-medium">{t('overview.manager')}</th>
-              <th className="px-3 py-2 text-right font-medium">{t('overview.overdueSum')}</th>
-              <th className="px-3 py-2 font-medium">{t('overview.overdueSince')}</th>
+              {showAging ? (
+                agingColumns.map((col) => (
+                  <th key={col.key} className="px-3 py-2 text-right font-medium">
+                    {t(col.key)}
+                  </th>
+                ))
+              ) : (
+                <>
+                  <th className="px-3 py-2 text-right font-medium">{t('overview.overdueSum')}</th>
+                  <th className="px-3 py-2 font-medium">{t('overview.overdueSince')}</th>
+                </>
+              )}
               <th className="px-3 py-2 text-right font-medium">{t('overview.totalDebtShort')}</th>
-              <th className="px-3 py-2 font-medium">{t('overview.nextDue')}</th>
+              <th className="px-3 py-2 font-medium">
+                {showAging ? t('export.notYetDue') : t('overview.nextDue')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -160,18 +201,42 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
                   )}
                 </td>
                 <td className="px-3 py-2 text-slate-600">{row.managerName ?? '—'}</td>
-                <td className="px-3 py-2 text-right font-semibold tabular-nums text-rose-700">
-                  {row.overdueAmount > 0 ? money.format(row.overdueAmount) : '—'}
-                </td>
-                <td className="px-3 py-2 tabular-nums text-rose-600">
-                  {row.overdueDate ? new Date(row.overdueDate).toLocaleDateString(dateLocale) : '—'}
-                </td>
+                {showAging ? (
+                  agingColumns.map((col) => {
+                    const amount = col.pick(row);
+                    return (
+                      <td
+                        key={col.key}
+                        className={`px-3 py-2 text-right tabular-nums ${
+                          amount > 0 ? 'font-semibold text-rose-700' : 'text-slate-300'
+                        }`}
+                      >
+                        {amount > 0 ? money.format(amount) : '—'}
+                      </td>
+                    );
+                  })
+                ) : (
+                  <>
+                    <td className="px-3 py-2 text-right font-semibold tabular-nums text-rose-700">
+                      {row.overdueAmount > 0 ? money.format(row.overdueAmount) : '—'}
+                    </td>
+                    <td className="px-3 py-2 tabular-nums text-rose-700">
+                      {row.overdueDate
+                        ? new Date(row.overdueDate).toLocaleDateString(dateLocale)
+                        : '—'}
+                    </td>
+                  </>
+                )}
                 <td className="px-3 py-2 text-right tabular-nums text-slate-900">
                   {money.format(row.totalDebt)}
                   <span className="ml-1 text-fin-xs text-slate-400">{row.currency}</span>
                 </td>
                 <td className="px-3 py-2 tabular-nums text-slate-500">
-                  {row.nextDueDate ? new Date(row.nextDueDate).toLocaleDateString(dateLocale) : '—'}
+                  {showAging
+                    ? money.format(row.notYetDue)
+                    : row.nextDueDate
+                      ? new Date(row.nextDueDate).toLocaleDateString(dateLocale)
+                      : '—'}
                 </td>
               </tr>
             ))}
@@ -182,14 +247,26 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
                 <td className="px-3 py-2 text-fin-sm uppercase text-slate-500" colSpan={2}>
                   {t('sklad.totals.label')}
                 </td>
-                <td className="px-3 py-2 text-right tabular-nums text-rose-700">
-                  {money.format(totals.overdue)}
-                </td>
-                <td />
+                {showAging ? (
+                  agingColumns.map((col) => (
+                    <td key={col.key} className="px-3 py-2 text-right tabular-nums text-rose-700">
+                      {money.format(totals.aging[col.key] ?? 0)}
+                    </td>
+                  ))
+                ) : (
+                  <>
+                    <td className="px-3 py-2 text-right tabular-nums text-rose-700">
+                      {money.format(totals.overdue)}
+                    </td>
+                    <td />
+                  </>
+                )}
                 <td className="px-3 py-2 text-right tabular-nums text-slate-900">
                   {money.format(totals.total)}
                 </td>
-                <td />
+                <td className="px-3 py-2 text-right tabular-nums text-slate-700">
+                  {showAging ? money.format(totals.notYetDue) : ''}
+                </td>
               </tr>
             </tfoot>
           )}

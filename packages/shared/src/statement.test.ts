@@ -208,6 +208,54 @@ describe('buildStatement — aging', () => {
     expect(buckets.reduce((a, b) => a + b, 0)).toBe(statement.overdueAmount);
   });
 
+  it('counts every deadline that has passed, not only the first', () => {
+    const statement = buildStatement(
+      [
+        sale('old', '2026-01-05T00:00:00Z', 1000, { dueDate: '2026-01-31' }),
+        sale('recent', '2026-03-05T00:00:00Z', 500, { dueDate: '2026-03-10' }),
+      ],
+      { today },
+    );
+
+    // Measured from the newest deadline that has gone by. Measuring from the
+    // oldest — which is what the SQL did before 0038 — would have reported
+    // 1000 and treated the March debt as though its day had not come.
+    expect(statement.overdueAmount).toBe(1500);
+    expect(statement.overdueDate).toBe('2026-01-31');
+    expect(statement.notYetDue).toBe(0);
+  });
+
+  it('sorts each slice into the bucket for how long it has been late', () => {
+    const statement = buildStatement(
+      [
+        sale('old', '2026-01-05T00:00:00Z', 1000, { dueDate: '2026-01-31' }),
+        sale('recent', '2026-03-05T00:00:00Z', 500, { dueDate: '2026-03-10' }),
+      ],
+      { today },
+    );
+
+    // 2026-01-31 is 43 days back, 2026-03-10 is 5.
+    expect(statement.aging.map((b) => b.amount)).toEqual([500, 1000, 0, 0]);
+  });
+
+  it('settles the oldest bucket first when a payment lands', () => {
+    const statement = buildStatement(
+      [
+        sale('oldest', '2025-12-01T00:00:00Z', 1000, { dueDate: '2025-12-10' }),
+        sale('middle', '2026-01-20T00:00:00Z', 500, { dueDate: '2026-01-31' }),
+        sale('newest', '2026-03-05T00:00:00Z', 300, { dueDate: '2026-03-10' }),
+        payment('paid', '2026-03-14T00:00:00Z', 1200),
+      ],
+      { today },
+    );
+
+    expect(statement.closingBalance).toBe(600);
+    expect(statement.overdueAmount).toBe(600);
+    // 1200 against 1000 / 500 / 300 oldest-first: the two oldest buckets are
+    // cleared or eaten into, the newest is untouched.
+    expect(statement.aging.map((b) => b.amount)).toEqual([300, 300, 0, 0]);
+  });
+
   it('does not let cancelling a mistyped entry settle the oldest debt', () => {
     const statement = buildStatement(
       [

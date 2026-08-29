@@ -8,6 +8,7 @@ import { exportOrgSummaryToExcel } from '@/lib/export/orgSummaryExcel';
 import { analyticsFromReport } from '@/lib/analyticsData';
 import { LedgerAnalytics } from './LedgerAnalytics';
 import { TopDebtors } from './TopDebtors';
+import { AgingLadder } from './AgingLadder';
 import { ModuleBreakdownTable } from './ModuleBreakdownTable';
 import { CounterpartyJournal } from './CounterpartyJournal';
 import { PrintHeader, PrintSignatures } from './PrintHeader';
@@ -50,10 +51,23 @@ export function OverviewAnalytics({
     categoryFilter,
   );
 
-  // The debtors panel and the journal below read the same list, so the two
-  // cannot show different figures for a client on one screen. Not period
-  // scoped: a debt is a position and does not restart with the filter.
+  // The debtors panel, the aging ladder and the journal below read the same
+  // list, so no two of them can show different figures for a client on one
+  // screen. Not period scoped: a debt is a position and does not restart with
+  // the filter.
   const { data: journal } = useCounterpartyJournal(supabase, orgId);
+
+  // A module page must not summarise the whole book. The RPC has no category
+  // parameter, but it returns each client's tags, so the narrowing happens
+  // here rather than the panels quietly reporting the org's totals under a
+  // module's heading.
+  const scopedJournal = useMemo(
+    () =>
+      categoryFilter
+        ? (journal ?? []).filter((row) => row.categories.includes(categoryFilter))
+        : (journal ?? []),
+    [journal, categoryFilter],
+  );
 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -144,7 +158,10 @@ export function OverviewAnalytics({
               the per-client ledger it always goes into the printed PDF. */}
           <LedgerAnalytics data={analytics} period={period} forcePrintVisible />
         </div>
-        <TopDebtors rows={journal ?? []} />
+        <div className="flex flex-col gap-4">
+          <AgingLadder rows={scopedJournal} />
+          <TopDebtors rows={scopedJournal} />
+        </div>
       </div>
 
       {/* The journal replaces the module table as the bottom of the page:

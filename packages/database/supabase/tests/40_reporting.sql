@@ -414,3 +414,100 @@ begin
   where code in ('KZT', 'KGS', 'TJS', 'AZN', 'AFN', 'CNY', 'GBP');
   perform test_report('the neighbouring currencies are available', n = 7);
 end $$;
+
+
+-- ---------------------------------------------------------------------
+-- The aged receivable (0038).
+--
+-- Placed after the filter counts above, which assert how many clients are
+-- overdue — this adds another one.
+--
+-- Three deadlines missed and nothing paid. The whole 1800 is past due on any
+-- honest reading, and the rule up to 0037 reported 1000: it measured from the
+-- *oldest* missed deadline, so everything that fell due afterwards was treated
+-- as though its day had not come.
+-- ---------------------------------------------------------------------
+insert into counterparties (id, org_id, name, currency)
+values ('eeeeeeee-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111',
+        'Mijoz D', 'UZS');
+
+do $$
+begin
+  -- Billed 100 days ago, due 95 days ago: the 90+ bucket.
+  insert into transactions (org_id, counterparty_id, occurred_at, due_date,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000004',
+    (current_date - 100)::timestamptz, current_date - 95,
+    'cccccccc-0000-0000-0000-000000000001', 1000,
+    'cccccccc-0000-0000-0000-000000000002', 1000, 'UZS', 'eski sotuv');
+
+  -- Due 35 days ago: the 31-60 bucket.
+  insert into transactions (org_id, counterparty_id, occurred_at, due_date,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000004',
+    (current_date - 40)::timestamptz, current_date - 35,
+    'cccccccc-0000-0000-0000-000000000001', 500,
+    'cccccccc-0000-0000-0000-000000000002', 500, 'UZS', 'sotuv');
+
+  -- Due 2 days ago: the 1-30 bucket.
+  insert into transactions (org_id, counterparty_id, occurred_at, due_date,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000004',
+    (current_date - 5)::timestamptz, current_date - 2,
+    'cccccccc-0000-0000-0000-000000000001', 300,
+    'cccccccc-0000-0000-0000-000000000002', 300, 'UZS', 'yangi sotuv');
+end $$;
+
+do $$
+declare r record; amt numeric;
+begin
+  select * into r from counterparty_journal('11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000004';
+
+  perform test_report('every missed deadline counts, not just the first',
+                      r.overdue_amount = 1800 and r.total_debt = 1800);
+  perform test_report('and the oldest one is still what dates it',
+                      r.overdue_date = current_date - 95);
+
+  perform test_report('the newest debt lands in the youngest bucket',
+                      r.overdue_1_30 = 300);
+  perform test_report('and each older one in its own',
+                      r.overdue_31_60 = 500 and r.overdue_61_90 = 0
+                      and r.overdue_90_plus = 1000);
+  perform test_report('the buckets add back up to the total',
+                      r.overdue_1_30 + r.overdue_31_60 + r.overdue_61_90 + r.overdue_90_plus
+                      = r.overdue_amount);
+  perform test_report('nothing is left over when it is all past due',
+                      r.not_yet_due = 0);
+
+  -- The dashboard card reads the same rule from its own function.
+  select overdue_amount into amt from org_overdue_by_counterparty(
+    '11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000004';
+  perform test_report('the overdue card agrees with the journal', amt = 1800);
+end $$;
+
+-- Paying settles the oldest bucket first.
+do $$
+declare r record;
+begin
+  insert into transactions (org_id, counterparty_id, occurred_at,
+    debit_account_id, debit_amount, credit_account_id, credit_amount, currency, description)
+  values ('11111111-1111-1111-1111-111111111111', 'eeeeeeee-0000-0000-0000-000000000004',
+    current_date::timestamptz,
+    'cccccccc-0000-0000-0000-000000000002', 1200,
+    'cccccccc-0000-0000-0000-000000000001', 1200, 'UZS', 'to''lov');
+
+  select * into r from counterparty_journal('11111111-1111-1111-1111-111111111111')
+  where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000004';
+
+  -- 1200 against a ladder of 1000 / 500 / 300, oldest first: the 90+ bucket
+  -- clears outright and 200 comes off the 31-60 one, leaving 300 there and the
+  -- newest 300 untouched.
+  perform test_report('a payment lowers the ladder from the bottom',
+                      r.total_debt = 600 and r.overdue_amount = 600);
+  perform test_report('the oldest bucket clears first',
+                      r.overdue_90_plus = 0 and r.overdue_61_90 = 0);
+  perform test_report('and the rest of the payment eats into the next one up',
+                      r.overdue_31_60 = 300 and r.overdue_1_30 = 300);
+end $$;

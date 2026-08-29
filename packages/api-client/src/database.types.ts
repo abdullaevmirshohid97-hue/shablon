@@ -731,6 +731,14 @@ export interface Database {
           manager_name: string | null;
           total_debt: number;
           overdue_amount: number;
+          // Null-typed on purpose: an app deployed ahead of 0038 talks to a
+          // function that does not return these at all, and reading zeros is a
+          // better failure than a column of NaN.
+          overdue_1_30: number | null;
+          overdue_31_60: number | null;
+          overdue_61_90: number | null;
+          overdue_90_plus: number | null;
+          not_yet_due: number | null;
           overdue_date: string | null;
           next_due_date: string | null;
           last_entry_at: string | null;

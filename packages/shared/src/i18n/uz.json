@@ -200,7 +200,9 @@
     "noData": "Bu davrda ma'lumot yo'q",
     "totalDebt": "Umumiy qarzdorlik",
     "debtChange": "Qarzdorlik o‘zgarishi",
-    "overdueNote": "{n} ta mijoz muddatidan kechikkan. Ko‘rsatilgan summa — muddat o‘tgan paytda qolgan va hozirgacha to‘lanmagan qarz."
+    "overdueNote": "{n} ta mijoz muddatidan kechikkan. Ko‘rsatilgan summa — muddat o‘tgan paytda qolgan va hozirgacha to‘lanmagan qarz.",
+    "agingTitle": "Qarz yoshi",
+    "noOverdue": "Muddati o'tgan qarz yo'q"
   },
   "overview": {
     "topDebtors": "Eng ko'p qarzdorlar",

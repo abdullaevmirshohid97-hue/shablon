@@ -61,6 +61,16 @@ export interface CounterpartyJournalRow {
   managerName?: string | null;
   totalDebt: number;
   overdueAmount: number;
+  /**
+   * `overdueAmount` split by how long it has been outstanding (0038). The four
+   * sum back to it, and `notYetDue` carries the rest of `totalDebt` — the part
+   * whose deadline has not arrived, or which never had one.
+   */
+  overdue1To30: number;
+  overdue31To60: number;
+  overdue61To90: number;
+  overdue90Plus: number;
+  notYetDue: number;
   /** Since when they have been late. */
   overdueDate?: string | null;
   /** The nearest deadline still ahead of them. */
