@@ -70,13 +70,16 @@ end $$;
 do $$
 declare amt numeric; d date; n int;
 begin
-  -- 600 billed, 50 paid against a date that has passed. The figure is the 550
-  -- still owed; the old version reported the 50 already in the till.
+  -- The deadline fell 5 days ago. By then the client had been billed 100 + 200
+  -- and had paid 50, so 250 was outstanding when it passed. The 300 billed
+  -- today is debt, but it is not late debt — it raises the balance to 550 and
+  -- leaves this figure alone (0037). The version before that reported the whole
+  -- 550, and the one before that reported the 50 already in the till.
   select overdue_amount, overdue_date into amt, d
   from org_overdue_by_counterparty('11111111-1111-1111-1111-111111111111')
   where counterparty_id = 'eeeeeeee-0000-0000-0000-000000000001';
-  perform test_report('overdue reports what is owed, dated from when it fell due',
-                      amt = 550 and d = current_date - 5);
+  perform test_report('overdue is what was outstanding when the deadline passed',
+                      amt = 250 and d = current_date - 5);
 
   select count(*) into n from org_overdue_by_counterparty('11111111-1111-1111-1111-111111111111');
   perform test_report('the not-yet-due entry is not counted as overdue', n = 1);

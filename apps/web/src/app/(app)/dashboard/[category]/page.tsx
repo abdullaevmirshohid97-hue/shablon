@@ -25,7 +25,7 @@ export default async function CategoryModulePage({
 
   const { data: memberships } = await supabase
     .from('memberships')
-    .select('org_id, role, organizations(name)')
+    .select('org_id, role, organizations(name, base_currency)')
     .eq('user_id', user.id);
 
   const org = memberships?.[0];
@@ -65,6 +65,7 @@ export default async function CategoryModulePage({
       <OverviewAnalytics
         orgId={org.org_id}
         orgName={one(org.organizations)?.name ?? null}
+        baseCurrency={one(org.organizations)?.base_currency ?? 'UZS'}
         categoryFilter={category}
       />
 

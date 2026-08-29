@@ -5,7 +5,7 @@ import { useTransactions } from '@mubosher/api-client';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { LedgerTable } from '@/components/LedgerTable';
 import { LedgerAnalytics } from '@/components/LedgerAnalytics';
-import { PrintHeader } from '@/components/PrintHeader';
+import { PrintHeader, PrintSignatures } from '@/components/PrintHeader';
 import { ALL_TIME_RANGE, formatPeriodLabel, usePeriodFilter } from '@/components/PeriodFilter';
 import { analyticsFromTransactions } from '@/lib/analyticsData';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
@@ -15,11 +15,13 @@ export function CounterpartyLedgerClient({
   orgName,
   counterpartyId,
   counterpartyName,
+  baseCurrency = 'UZS',
 }: {
   orgId: string;
   orgName: string | null;
   counterpartyId: string;
   counterpartyName: string;
+  baseCurrency?: string;
 }) {
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const { data: transactions, isLoading, error } = useTransactions(supabase, orgId, counterpartyId);
@@ -53,6 +55,7 @@ export function CounterpartyLedgerClient({
       <PrintHeader
         title={counterpartyName}
         subtitle={orgName}
+        baseCurrency={baseCurrency}
         period={formatPeriodLabel(
           period.range,
           locale === 'ru' ? 'ru-RU' : 'uz-UZ',
@@ -72,7 +75,11 @@ export function CounterpartyLedgerClient({
         error={error}
         onPrintClick={handlePrintClick}
         period={period}
+        orgName={orgName}
+        baseCurrency={baseCurrency}
       />
+
+      <PrintSignatures counterpartyName={counterpartyName} />
     </div>
   );
 }

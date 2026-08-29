@@ -1,8 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { useCategoriesWithKind, useCreateTransaction } from '@mubosher/api-client';
-import { computeRunningBalance } from '@mubosher/shared';
+import {
+  amountInWords,
+  baseLegs,
+  buildStatement,
+  computeRunningBalance,
+  currencyWords,
+  isPostedEntry,
+} from '@mubosher/shared';
 import type { FundSource, LedgerTransaction } from '@mubosher/shared';
 import { EditTransactionModal } from './EditTransactionModal';
 import { ReverseTransactionModal } from './ReverseTransactionModal';
@@ -12,11 +19,62 @@ import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { useOrgRole } from '@/lib/auth/OrgRoleProvider';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge, ToggleChip } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/Input';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@mubosher/api-client';
 
 const currencyFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2 });
+const qtyFormatter = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 3 });
+
+// Money is typed, not only displayed. A bare <input type="number"> shows
+// 12000000 as eight undifferentiated digits, and the mistake that invites —
+// one zero too many — is the most expensive one on this screen to unwind, so
+// the groups appear as the figure is entered.
+const GROUP_SEPARATOR = ' '; // narrow no-break space: groups without a line break
+
+function groupDigits(digits: string): string {
+  return digits.replace(/B(?=(d{3})+(?!d))/g, GROUP_SEPARATOR);
+}
+
+function formatAmountInput(raw: string): string {
+  if (!raw) return '';
+  const [whole = '', fraction] = raw.split('.');
+  const grouped = groupDigits(whole);
+  return fraction === undefined ? grouped : `${grouped}.${fraction}`;
+}
+
+/** Back to something Number() accepts: groups stripped, a comma read as a decimal point. */
+function parseAmountInput(text: string): string {
+  const cleaned = text.replace(/[s  ]/g, '').replace(',', '.').replace(/[^d.]/g, '');
+  const [whole = '', ...rest] = cleaned.split('.');
+  return rest.length ? `${whole}.${rest.join('')}` : whole;
+}
+
+/**
+ * An amount wildly out of scale with this client's own history is almost
+ * always a slipped zero rather than a real deal, so it gets a second look
+ * before it posts. The yardstick is their median entry rather than a fixed
+ * sum: what counts as an alarming figure differs by client and by currency,
+ * and a hardcoded threshold would nag one org and never fire for another.
+ */
+const OUTLIER_MULTIPLE = 20;
+
+function medianEntryAmount(transactions: LedgerTransaction[]): number {
+  const amounts = transactions
+    .filter(isPostedEntry)
+    .slice(-30)
+    .map((t) => {
+      const { debit, credit } = baseLegs(t);
+      return debit + credit;
+    })
+    .filter((n) => n > 0)
+    .sort((a, b) => a - b);
+
+  // Under a handful of entries there is no "usual" to be out of scale with.
+  if (amounts.length < 5) return 0;
+  return amounts[Math.floor(amounts.length / 2)] ?? 0;
+}
 
 // Column headings used to be 10px uppercase in the lightest grey on the ramp —
 // legible on a designer's monitor, not on a laptop at arm's length. They now
@@ -37,6 +95,47 @@ function dueDateTone(
   horizon.setDate(horizon.getDate() + 7);
   if (dueDate <= horizon.toISOString().slice(0, 10)) return 'warning';
   return 'neutral';
+}
+
+/**
+ * One figure from the balances block, with what it is and — where the sign
+ * alone would not say it — which way it points.
+ */
+function StatementFigure({
+  label,
+  value,
+  hint,
+  tone = 'neutral',
+  strong = false,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: 'neutral' | 'success' | 'danger';
+  strong?: boolean;
+}) {
+  const toneClass =
+    tone === 'success'
+      ? 'text-emerald-700'
+      : tone === 'danger'
+        ? 'text-rose-700'
+        : 'text-slate-900';
+
+  return (
+    <div className="bg-white px-4 py-3">
+      <dt className="text-fin-xs font-semibold uppercase tracking-[0.04em] text-slate-500">
+        {label}
+      </dt>
+      <dd
+        className={`mt-0.5 tabular-nums ${
+          strong ? 'text-fin-lg font-bold' : 'text-fin-md font-semibold'
+        } ${toneClass}`}
+      >
+        {value}
+      </dd>
+      {hint && <p className="mt-0.5 text-fin-xs text-slate-400">{hint}</p>}
+    </div>
+  );
 }
 
 /** Hozirgi mahalliy sana-vaqt (yyyy-MM-ddTHH:mm) — datetime-local input uchun. */
@@ -88,12 +187,15 @@ function InlineEntryRow({
   counterpartyId,
   currencies,
   columnCount,
+  transactions,
 }: {
   supabase: SupabaseClient<Database>;
   orgId: string;
   counterpartyId: string;
   currencies: string[];
   columnCount: number;
+  /** This client's history — read only to judge whether a new figure is out of scale with it. */
+  transactions: LedgerTransaction[];
 }) {
   const { t } = useLocale();
   const { data: categories } = useCategoriesWithKind(supabase, orgId);
@@ -103,6 +205,8 @@ function InlineEntryRow({
   const [restored, setRestored] = useState(false);
   const storageKey = draftStorageKey(counterpartyId);
   const isDirty = hasTypedContent(draft);
+  const median = useMemo(() => medianEntryAmount(transactions), [transactions]);
+  const last = transactions[transactions.length - 1];
 
   // A half-filled row survives leaving the page. Switching to the warehouse
   // module mid-entry — or closing the tab by accident — used to throw the
@@ -147,6 +251,42 @@ function InlineEntryRow({
     setDraft((d) => ({ ...d, [key]: value }));
   }
 
+  // Enter posts the row, Escape clears it — the two things a hand already on
+  // the number pad should not have to reach for the mouse to do.
+  function handleKeyDown(e: KeyboardEvent<HTMLElement>) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      void handleSave();
+    } else if (e.key === 'Escape' && isDirty) {
+      e.preventDefault();
+      discardDraft();
+    }
+  }
+
+  /**
+   * Fills the row from the entry above it.
+   *
+   * Most of what goes into this ledger is the same operation as last time with
+   * a different figure — the same client, the same goods, the same fund
+   * source. Retyping the description every time is how it was being done.
+   */
+  function copyLastEntry() {
+    if (!last) return;
+    const legs = baseLegs(last);
+    setRestored(false);
+    setFormError(null);
+    setDraft((d) => ({
+      ...d,
+      description: last.description ?? '',
+      kg: last.quantityKg != null ? String(last.quantityKg) : '',
+      dona: last.quantityDona != null ? String(last.quantityDona) : '',
+      kirimSumma: legs.debit ? String(last.debitAmount) : '',
+      chiqimSumma: legs.credit ? String(last.creditAmount) : '',
+      currency: last.currency,
+      source: last.source,
+    }));
+  }
+
   function discardDraft() {
     setDraft(emptyDraft());
     setRestored(false);
@@ -182,6 +322,27 @@ function InlineEntryRow({
       ...(hasKirim ? [{ kind: 'kirim' as const, amount: Number(draft.kirimSumma) }] : []),
       ...(hasChiqim ? [{ kind: 'chiqim' as const, amount: Number(draft.chiqimSumma) }] : []),
     ];
+
+    if (legs.some((leg) => !Number.isFinite(leg.amount) || leg.amount <= 0)) {
+      setFormError(t('ledger.inlineAmountInvalid'));
+      return;
+    }
+
+    // Posted, not blocked: the figure may well be right. It just has to be
+    // meant, because nothing downstream distinguishes a real ten-million entry
+    // from a one-million one typed with an extra zero.
+    const outlier = median > 0 && legs.find((leg) => leg.amount >= median * OUTLIER_MULTIPLE);
+    if (
+      outlier &&
+      !window.confirm(
+        t('ledger.largeAmountConfirm').replace(
+          '{amount}',
+          currencyFormatter.format(outlier.amount),
+        ),
+      )
+    ) {
+      return;
+    }
 
     // A failed leg must not clear the row: whatever was typed stays on screen
     // (and in storage) so it can be retried, rather than vanishing along with
@@ -253,6 +414,8 @@ function InlineEntryRow({
             type="number"
             value={draft.kg}
             onChange={(e) => set('kg', e.target.value)}
+            onKeyDown={handleKeyDown}
+            aria-label={t('ledger.kg')}
             className={`${inlineInput} text-right tabular-nums`}
           />
         </td>
@@ -261,22 +424,30 @@ function InlineEntryRow({
             type="number"
             value={draft.dona}
             onChange={(e) => set('dona', e.target.value)}
+            onKeyDown={handleKeyDown}
+            aria-label={t('ledger.dona')}
             className={`${inlineInput} text-right tabular-nums`}
           />
         </td>
         <td className="px-2 py-1.5">
           <input
-            type="number"
-            value={draft.chiqimSumma}
-            onChange={(e) => set('chiqimSumma', e.target.value)}
+            type="text"
+            inputMode="decimal"
+            value={formatAmountInput(draft.chiqimSumma)}
+            onChange={(e) => set('chiqimSumma', parseAmountInput(e.target.value))}
+            onKeyDown={handleKeyDown}
+            aria-label={t('ledger.chiqimSumma')}
             className={`${inlineInput} text-right tabular-nums`}
           />
         </td>
         <td className="px-2 py-1.5">
           <input
-            type="number"
-            value={draft.kirimSumma}
-            onChange={(e) => set('kirimSumma', e.target.value)}
+            type="text"
+            inputMode="decimal"
+            value={formatAmountInput(draft.kirimSumma)}
+            onChange={(e) => set('kirimSumma', parseAmountInput(e.target.value))}
+            onKeyDown={handleKeyDown}
+            aria-label={t('ledger.kirimSumma')}
             className={`${inlineInput} text-right tabular-nums`}
           />
         </td>
@@ -324,6 +495,7 @@ function InlineEntryRow({
                 type="text"
                 value={draft.description}
                 onChange={(e) => set('description', e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder={t('ledger.inlineDescriptionHint')}
                 className={`${inlineInput} flex-1`}
               />
@@ -352,6 +524,16 @@ function InlineEntryRow({
                 )}
               </div>
             )}
+
+            {last && !isDirty && (
+              <button
+                type="button"
+                onClick={copyLastEntry}
+                className="shrink-0 text-fin-sm font-medium text-slate-500 underline-offset-2 hover:text-slate-900 hover:underline"
+              >
+                {t('ledger.copyLast')}
+              </button>
+            )}
           </div>
         </td>
       </tr>
@@ -369,6 +551,8 @@ export function LedgerTable({
   error,
   onPrintClick,
   period,
+  orgName = null,
+  baseCurrency = 'UZS',
 }: {
   supabase: SupabaseClient<Database>;
   orgId: string;
@@ -380,8 +564,13 @@ export function LedgerTable({
   onPrintClick?: () => void;
   /** Owned by the page so the same period drives the table, the print header and the export. */
   period: PeriodFilterState;
+  orgName?: string | null;
+  /** The org's reporting currency: what the balance column and the export totals are stated in. */
+  baseCurrency?: string;
 }) {
   const [currencies, setCurrencies] = useState<string[]>(['UZS']);
+  const [search, setSearch] = useState('');
+  const [onlyOverdue, setOnlyOverdue] = useState(false);
   const [editing, setEditing] = useState<LedgerTransaction | null>(null);
   const [reversing, setReversing] = useState<LedgerTransaction | null>(null);
   const { locale, t } = useLocale();
@@ -404,23 +593,38 @@ export function LedgerTable({
   // column, so the table is one column narrower for them.
   const columnCount = canWrite ? 10 : 9;
 
-  // Newest first, matching how the paper ledger and Excel export read.
-  // The period only narrows what is *shown*; the balance below is still
-  // accumulated over the full history, so a filtered row keeps the correct
-  // carried-in saldo instead of restarting from zero.
+  // Newest first, matching how the paper ledger reads. (The Excel statement
+  // runs the other way, because a balance column only makes sense read
+  // downward.) Every filter here narrows what is *shown*; the balance beside
+  // each row is still accumulated over the full history, so a filtered row
+  // keeps its true saldo instead of restarting from zero.
   const displayRows = useMemo(() => {
     if (!transactions) return [];
     const range = period.range;
-    const rows = range
-      ? transactions.filter((t) => {
-          const date = t.occurredAt.slice(0, 10);
-          return date >= range.start && date <= range.end;
-        })
-      : transactions;
-    return [...rows].reverse();
-  }, [transactions, period.range]);
+    const needle = search.trim().toLowerCase();
 
-  // Joriy saldo (running balance) per row — computed in chronological order,
+    const rows = transactions.filter((t) => {
+      if (range) {
+        const date = t.occurredAt.slice(0, 10);
+        if (date < range.start || date > range.end) return false;
+      }
+      if (onlyOverdue && !(t.dueDate && t.dueDate < todayIso)) return false;
+      if (needle) {
+        const haystack = [t.description, t.documentNo, t.categoryName]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        if (!haystack.includes(needle)) return false;
+      }
+      return true;
+    });
+
+    return [...rows].reverse();
+  }, [transactions, period.range, search, onlyOverdue, todayIso]);
+
+  const isFiltered = Boolean(search.trim() || onlyOverdue);
+
+  // Qarzdorlik (running balance) per row — computed in chronological order,
   // then looked up by id while rendering the reversed (newest-first) view.
   const balanceById = useMemo(() => {
     const map = new Map<string, ReturnType<typeof computeRunningBalance>[number]>();
@@ -430,7 +634,55 @@ export function LedgerTable({
     return map;
   }, [transactions]);
 
-  if (isLoading) return <p className="text-fin text-slate-500">{t('common.loading')}</p>;
+  // The same statement the export writes and the print header describes, so
+  // the footer under the table and the summary block in the file are one
+  // calculation rather than two that happen to agree today.
+  const statement = useMemo(
+    () => buildStatement(transactions ?? [], { range: period.range }),
+    [transactions, period.range],
+  );
+
+  // Totals for the rows actually on screen, filters included — a table that
+  // shows twelve rows and totals four hundred is worse than no total at all.
+  // The balance beside them stays the period's closing figure, because a
+  // filtered subset of a ledger does not have one of its own.
+  const totals = useMemo(
+    () =>
+      displayRows.reduce(
+        (acc, tx) => {
+          const counted = isPostedEntry(tx);
+          const legs = baseLegs(tx);
+          return {
+            kg: acc.kg + (tx.quantityKg ?? (tx.unit === 'kg' ? (tx.quantity ?? 0) : 0)),
+            dona: acc.dona + (tx.quantityDona ?? (tx.unit === 'dona' ? (tx.quantity ?? 0) : 0)),
+            kirim: acc.kirim + (counted ? legs.debit : 0),
+            chiqim: acc.chiqim + (counted ? legs.credit : 0),
+          };
+        },
+        { kg: 0, dona: 0, kirim: 0, chiqim: 0 },
+      ),
+    [displayRows],
+  );
+
+  // A grey block the shape of the table, rather than a line of text where the
+  // ledger will be: the page stops jumping when the rows arrive.
+  if (isLoading)
+    return (
+      <Card className="p-4">
+        <div className="mb-4 h-9 w-64 animate-pulse rounded-md bg-slate-100" />
+        <div className="mb-4 grid grid-cols-2 gap-px bg-slate-100 sm:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-16 animate-pulse bg-slate-50" />
+          ))}
+        </div>
+        <div className="space-y-2">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-8 animate-pulse rounded bg-slate-100" />
+          ))}
+        </div>
+        <span className="sr-only">{t('common.loading')}</span>
+      </Card>
+    );
   if (error)
     return (
       <p className="text-fin text-rose-600">
@@ -441,7 +693,22 @@ export function LedgerTable({
   return (
     <Card className="flex flex-col overflow-hidden">
       <div className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
-        <PeriodFilter state={period} />
+        <div className="flex flex-wrap items-center gap-2">
+          <PeriodFilter state={period} />
+          {/* Forty rows in, the question is rarely "all of them" — it is one
+              document number, or everyone who is late. */}
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t('ledger.searchPlaceholder')}
+            aria-label={t('ledger.searchPlaceholder')}
+            className="w-52"
+          />
+          <ToggleChip active={onlyOverdue} onClick={() => setOnlyOverdue((v) => !v)}>
+            {t('overview.onlyOverdue')}
+          </ToggleChip>
+        </div>
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -449,7 +716,14 @@ export function LedgerTable({
             size="sm"
             onClick={() =>
               transactions &&
-              exportLedgerToExcel(counterpartyName, transactions, locale, period.range)
+              exportLedgerToExcel({
+                counterpartyName,
+                transactions,
+                locale,
+                baseCurrency,
+                orgName,
+                range: period.range,
+              })
             }
             disabled={!displayRows.length}
           >
@@ -472,6 +746,58 @@ export function LedgerTable({
           </Button>
         </div>
       </div>
+
+      {/* The balances block a bank puts at the head of a statement: what was
+          carried in, what moved, what is owed now, and how much of it is late.
+          It prints, because on paper it is the part that is read first. */}
+      <dl className="grid grid-cols-2 gap-px border-b border-slate-200 bg-slate-200 sm:grid-cols-4">
+        {period.range && (
+          <StatementFigure
+            label={t('export.openingBalance')}
+            value={currencyFormatter.format(statement.openingBalance)}
+          />
+        )}
+        <StatementFigure
+          label={t('analytics.totalKirim')}
+          value={currencyFormatter.format(statement.debitTurnover)}
+          tone="success"
+        />
+        <StatementFigure
+          label={t('analytics.totalChiqim')}
+          value={currencyFormatter.format(statement.creditTurnover)}
+          tone="danger"
+        />
+        <StatementFigure
+          label={statement.closingBalance < 0 ? t('export.advance') : t('export.closingBalance')}
+          value={currencyFormatter.format(Math.abs(statement.closingBalance))}
+          hint={`${baseCurrency} · ${
+            statement.closingBalance < 0 ? t('ledger.weOwe') : t('ledger.owesUs')
+          }`}
+          strong
+        />
+        {statement.overdueAmount > 0 && (
+          <StatementFigure
+            label={t('analytics.overdueTotal')}
+            value={currencyFormatter.format(statement.overdueAmount)}
+            hint={
+              statement.overdueDate
+                ? `${t('overview.overdueSince')}: ${new Date(
+                    statement.overdueDate,
+                  ).toLocaleDateString(dateLocale)}`
+                : undefined
+            }
+            tone="danger"
+            strong
+          />
+        )}
+      </dl>
+
+      {/* Only on paper. The words are what makes a signed sum hard to alter
+          afterwards, which is the whole reason the forms carry the line. */}
+      <p className="print-only border-b border-slate-200 px-4 py-2 text-fin-sm text-slate-600">
+        {t('export.inWords')}:{' '}
+        {amountInWords(statement.closingBalance, locale, currencyWords(baseCurrency, locale))}
+      </p>
 
       <div className="ledger-scroll max-h-[65vh] overflow-auto">
         <table className="w-full min-w-[1060px] table-fixed border-collapse text-fin">
@@ -497,7 +823,9 @@ export function LedgerTable({
               <th className={`${th} text-right`}>{t('ledger.chiqimSumma')}</th>
               <th className={`${th} text-right`}>{t('ledger.kirimSumma')}</th>
               <th className={th}>{t('ledger.chiqimMuddati')}</th>
-              <th className={`${th} text-right`}>{t('ledger.balance')}</th>
+              <th className={`${th} text-right`} title={t('ledger.balanceHint')}>
+                {t('ledger.balance')}
+              </th>
               {canWrite && <th className="print:hidden" />}
             </tr>
           </thead>
@@ -509,6 +837,7 @@ export function LedgerTable({
                 counterpartyId={counterpartyId}
                 currencies={currencies}
                 columnCount={columnCount}
+                transactions={transactions ?? []}
               />
             )}
             {displayRows.map((tx) => {
@@ -572,6 +901,10 @@ export function LedgerTable({
                     {(() => {
                       const bal = balanceById.get(tx.id);
                       if (!bal) return '';
+                      // A draft carries the balance it did not move. Printing
+                      // that figure beside it would read as though it had.
+                      if (!bal.counted)
+                        return <span className="text-slate-400">{t('ledger.statusDraft')}</span>;
                       const isCredit = bal.side === 'credit';
                       return (
                         <span
@@ -623,14 +956,47 @@ export function LedgerTable({
                 </tr>
               );
             })}
-            {!transactions?.length && (
+            {!displayRows.length && (
               <tr>
                 <td colSpan={columnCount} className="py-10 text-center text-fin text-slate-500">
-                  {t('ledger.empty')}
+                  {isFiltered ? t('ledger.filteredEmpty') : t('ledger.empty')}
                 </td>
               </tr>
             )}
           </tbody>
+          {displayRows.length > 0 && (
+            /* Column totals that stay put while the rows scroll: at four
+               hundred entries the sum of a column is the reason the column is
+               being read, and scrolling to the bottom to find it is not. */
+            <tfoot className="sticky bottom-0 z-10 bg-slate-100">
+              <tr className="border-t-2 border-slate-300 font-semibold">
+                <td
+                  className={`${td} text-fin-xs uppercase tracking-wide text-slate-500`}
+                  colSpan={3}
+                >
+                  {t('export.total')}
+                </td>
+                <td className={`${td} text-right tabular-nums`}>
+                  {totals.kg ? qtyFormatter.format(totals.kg) : ''}
+                </td>
+                <td className={`${td} text-right tabular-nums`}>
+                  {totals.dona ? qtyFormatter.format(totals.dona) : ''}
+                </td>
+                <td className={`${td} text-right tabular-nums text-rose-700`}>
+                  {currencyFormatter.format(totals.chiqim)}
+                </td>
+                <td className={`${td} text-right tabular-nums text-emerald-700`}>
+                  {currencyFormatter.format(totals.kirim)}
+                </td>
+                <td className={td} />
+                <td className={`${td} bg-slate-200/70 text-right tabular-nums`}>
+                  {statement.closingBalance < 0 ? '−' : ''}
+                  {currencyFormatter.format(Math.abs(statement.closingBalance))}
+                </td>
+                {canWrite && <td className="print:hidden" />}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 

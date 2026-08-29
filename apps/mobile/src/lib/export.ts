@@ -3,7 +3,12 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as XLSX from 'xlsx-js-style';
-import { computeRunningBalance, type LedgerTransaction } from '@mubosher/shared';
+import {
+  baseLegs,
+  computeRunningBalance,
+  isPostedEntry,
+  type LedgerTransaction,
+} from '@mubosher/shared';
 import { formatDate, formatMoney } from './format';
 
 /** One normalised ledger line, oldest-first order preserved by the caller. */
@@ -169,14 +174,12 @@ function invoiceHtml(counterpartyName: string, transactions: LedgerTransaction[]
     .map((r, i) => ({ ...r, balance: balanceCell(balances[i]) }))
     .reverse();
 
-  const totalChiqim = transactions.reduce(
-    (sum, t) => sum + (t.creditAccountType === 'receivable' ? t.creditAmount : 0),
-    0,
-  );
-  const totalKirim = transactions.reduce(
-    (sum, t) => sum + (t.debitAccountType === 'receivable' ? t.debitAmount : 0),
-    0,
-  );
+  // Base currency and posted entries only, matching the balance column above
+  // it and the web report — an invoice whose total disagrees with the saldo
+  // printed beside it is the one document nobody can act on.
+  const posted = transactions.filter(isPostedEntry);
+  const totalChiqim = posted.reduce((sum, t) => sum + baseLegs(t).credit, 0);
+  const totalKirim = posted.reduce((sum, t) => sum + baseLegs(t).debit, 0);
 
   const balance = currentBalanceLabel(transactions);
   const today = formatDate(new Date().toISOString());

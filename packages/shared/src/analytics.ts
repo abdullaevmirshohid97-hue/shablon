@@ -5,6 +5,7 @@ import type {
   PeriodRange,
   PeriodStats,
 } from './types';
+import { baseLegs, computeOverdue, isPostedEntry } from './statement';
 
 // All period math happens in UTC calendar fields so results don't shift
 // depending on the server/browser's local timezone — a "month" is defined
@@ -70,12 +71,9 @@ function isWithinRange(occurredAt: string, range: PeriodRange): boolean {
   return date >= range.start && date <= range.end;
 }
 
-/** A draft is not a posting. The dashboard's SQL has always excluded them
- * (`status <> 'draft'`); this path had not, so one unposted entry made the
- * client page and the dashboard disagree. */
-function isPosted(t: LedgerTransaction): boolean {
-  return t.status !== 'draft';
-}
+/** A draft is not a posting — see `isPostedEntry`, which this and the ledger
+ * both read so the rule cannot drift between them. */
+const isPosted = isPostedEntry;
 
 /**
  * Turnover for a period: total kirim/chiqim money, and a breakdown by
@@ -99,7 +97,10 @@ export function computePeriodStats(
   for (const t of inRange) {
     const isKirim = t.debitAccountType === 'receivable';
     const isChiqim = t.creditAccountType === 'receivable';
-    const amount = isKirim ? t.debitAmount : isChiqim ? t.creditAmount : 0;
+    // Base currency, like the SQL: a USD row and a UZS row cannot be added up
+    // as entered.
+    const legs = baseLegs(t);
+    const amount = isKirim ? legs.debit : isChiqim ? legs.credit : 0;
 
     if (isKirim) totalKirim += amount;
     if (isChiqim) totalChiqim += amount;
@@ -154,8 +155,8 @@ export function computeTotalDebt(transactions: LedgerTransaction[], asOf?: strin
     if (!isPosted(t)) continue;
     if (asOf && t.occurredAt.slice(0, 10) > asOf) continue;
 
-    if (t.debitAccountType === 'receivable') debt += t.debitAmount;
-    if (t.creditAccountType === 'receivable') debt -= t.creditAmount;
+    const { debit, credit } = baseLegs(t);
+    debt += debit - credit;
   }
 
   return Math.round(debt * 100) / 100;
@@ -193,53 +194,40 @@ export interface OverdueDebt {
 }
 
 /**
- * Who is late paying, and how much they owe.
+ * Who is late paying, and how much of what they owe is actually late.
  *
- * This used to sum the credit side of the receivable for rows past their due
- * date — which is money the client had already handed over. The figure moved
- * the wrong way: the more someone paid, the larger their "overdue debt" read,
- * and a client who had cleared everything stayed at the top of the list.
+ * It once summed the credit side of the receivable for rows past their due
+ * date — money the client had already handed over — so the figure moved the
+ * wrong way: the more someone paid, the larger their "overdue debt" read. 0031
+ * replaced that with the client's whole balance, which stops the figure being
+ * backwards but still overstates it, because debt run up *after* the missed
+ * deadline is counted as though it were already late.
  *
- * Only the chiqim leg carries a due date (see LedgerTable), and nothing records
- * one against a sale, so a date can honestly say *whether* someone is late but
- * not how much. The date decides who appears; the amount is what they actually
- * owe. Anyone settled or in credit drops off entirely.
+ * So this is 0032's rule, which is now the only one: what was outstanding when
+ * the deadline passed, less everything paid since, capped at what they owe
+ * today. A payment lowers it, a new sale does not raise it, and anyone settled
+ * or in credit drops off the list entirely. `computeOverdue` is the single
+ * implementation — the statement, the export and this card all read it.
  */
 export function getOverdueByCounterparty(
   transactions: LedgerTransaction[],
   today: Date,
 ): Record<string, OverdueDebt> {
   const todayIso = toIsoDate(today);
-  const balance = new Map<string, number>();
-  const oldestPastDue = new Map<string, string>();
 
+  const byCounterparty = new Map<string, LedgerTransaction[]>();
   for (const t of transactions) {
-    if (t.status === 'draft') continue;
-
-    // What they owe. The same arithmetic as the running balance, so the figure
-    // on the card and the figure on the client's page cannot disagree.
-    if (t.debitAccountType === 'receivable') {
-      balance.set(t.counterpartyId, (balance.get(t.counterpartyId) ?? 0) + t.debitAmount);
-    }
-    if (t.creditAccountType === 'receivable') {
-      balance.set(t.counterpartyId, (balance.get(t.counterpartyId) ?? 0) - t.creditAmount);
-    }
-
-    // Since when they have been late. The date decides who is on the list; it
-    // is not itself an amount.
-    if (t.dueDate && t.dueDate < todayIso) {
-      const current = oldestPastDue.get(t.counterpartyId);
-      if (!current || t.dueDate < current) oldestPastDue.set(t.counterpartyId, t.dueDate);
-    }
+    const bucket = byCounterparty.get(t.counterpartyId);
+    if (bucket) bucket.push(t);
+    else byCounterparty.set(t.counterpartyId, [t]);
   }
 
   const result: Record<string, OverdueDebt> = {};
 
-  for (const [counterpartyId, overdueDate] of oldestPastDue) {
-    const owed = Math.round((balance.get(counterpartyId) ?? 0) * 100) / 100;
-    // Settled, or in credit: not a debtor, whatever the dates say.
-    if (owed <= 0) continue;
-    result[counterpartyId] = { overdueAmount: owed, overdueDate };
+  for (const [counterpartyId, rows] of byCounterparty) {
+    const { overdueAmount, overdueDate } = computeOverdue(rows, todayIso);
+    if (!overdueDate || overdueAmount <= 0) continue;
+    result[counterpartyId] = { overdueAmount, overdueDate };
   }
 
   return result;

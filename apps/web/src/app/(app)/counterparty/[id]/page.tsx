@@ -33,11 +33,13 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
   // come back null, so it can never take the whole ledger page down with it.
   const { data: org } = await supabase
     .from('organizations')
-    .select('name')
+    .select('name, base_currency')
     .eq('id', counterparty.org_id)
     .maybeSingle();
 
   const orgName = org?.name ?? null;
+  // Every reported total is in this currency, so the statement has to name it.
+  const baseCurrency = org?.base_currency ?? 'UZS';
 
   // Managers read; owner/admin edit. Same split as the client directory.
   const { data: memberships } = await supabase
@@ -89,6 +91,7 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
         orgName={orgName}
         counterpartyId={counterparty.id}
         counterpartyName={counterparty.name}
+        baseCurrency={baseCurrency}
       />
 
       {/* Below the ledger, deliberately: removing a client is the last thing

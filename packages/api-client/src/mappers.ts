@@ -385,6 +385,11 @@ export function toLedgerTransaction(
     creditAccountType: creditType,
     creditAmount: row.credit_amount,
     currency: row.currency,
+    // Written by the 0017 trigger. Null only on rows that predate it, which
+    // were all base currency at rate 1 — the consumers fall back accordingly.
+    exchangeRate: row.exchange_rate,
+    baseDebitAmount: row.base_debit_amount,
+    baseCreditAmount: row.base_credit_amount,
     source: row.source,
     clientLocalId: row.client_local_id,
     status: row.status ?? 'posted',

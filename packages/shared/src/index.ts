@@ -1,5 +1,7 @@
 export * from './types';
 export * from './balance';
+export * from './statement';
+export * from './amountInWords';
 export * from './embed';
 export * from './schemas';
 export * from './analytics';

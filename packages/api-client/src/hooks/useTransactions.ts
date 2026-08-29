@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../database.types';
 import { toLedgerTransaction } from '../mappers';
+import { fetchAllRows } from '../paginate';
 
 /**
  * Loads a counterparty's transactions (joined with account types so the
@@ -22,24 +23,31 @@ export function useTransactions(
     queryKey,
     enabled: !!orgId && !!counterpartyId,
     queryFn: async () => {
-      const [
-        { data: accounts, error: accountsError },
-        { data: categories, error: categoriesError },
-        { data: txs, error: txError },
-      ] = await Promise.all([
-        supabase.from('accounts').select('*').eq('org_id', orgId!),
-        supabase.from('transaction_categories').select('*').eq('org_id', orgId!),
-        supabase
-          .from('transactions')
-          .select('*')
-          .eq('counterparty_id', counterpartyId!)
-          .order('occurred_at')
-          .order('created_at'),
+      // Paged rather than a single select: PostgREST truncates at the
+      // project's max-rows without reporting anything, and a ledger silently
+      // missing its oldest entries restates every balance below it.
+      const [accounts, categories, txs] = await Promise.all([
+        fetchAllRows((from, to) =>
+          supabase.from('accounts').select('*').eq('org_id', orgId!).order('id').range(from, to),
+        ),
+        fetchAllRows((from, to) =>
+          supabase
+            .from('transaction_categories')
+            .select('*')
+            .eq('org_id', orgId!)
+            .order('id')
+            .range(from, to),
+        ),
+        fetchAllRows((from, to) =>
+          supabase
+            .from('transactions')
+            .select('*')
+            .eq('counterparty_id', counterpartyId!)
+            .order('occurred_at')
+            .order('created_at')
+            .range(from, to),
+        ),
       ]);
-
-      if (accountsError) throw accountsError;
-      if (categoriesError) throw categoriesError;
-      if (txError) throw txError;
 
       const accountsById = new Map(accounts.map((a) => [a.id, a]));
       const categoriesById = new Map(categories.map((c) => [c.id, c]));

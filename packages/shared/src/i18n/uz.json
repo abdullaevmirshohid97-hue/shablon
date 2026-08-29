@@ -126,7 +126,7 @@
     "qoldi": "Qoldi",
     "fabrika": "Fabrika",
     "shaxsiy": "Shaxsiy",
-    "balance": "Joriy saldo",
+    "balance": "Qarzdorlik",
     "owesUs": "Bizga qarzdor",
     "weOwe": "Biz qarzdormiz",
     "empty": "Hozircha tranzaksiyalar yo'q",
@@ -155,7 +155,15 @@
     "inlineDescriptionHint": "Ma'lumotlar kiritilgandan so'ng izoh yozing",
     "draftUnsaved": "Saqlanmagan",
     "draftRestored": "Saqlanmagan yozuv tiklandi",
-    "draftClear": "Tozalash"
+    "draftClear": "Tozalash",
+    "statusPosted": "Aktiv",
+    "statusDraft": "Qoralama",
+    "balanceHint": "Musbat — mijoz bizga qarzdor, manfiy — biz mijozga qarzdormiz",
+    "inlineAmountInvalid": "Summa noto'g'ri — musbat son kiriting",
+    "largeAmountConfirm": "{amount} — bu summa odatdagidan ancha katta. Saqlaymizmi?",
+    "searchPlaceholder": "Izoh yoki hujjat №",
+    "filteredEmpty": "Filtrga mos yozuv topilmadi",
+    "copyLast": "Oxirgi yozuvdan nusxa"
   },
   "transaction": {
     "counterparty": "Kontragent",
@@ -606,8 +614,8 @@
   "export": {
     "period": "Davr",
     "periodAll": "Butun davr",
-    "openingBalance": "Boshlangʻich saldo",
-    "closingBalance": "Yakuniy saldo",
+    "openingBalance": "Boshlang'ich qarzdorlik",
+    "closingBalance": "Yakuniy qarzdorlik",
     "generatedAt": "Tayyorlandi",
     "client": "Mijoz",
     "clientCount": "Mijozlar soni",
@@ -615,7 +623,35 @@
     "entryCount": "Yozuvlar soni",
     "summarySheet": "Xulosa",
     "excelReport": "Excel hisobot",
-    "detailsOmitted": "Mijozlar juda ko'p — batafsil varaqlar qo'shilmadi"
+    "detailsOmitted": "Mijozlar juda ko'p — batafsil varaqlar qo'shilmadi",
+    "statementTitle": "Hisob ko'chirmasi",
+    "reportId": "Hisobot №",
+    "summarySection": "Hisobot xulosasi",
+    "agingSection": "Muddati o'tgan qarz — yoshi bo'yicha",
+    "notesSection": "Izohlar",
+    "debitTurnover": "Davr kirimi (debet)",
+    "creditTurnover": "Davr chiqimi (kredit)",
+    "totalDebt": "Qarzdorlik",
+    "advance": "Avans (ortiqcha to'lov)",
+    "notYetDue": "Muddati kelmagan qarz",
+    "aging1": "1–30 kun",
+    "aging2": "31–60 kun",
+    "aging3": "61–90 kun",
+    "aging4": "90+ kun",
+    "baseCurrency": "Bazaviy valyuta",
+    "rate": "Kurs",
+    "originalAmount": "Asl summa",
+    "status": "Holat",
+    "daysOverdue": "Kechikish (kun)",
+    "lastEntry": "Oxirgi yozuv",
+    "archived": "Arxivlangan",
+    "draftsExcluded": "{n} ta qoralama yozuv hisobga olinmadi — ular jami summalarga kirmaydi.",
+    "reversedNote": "{n} ta yozuv storno qilingan — «Holat» ustuniga qarang.",
+    "mixedCurrency": "Yozuvlar bir necha valyutada ({list}). Barcha jami summalar bazaviy valyutada ({base}), har bir qatorning asl summasi va kursi alohida ustunlarda.",
+    "truncatedWarning": "Diqqat: barcha yozuvlar yuklab olinmagan bo'lishi mumkin — hisobotni qayta tuzing.",
+    "verifyNote": "{n} ta yozuv asosida tuzildi.",
+    "inWords": "So'z bilan",
+    "debtorsRatio": "{total} mijozdan {n} tasi qarzdor"
   },
   "audit": {
     "title": "O'zgarishlar tarixi",
@@ -782,5 +818,12 @@
     "archiveEmpty": "Arxiv bo‘sh",
     "restore": "Qaytarish",
     "documents": "{n} ta hujjat"
+  },
+  "print": {
+    "signaturesTitle": "Imzolar",
+    "signatureDirector": "Rahbar (F.I.Sh., imzo)",
+    "signatureAccountant": "Bosh hisobchi (F.I.Sh., imzo)",
+    "signatureClient": "Mijoz (F.I.Sh., imzo)",
+    "signatureStamp": "M.O'. (muhr o'rni)"
   }
 }

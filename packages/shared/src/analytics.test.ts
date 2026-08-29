@@ -176,6 +176,37 @@ describe('getOverdueByCounterparty', () => {
     expect(result['cp-3']).toEqual({ overdueAmount: 2000, overdueDate: '2026-07-01' });
   });
 
+  it('counts what was outstanding at the deadline, not everything since', () => {
+    const result = getOverdueByCounterparty(
+      [
+        tx({
+          id: 'billed',
+          occurredAt: '2026-07-01T00:00:00Z',
+          debitAccountType: 'receivable',
+          debitAmount: 1000,
+          dueDate: '2026-07-10',
+        }),
+        // Paid after the deadline: brings the past-due part down.
+        tx({
+          id: 'paid',
+          occurredAt: '2026-07-15T00:00:00Z',
+          creditAccountType: 'receivable',
+          creditAmount: 300,
+        }),
+        // Billed after it: raises the balance and nothing else.
+        tx({
+          id: 'new-sale',
+          occurredAt: '2026-07-20T00:00:00Z',
+          debitAccountType: 'receivable',
+          debitAmount: 5000,
+        }),
+      ],
+      today,
+    );
+
+    expect(result['cp-1']).toEqual({ overdueAmount: 700, overdueDate: '2026-07-10' });
+  });
+
   it('returns an empty map when nothing is overdue', () => {
     expect(
       getOverdueByCounterparty([tx({ id: 't1', occurredAt: '2026-07-01T00:00:00Z' })], today),

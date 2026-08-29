@@ -107,6 +107,18 @@ export interface LedgerTransaction {
   creditAccountType: AccountType;
   creditAmount: number;
   currency: string;
+  /** Rate in force on this entry's own date (0017). 1 when the entry is already
+   * in the org's base currency, or when nothing was quoted. */
+  exchangeRate?: number | null;
+  /**
+   * The same amounts converted to the org's base currency, written by the
+   * database on insert. Every reported total is summed from these: adding a raw
+   * USD `debitAmount` to a raw UZS one produces a figure that means nothing,
+   * which is exactly what the dashboard's SQL avoids by summing
+   * `base_debit_amount` instead. Null on rows written before 0017.
+   */
+  baseDebitAmount?: number | null;
+  baseCreditAmount?: number | null;
   source: FundSource;
   clientLocalId?: string | null;
   status: TransactionStatus;
@@ -129,6 +141,8 @@ export interface RunningBalanceEntry {
   occurredAt: string;
   balance: number;
   side: BalanceSide;
+  /** False for a draft: the row exists, but it did not move the balance. */
+  counted: boolean;
 }
 
 /** Per-row Jami (running turnover) and Qoldi (running net balance), split by fund source. */

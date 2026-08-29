@@ -10,7 +10,7 @@ import { LedgerAnalytics } from './LedgerAnalytics';
 import { TopDebtors } from './TopDebtors';
 import { ModuleBreakdownTable } from './ModuleBreakdownTable';
 import { CounterpartyJournal } from './CounterpartyJournal';
-import { PrintHeader } from './PrintHeader';
+import { PrintHeader, PrintSignatures } from './PrintHeader';
 import { formatPeriodLabel, PeriodFilter, usePeriodFilter } from './PeriodFilter';
 import { Button } from '@/components/ui/Button';
 
@@ -29,10 +29,13 @@ import { Button } from '@/components/ui/Button';
 export function OverviewAnalytics({
   orgId,
   orgName,
+  baseCurrency = 'UZS',
   categoryFilter,
 }: {
   orgId: string;
   orgName?: string | null;
+  /** The org's reporting currency — every total in the report is stated in it. */
+  baseCurrency?: string;
   categoryFilter?: string;
 }) {
   const { t, locale } = useLocale();
@@ -53,20 +56,29 @@ export function OverviewAnalytics({
   const { data: journal } = useCounterpartyJournal(supabase, orgId);
 
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const analytics = useMemo(() => (data ? analyticsFromReport(data) : null), [data]);
   const reportTitle = categoryFilter ?? orgName ?? t('nav.allClients');
 
+  // A report that fails halfway used to leave the button spinning and no file
+  // on disk, with the reason only in the console — so the failure looked like
+  // a slow download.
   async function handleExcelReport() {
     setExporting(true);
+    setExportError(null);
     try {
       const ledger = await fetchOrgLedger(supabase, orgId, categoryFilter);
-      exportOrgSummaryToExcel(
-        reportTitle,
-        ledger.counterparties,
-        ledger.transactions,
+      exportOrgSummaryToExcel({
+        title: reportTitle,
+        counterparties: ledger.counterparties,
+        transactions: ledger.transactions,
         locale,
-        period.range,
-      );
+        baseCurrency,
+        orgName,
+        range: period.range,
+      });
+    } catch (err) {
+      setExportError((err as Error).message);
     } finally {
       setExporting(false);
     }
@@ -93,6 +105,7 @@ export function OverviewAnalytics({
       <PrintHeader
         title={reportTitle}
         subtitle={categoryFilter ? orgName : null}
+        baseCurrency={baseCurrency}
         period={formatPeriodLabel(period.range, dateLocale, t('export.periodAll'))}
       />
 
@@ -111,6 +124,11 @@ export function OverviewAnalytics({
             </svg>
             {exporting ? t('common.loading') : t('export.excelReport')}
           </Button>
+          {exportError && (
+            <span className="text-fin-sm font-medium text-rose-600">
+              {t('common.error')}: {exportError}
+            </span>
+          )}
           <Button type="button" variant="secondary" size="sm" onClick={() => window.print()}>
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-slate-500">
               <path d="M5 3a1 1 0 00-1 1v3H3a1 1 0 00-1 1v5a1 1 0 001 1h1v2a1 1 0 001 1h10a1 1 0 001-1v-2h1a1 1 0 001-1V8a1 1 0 00-1-1h-1V4a1 1 0 00-1-1H5zm10 4V4H5v3h10zM5 15v-2h10v2H5z" />
@@ -138,6 +156,8 @@ export function OverviewAnalytics({
       {!categoryFilter && data.modules.length > 1 && (
         <ModuleBreakdownTable modules={data.modules} />
       )}
+
+      <PrintSignatures />
     </div>
   );
 }

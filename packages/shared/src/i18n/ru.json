@@ -126,7 +126,7 @@
     "qoldi": "Остаток",
     "fabrika": "Фабрика",
     "shaxsiy": "Личное",
-    "balance": "Текущее сальдо",
+    "balance": "Задолженность",
     "owesUs": "Должен нам",
     "weOwe": "Мы должны",
     "empty": "Пока нет транзакций",
@@ -155,7 +155,15 @@
     "inlineDescriptionHint": "Комментарий пишется после ввода данных",
     "draftUnsaved": "Не сохранено",
     "draftRestored": "Несохранённая запись восстановлена",
-    "draftClear": "Очистить"
+    "draftClear": "Очистить",
+    "statusPosted": "Активна",
+    "statusDraft": "Черновик",
+    "balanceHint": "Плюс — клиент должен нам, минус — мы должны клиенту",
+    "inlineAmountInvalid": "Неверная сумма — введите положительное число",
+    "largeAmountConfirm": "{amount} — сумма значительно выше обычной. Сохранить?",
+    "searchPlaceholder": "Комментарий или № документа",
+    "filteredEmpty": "По фильтру записей не найдено",
+    "copyLast": "Копировать последнюю запись"
   },
   "transaction": {
     "counterparty": "Контрагент",
@@ -606,8 +614,8 @@
   "export": {
     "period": "Период",
     "periodAll": "Весь период",
-    "openingBalance": "Входящее сальдо",
-    "closingBalance": "Исходящее сальдо",
+    "openingBalance": "Задолженность на начало периода",
+    "closingBalance": "Задолженность на конец периода",
     "generatedAt": "Сформировано",
     "client": "Клиент",
     "clientCount": "Количество клиентов",
@@ -615,7 +623,35 @@
     "entryCount": "Количество записей",
     "summarySheet": "Сводка",
     "excelReport": "Отчёт Excel",
-    "detailsOmitted": "Слишком много клиентов — подробные листы не добавлены"
+    "detailsOmitted": "Слишком много клиентов — подробные листы не добавлены",
+    "statementTitle": "Выписка по счёту",
+    "reportId": "Отчёт №",
+    "summarySection": "Сводка по отчёту",
+    "agingSection": "Просроченная задолженность — по срокам",
+    "notesSection": "Примечания",
+    "debitTurnover": "Приход за период (дебет)",
+    "creditTurnover": "Расход за период (кредит)",
+    "totalDebt": "Задолженность",
+    "advance": "Аванс (переплата)",
+    "notYetDue": "Срок не наступил",
+    "aging1": "1–30 дней",
+    "aging2": "31–60 дней",
+    "aging3": "61–90 дней",
+    "aging4": "90+ дней",
+    "baseCurrency": "Базовая валюта",
+    "rate": "Курс",
+    "originalAmount": "Сумма в валюте",
+    "status": "Статус",
+    "daysOverdue": "Просрочка (дней)",
+    "lastEntry": "Последняя запись",
+    "archived": "В архиве",
+    "draftsExcluded": "Черновиков не учтено: {n} — они не входят в итоги.",
+    "reversedNote": "Сторнированных записей: {n} — см. колонку «Статус».",
+    "mixedCurrency": "Записи в нескольких валютах ({list}). Все итоги — в базовой валюте ({base}), исходная сумма и курс каждой строки в отдельных колонках.",
+    "truncatedWarning": "Внимание: возможно, загружены не все записи — сформируйте отчёт заново.",
+    "verifyNote": "Сформировано по {n} записям.",
+    "inWords": "Прописью",
+    "debtorsRatio": "Должников: {n} из {total}"
   },
   "audit": {
     "title": "История изменений",
@@ -782,5 +818,12 @@
     "archiveEmpty": "Архив пуст",
     "restore": "Вернуть",
     "documents": "документов: {n}"
+  },
+  "print": {
+    "signaturesTitle": "Подписи",
+    "signatureDirector": "Руководитель (Ф.И.О., подпись)",
+    "signatureAccountant": "Главный бухгалтер (Ф.И.О., подпись)",
+    "signatureClient": "Клиент (Ф.И.О., подпись)",
+    "signatureStamp": "М.П. (место печати)"
   }
 }
