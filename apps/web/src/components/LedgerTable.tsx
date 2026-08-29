@@ -5,12 +5,11 @@ import { useCategoriesWithKind, useCreateTransaction } from '@mubosher/api-clien
 import {
   amountInWords,
   baseLegs,
-  buildStatement,
   computeRunningBalance,
   currencyWords,
   isPostedEntry,
 } from '@mubosher/shared';
-import type { FundSource, LedgerTransaction } from '@mubosher/shared';
+import type { CounterpartyStatement, FundSource, LedgerTransaction } from '@mubosher/shared';
 import { EditTransactionModal } from './EditTransactionModal';
 import { ReverseTransactionModal } from './ReverseTransactionModal';
 import { PeriodFilter, type PeriodFilterState } from './PeriodFilter';
@@ -547,26 +546,37 @@ export function LedgerTable({
   counterpartyId,
   counterpartyName,
   transactions,
+  statement,
   isLoading,
   error,
-  onPrintClick,
+  printMenu,
   period,
   orgName = null,
   baseCurrency = 'UZS',
+  summaryPrintable = true,
 }: {
   supabase: SupabaseClient<Database>;
   orgId: string;
   counterpartyId: string;
   counterpartyName: string;
   transactions: LedgerTransaction[] | undefined;
+  /**
+   * Computed once by the page and handed to everything that shows a figure —
+   * this table, the printed act and the Excel file — so none of them can state
+   * a balance another one denies.
+   */
+  statement: CounterpartyStatement;
   isLoading: boolean;
   error: unknown;
-  onPrintClick?: () => void;
+  /** The page owns what printing produces; the toolbar only offers the control. */
+  printMenu?: React.ReactNode;
   /** Owned by the page so the same period drives the table, the print header and the export. */
   period: PeriodFilterState;
   orgName?: string | null;
   /** The org's reporting currency: what the balance column and the export totals are stated in. */
   baseCurrency?: string;
+  /** False when the page is printing a document that states the balances itself. */
+  summaryPrintable?: boolean;
 }) {
   const [currencies, setCurrencies] = useState<string[]>(['UZS']);
   const [search, setSearch] = useState('');
@@ -634,14 +644,6 @@ export function LedgerTable({
     return map;
   }, [transactions]);
 
-  // The same statement the export writes and the print header describes, so
-  // the footer under the table and the summary block in the file are one
-  // calculation rather than two that happen to agree today.
-  const statement = useMemo(
-    () => buildStatement(transactions ?? [], { range: period.range }),
-    [transactions, period.range],
-  );
-
   // Totals for the rows actually on screen, filters included — a table that
   // shows twelve rows and totals four hundred is worse than no total at all.
   // The balance beside them stays the period's closing figure, because a
@@ -691,7 +693,11 @@ export function LedgerTable({
     );
 
   return (
-    <Card className="flex flex-col overflow-hidden">
+    // The card cannot clip its own children any more: the print menu opens a
+    // panel out of the toolbar, and overflow-hidden here cut it in half on a
+    // short ledger. The scrolling body clips itself and carries the rounded
+    // bottom instead.
+    <Card className="flex flex-col">
       <div className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
           <PeriodFilter state={period} />
@@ -732,25 +738,31 @@ export function LedgerTable({
             </svg>
             {t('ledger.exportExcel')}
           </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => (onPrintClick ? onPrintClick() : window.print())}
-            disabled={!displayRows.length}
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-slate-500">
-              <path d="M5 3a1 1 0 00-1 1v3H3a1 1 0 00-1 1v5a1 1 0 001 1h1v2a1 1 0 001 1h10a1 1 0 001-1v-2h1a1 1 0 001-1V8a1 1 0 00-1-1h-1V4a1 1 0 00-1-1H5zm10 4V4H5v3h10zM5 15v-2h10v2H5z" />
-            </svg>
-            {t('ledger.exportPdf')}
-          </Button>
+          {printMenu ?? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => window.print()}
+              disabled={!displayRows.length}
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-slate-500">
+                <path d="M5 3a1 1 0 00-1 1v3H3a1 1 0 00-1 1v5a1 1 0 001 1h1v2a1 1 0 001 1h10a1 1 0 001-1v-2h1a1 1 0 001-1V8a1 1 0 00-1-1h-1V4a1 1 0 00-1-1H5zm10 4V4H5v3h10zM5 15v-2h10v2H5z" />
+              </svg>
+              {t('ledger.exportPdf')}
+            </Button>
+          )}
         </div>
       </div>
 
       {/* The balances block a bank puts at the head of a statement: what was
           carried in, what moved, what is owed now, and how much of it is late.
           It prints, because on paper it is the part that is read first. */}
-      <dl className="grid grid-cols-2 gap-px border-b border-slate-200 bg-slate-200 sm:grid-cols-4">
+      <dl
+        className={`grid grid-cols-2 gap-px border-b border-slate-200 bg-slate-200 sm:grid-cols-4 ${
+          summaryPrintable ? '' : 'no-print'
+        }`}
+      >
         {period.range && (
           <StatementFigure
             label={t('export.openingBalance')}
@@ -794,12 +806,14 @@ export function LedgerTable({
 
       {/* Only on paper. The words are what makes a signed sum hard to alter
           afterwards, which is the whole reason the forms carry the line. */}
-      <p className="print-only border-b border-slate-200 px-4 py-2 text-fin-sm text-slate-600">
-        {t('export.inWords')}:{' '}
-        {amountInWords(statement.closingBalance, locale, currencyWords(baseCurrency, locale))}
-      </p>
+      {summaryPrintable && (
+        <p className="print-only border-b border-slate-200 px-4 py-2 text-fin-sm text-slate-600">
+          {t('export.inWords')}:{' '}
+          {amountInWords(statement.closingBalance, locale, currencyWords(baseCurrency, locale))}
+        </p>
+      )}
 
-      <div className="ledger-scroll max-h-[65vh] overflow-auto">
+      <div className="ledger-scroll max-h-[65vh] overflow-auto rounded-b-xl">
         <table className="w-full min-w-[1060px] table-fixed border-collapse text-fin">
           <colgroup>
             <col className="w-[12%]" />
@@ -880,10 +894,10 @@ export function LedgerTable({
                   </td>
                   <td className={`${td} text-right tabular-nums`}>{kg ?? ''}</td>
                   <td className={`${td} text-right tabular-nums`}>{dona ?? ''}</td>
-                  <td className={`${td} text-right font-medium tabular-nums text-rose-600`}>
+                  <td className={`${td} text-right font-medium tabular-nums text-rose-700`}>
                     {isChiqim ? currencyFormatter.format(tx.creditAmount) : ''}
                   </td>
-                  <td className={`${td} text-right font-medium tabular-nums text-emerald-600`}>
+                  <td className={`${td} text-right font-medium tabular-nums text-emerald-700`}>
                     {tx.debitAccountType === 'receivable'
                       ? currencyFormatter.format(tx.debitAmount)
                       : ''}
@@ -908,7 +922,7 @@ export function LedgerTable({
                       const isCredit = bal.side === 'credit';
                       return (
                         <span
-                          className={isCredit ? 'text-amber-600' : 'text-slate-900'}
+                          className={isCredit ? 'text-amber-700' : 'text-slate-900'}
                           title={isCredit ? t('ledger.weOwe') : t('ledger.owesUs')}
                         >
                           {isCredit ? '−' : ''}

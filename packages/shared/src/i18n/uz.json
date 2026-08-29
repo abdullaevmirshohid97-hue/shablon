@@ -134,7 +134,6 @@
     "exportPdf": "PDF chiqarish",
     "editTitle": "Tranzaksiyani tahrirlash",
     "dueDate": "Srok",
-    "includeAnalyticsInPdf": "PDF hisobotga davriy analitikani ham qo'shaymi?",
     "scroll": "Jadvalni ko'rish uchun aylantiring",
     "kg": "Kg",
     "dona": "Dona",
@@ -201,7 +200,7 @@
     "noData": "Bu davrda ma'lumot yo'q",
     "totalDebt": "Umumiy qarzdorlik",
     "debtChange": "Qarzdorlik o‘zgarishi",
-    "overdueNote": "{n} ta mijoz muddatidan kechikkan. Ko‘rsatilgan summa — ularning hozirgi qarzi."
+    "overdueNote": "{n} ta mijoz muddatidan kechikkan. Ko‘rsatilgan summa — muddat o‘tgan paytda qolgan va hozirgacha to‘lanmagan qarz."
   },
   "overview": {
     "topDebtors": "Eng ko'p qarzdorlar",
@@ -824,6 +823,23 @@
     "signatureDirector": "Rahbar (F.I.Sh., imzo)",
     "signatureAccountant": "Bosh hisobchi (F.I.Sh., imzo)",
     "signatureClient": "Mijoz (F.I.Sh., imzo)",
-    "signatureStamp": "M.O'. (muhr o'rni)"
+    "signatureStamp": "M.O'. (muhr o'rni)",
+    "modeStatement": "Hisob ko'chirmasi",
+    "modeStatementHint": "Qoldiqlar, muddati o'tgan qarz va barcha operatsiyalar",
+    "modeAct": "Solishtirish dalolatnomasi",
+    "modeActHint": "Mijoz imzolashi uchun — akt sverka shaklida",
+    "withAnalytics": "Davriy analitikani ham qo'shish"
+  },
+  "act": {
+    "title": "Solishtirish dalolatnomasi",
+    "subtitle": "O'zaro hisob-kitoblar bo'yicha, {period} davri uchun",
+    "ourSideFallback": "Tashkilot",
+    "preamble": "Biz, quyida imzo chekuvchilar, bir tomondan {org} nomidan va ikkinchi tomondan {client} nomidan, {period} davri uchun o'zaro hisob-kitoblarni solishtirdik va quyidagilarni aniqladik:",
+    "indicator": "Ko'rsatkich",
+    "ourData": "{org} ma’lumoti",
+    "theirData": "{client} ma’lumoti",
+    "conclusionOwesUs": "{date} holatiga {client} tomonidan {org} foydasiga {amount} miqdorida qarzdorlik mavjud.",
+    "conclusionWeOwe": "{date} holatiga {org} tomonidan {client} foydasiga {amount} miqdorida qarzdorlik mavjud.",
+    "disagreement": "Kelishmovchilik bo'lgan taqdirda, mijoz o'z ma'lumotlarini jadvalning o'ng ustuniga yozadi va farqni tasdiqlovchi hujjatlarni ilova qiladi. Dalolatnoma ikki nusxada tuzildi, har ikkala tomon uchun bir nusxadan."
   }
 }

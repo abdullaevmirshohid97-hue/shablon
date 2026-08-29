@@ -73,8 +73,10 @@ export function ScanDesk({ orgId }: { orgId: string }) {
     addPackage(pending);
     setPendingCode(undefined);
     // addPackage is defined in this closure and depends only on setState
-    // setters, which React guarantees are stable.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // setters, which React guarantees are stable, so it is deliberately not a
+    // dependency here. (No directive: this project's eslint config carries no
+    // react-hooks plugin, and disabling a rule that is not installed is itself
+    // an error under flat config.)
   }, [pending]);
 
   function addPackage(pkg: SkladPackage) {
