@@ -1,7 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useOrgReport, fetchOrgLedger, useCounterpartyJournal } from '@mubosher/api-client';
+import {
+  useOrgReport,
+  fetchOrgLedger,
+  useCounterpartyJournal,
+  useOrgCurrencyTotals,
+  useOrgMonthlySeries,
+} from '@mubosher/api-client';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { exportOrgSummaryToExcel } from '@/lib/export/orgSummaryExcel';
@@ -9,6 +15,8 @@ import { analyticsFromReport } from '@/lib/analyticsData';
 import { LedgerAnalytics } from './LedgerAnalytics';
 import { TopDebtors } from './TopDebtors';
 import { AgingLadder, agingFromJournal } from './AgingLadder';
+import { CurrencyBreakdown } from './CurrencyBreakdown';
+import { LedgerTrend } from './LedgerTrend';
 import { ModuleBreakdownTable } from './ModuleBreakdownTable';
 import { CounterpartyJournal } from './CounterpartyJournal';
 import { PrintHeader, PrintSignatures } from './PrintHeader';
@@ -71,6 +79,24 @@ export function OverviewAnalytics({
 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+
+  // Which currency the trend below is drawn from. Null is the consolidated
+  // view — everything converted to base — which is what every other panel on
+  // this page shows and so is the honest default.
+  const [trendCurrency, setTrendCurrency] = useState<string | null>(null);
+
+  const { data: currencyTotals, isLoading: currencyLoading } = useOrgCurrencyTotals(
+    supabase,
+    orgId,
+    { from: period.range?.start ?? null, to: period.range?.end ?? null },
+    categoryFilter,
+  );
+
+  const { data: series, isLoading: seriesLoading } = useOrgMonthlySeries(supabase, orgId, {
+    months: 12,
+    currency: trendCurrency,
+    category: categoryFilter,
+  });
   const analytics = useMemo(() => (data ? analyticsFromReport(data) : null), [data]);
   const reportTitle = categoryFilter ?? orgName ?? t('nav.allClients');
 
@@ -169,6 +195,25 @@ export function OverviewAnalytics({
           turnover row cannot answer it. The module table stays below it, and
           only when there is more than one module to compare. */}
       {!categoryFilter && <CounterpartyJournal orgId={orgId} baseCurrency={baseCurrency} />}
+
+      {/* Currency first, then the shape of the year. The tiles say what each
+          currency did; the chips under them decide which of those the charts
+          are about. */}
+      {(currencyLoading || (currencyTotals?.length ?? 0) > 1) && (
+        <CurrencyBreakdown
+          rows={currencyTotals ?? []}
+          selected={trendCurrency}
+          onSelect={setTrendCurrency}
+          baseCurrency={baseCurrency}
+          isLoading={currencyLoading}
+        />
+      )}
+
+      <LedgerTrend
+        points={series ?? []}
+        currency={trendCurrency ?? baseCurrency}
+        isLoading={seriesLoading}
+      />
 
       {!categoryFilter && data.modules.length > 1 && (
         <ModuleBreakdownTable modules={data.modules} />

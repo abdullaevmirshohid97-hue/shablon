@@ -761,6 +761,37 @@ export interface Database {
           entry_count: number;
         }[];
       };
+      org_currency_totals: {
+        Args: {
+          target_org_id: string;
+          p_from?: string | null;
+          p_to?: string | null;
+          p_category?: string | null;
+        };
+        Returns: {
+          currency: string;
+          total_kirim: number;
+          total_chiqim: number;
+          net: number;
+          total_debt: number;
+          entry_count: number;
+          counterparty_count: number;
+        }[];
+      };
+      org_monthly_series: {
+        Args: {
+          target_org_id: string;
+          p_months?: number | null;
+          p_currency?: string | null;
+          p_category?: string | null;
+        };
+        Returns: {
+          month: string;
+          total_kirim: number;
+          total_chiqim: number;
+          closing_debt: number;
+        }[];
+      };
       org_overdue_by_counterparty: {
         Args: { target_org_id: string; p_as_of?: string | null; p_category?: string | null };
         Returns: {

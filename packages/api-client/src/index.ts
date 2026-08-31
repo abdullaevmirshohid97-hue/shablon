@@ -11,6 +11,7 @@ export * from './hooks/useModules';
 export * from './hooks/fetchOrgLedger';
 export * from './paginate';
 export * from './hooks/useOrgReport';
+export * from './hooks/useOrgTrend';
 export * from './hooks/useSkladLookups';
 export * from './hooks/useSkladItems';
 export * from './hooks/useSkladOrders';
