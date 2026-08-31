@@ -160,6 +160,24 @@ export function GraphIcon({ className }: { className?: string }) {
  * icon is a cosmetic gap, and a module that cannot render its own navigation
  * is not.
  */
+/** The director's watch: a shield with an eye, for the screen that oversees
+ * rather than operates. */
+function ShieldIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={className}
+    >
+      <path d="M10 2.5 4 5v4.2c0 3.4 2.4 6.5 6 8.3 3.6-1.8 6-4.9 6-8.3V5l-6-2.5Z" />
+      <circle cx="10" cy="9.2" r="1.6" />
+      <path d="M6.6 9.2c.9-1.5 2-2.3 3.4-2.3s2.5.8 3.4 2.3c-.9 1.5-2 2.3-3.4 2.3s-2.5-.8-3.4-2.3Z" />
+    </svg>
+  );
+}
+
 const ICONS: Record<string, (props: { className?: string }) => React.ReactElement> = {
   finance: FinanceIcon,
   sklad: SkladIcon,
@@ -172,6 +190,7 @@ const ICONS: Record<string, (props: { className?: string }) => React.ReactElemen
   clients: ClientsIcon,
   settings: SettingsIcon,
   graph: GraphIcon,
+  shield: ShieldIcon,
 };
 
 export function iconFor(name: string): (props: { className?: string }) => React.ReactElement {

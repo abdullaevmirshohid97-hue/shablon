@@ -145,7 +145,14 @@ describe('the rails', () => {
       '/hub/sklad',
       '/hub/sotuv',
       '/hub/obyekt',
+      '/direktor',
     ]);
+  });
+
+  it('keeps the director door away from anyone who is not one', () => {
+    const forStaff = ontology.tiles({ isOrgAdmin: false }).map((e) => e.href);
+    expect(forStaff).not.toContain('/direktor');
+    expect(forStaff).toContain('/dashboard');
   });
 
   it('keeps the settings door off the tiles even for an admin', () => {

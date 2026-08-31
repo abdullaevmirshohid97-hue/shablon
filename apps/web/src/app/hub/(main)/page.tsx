@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ontology } from '@mubosher/shared';
+import { getOrgContext } from '@/lib/auth/activeOrg';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { Card } from '@/components/ui/Card';
 import { iconFor } from '../nav-icons';
@@ -13,7 +14,12 @@ import { iconFor } from '../nav-icons';
  */
 export default async function HubPage() {
   const { t } = await getServerTranslator();
-  const tiles = ontology.tiles({ isOrgAdmin: false });
+
+  // The flag was hardcoded false, so every admin-only door was missing from
+  // the front door — including, once it existed, the director's.
+  const { options } = await getOrgContext();
+  const isOrgAdmin = options.some((o) => o.role === 'owner' || o.role === 'admin');
+  const tiles = ontology.tiles({ isOrgAdmin });
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
