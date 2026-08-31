@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { LedgerTransaction } from '@mubosher/shared';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -8,6 +8,7 @@ import type { Database } from '@mubosher/api-client';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Input, Label } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
 
 const currencyFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2 });
 
@@ -39,21 +40,11 @@ export function ReverseTransactionModal({
   const { t, locale } = useLocale();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
   const queryClient = useQueryClient();
-  const dialogRef = useRef<HTMLDivElement>(null);
 
   const [reversalDate, setReversalDate] = useState(todayIso());
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    document.addEventListener('keydown', onKeyDown);
-    dialogRef.current?.focus();
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
 
   const amount =
     transaction.debitAccountType === 'receivable'
@@ -83,19 +74,13 @@ export function ReverseTransactionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-scrim/50 p-4 backdrop-blur-sm">
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('ledger.reverseTitle')}
-        tabIndex={-1}
-        className="w-full max-w-md rounded-xl bg-white p-5 shadow-popover outline-none"
-      >
-        <h2 className="text-fin-lg font-semibold text-slate-900">{t('ledger.reverseTitle')}</h2>
-        <p className="mt-1 text-fin-md text-slate-500">{t('ledger.reverseDescription')}</p>
-
-        <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-fin-md">
+    <Modal
+      onClose={onClose}
+      title={t('ledger.reverseTitle')}
+      description={t('ledger.reverseDescription')}
+    >
+      <div className="flex flex-col gap-4">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-fin-md">
           <div className="flex justify-between gap-3">
             <span className="text-slate-500">{transaction.documentNo}</span>
             <span className="tabular-nums font-semibold text-slate-900">
@@ -110,7 +95,7 @@ export function ReverseTransactionModal({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div>
             <Label>{t('ledger.reverseDate')}</Label>
             <Input
@@ -142,6 +127,6 @@ export function ReverseTransactionModal({
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -45,17 +45,13 @@ export default {
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // Both resolve to variables so a theme can change the typeface, not only
+      // the palette — see the :root block at the top of globals.css. The
+      // inline fallbacks mean a missing variable degrades to the same stack
+      // that was hardcoded here before, rather than to Times New Roman.
       fontFamily: {
-        sans: [
-          'Inter',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          '"Segoe UI"',
-          'Roboto',
-          '"Helvetica Neue"',
-          'Arial',
-          'sans-serif',
-        ],
+        sans: ['var(--font-ui, Inter, -apple-system, "Segoe UI", Roboto, Arial, sans-serif)'],
+        mono: ['var(--font-numeric, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace)'],
       },
       colors: {
         // Surface and ink poles. Both are variables so that `bg-white` means
@@ -91,9 +87,12 @@ export default {
         popover:
           '0 8px 24px -6px rgb(var(--c-shadow) / 0.16), 0 2px 6px -2px rgb(var(--c-shadow) / 0.08)',
       },
+      // Same idea as the fonts: the app's two shape decisions — how round a
+      // control is and how round a card is — become theme-settable without a
+      // sweep through every rounded-lg in the codebase.
       borderRadius: {
-        lg: '0.5rem',
-        xl: '0.75rem',
+        lg: 'var(--radius-control, 0.5rem)',
+        xl: 'var(--radius-card, 0.75rem)',
       },
       letterSpacing: {
         tightest: '-0.02em',

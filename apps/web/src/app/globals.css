@@ -15,6 +15,27 @@
    readable in all three themes without a single `dark:` variant anywhere.
    --------------------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------------------
+   Shape and type.
+
+   A theme used to be able to change only colour, which is fine while every
+   theme is the same interface in a different light. It stops being fine the
+   moment one of them is a *different look* — a terminal skin wants monospace
+   figures and square panels, and neither of those is a colour. Declaring them
+   here, on bare :root, keeps the current appearance exactly as it is (these
+   are the values Tailwind was already compiling in) while giving a theme block
+   somewhere to override them from.
+   --------------------------------------------------------------------------- */
+:root {
+  --font-ui:
+    Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-numeric: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --radius-control: 0.5rem; /* buttons, inputs, chips — Tailwind's rounded-lg */
+  --radius-card: 0.75rem; /* cards and dialogs — Tailwind's rounded-xl */
+}
+
 :root,
 :root[data-theme='light'] {
   color-scheme: light;
