@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-export const THEMES = ['ice', 'light', 'dark'] as const;
+export const THEMES = ['ice', 'light', 'dark', 'edex'] as const;
 export type Theme = (typeof THEMES)[number];
 
 export const THEME_STORAGE_KEY = 'mubosher.theme';
@@ -17,12 +17,19 @@ function isTheme(value: unknown): value is Theme {
  * one frame of the default (white) theme before React hydrates, which on a
  * dark theme is a full-screen flash — the one thing users notice immediately
  * and never forgive.
+ *
+ * The valid names are interpolated from THEMES rather than written out again:
+ * this string used to list them by hand, so adding a theme meant remembering
+ * to edit a script inside a template literal, and forgetting meant the new
+ * theme flashed white on every load.
  */
-export const themeBootstrapScript = `(function(){try{var t=localStorage.getItem(${JSON.stringify(
+export const themeBootstrapScript = `(function(){try{var v=${JSON.stringify(
+  THEMES,
+)};var t=localStorage.getItem(${JSON.stringify(
   THEME_STORAGE_KEY,
-)});if(t==='ice'||t==='light'||t==='dark'){document.documentElement.dataset.theme=t}else{document.documentElement.dataset.theme=${JSON.stringify(
+)});document.documentElement.dataset.theme=v.indexOf(t)>-1?t:${JSON.stringify(
   DEFAULT_THEME,
-)}}}catch(e){}})()`;
+)}}catch(e){}})()`;
 
 interface ThemeContextValue {
   theme: Theme;

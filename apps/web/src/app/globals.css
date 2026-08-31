@@ -32,6 +32,7 @@
     sans-serif;
   --font-numeric: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 
+  --radius-sm: 0.375rem; /* icon buttons and badges — Tailwind's rounded-md */
   --radius-control: 0.5rem; /* buttons, inputs, chips — Tailwind's rounded-lg */
   --radius-card: 0.75rem; /* cards and dialogs — Tailwind's rounded-xl */
 }
@@ -269,6 +270,101 @@ h3 {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--c-slate-400));
+}
+
+/* ---------------------------------------------------------------------------
+   eDEX — the terminal skin.
+
+   Not another light level: a different look. Where light/ice/dark are the same
+   interface under different lamps, this one changes the typeface to the
+   system's monospace and squares the corners, which is what the shape and type
+   tokens at the top of this file exist for.
+
+   The accent ramps are the dark theme's, unchanged and deliberately so: they
+   are already proven against a dark surface, and this ground is darker still,
+   so contrast only improves. The identity comes from the ground, the cool
+   neutral ramp, the cyan brand and the monospace figures — not from making
+   money a different colour, which would cost the one thing this app's palette
+   is for. No scanlines and no glow either: they are the part of the look that
+   costs legibility and returns nothing, and a ledger is read, not admired.
+
+   The neutral ramp inverts as it does in dark mode: 50 is canvas, 900 is ink.
+   --------------------------------------------------------------------------- */
+:root[data-theme='edex'] {
+  color-scheme: dark;
+
+  --font-ui: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  --font-numeric: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --radius-sm: 0.125rem;
+  --radius-control: 0.125rem;
+  --radius-card: 0.25rem;
+
+  --c-white: 12 19 22; /* card surface — one step above the canvas */
+  --c-black: 232 244 247; /* the "deepest ink" pole, inverted */
+  --c-shadow: 0 0 0;
+  --c-scrim: 0 0 0;
+  --c-ink: 7 12 14;
+  --c-paper: 226 232 234;
+
+  --c-slate-50: 7 12 14; /* page canvas */
+  --c-slate-100: 20 31 35; /* hover fills */
+  --c-slate-200: 34 50 56; /* hairlines */
+  --c-slate-300: 52 74 82; /* input borders */
+  --c-slate-400: 108 132 140; /* placeholders, muted meta */
+  --c-slate-500: 146 166 173; /* secondary text */
+  --c-slate-600: 172 188 194;
+  --c-slate-700: 196 208 212;
+  --c-slate-800: 214 222 225;
+  --c-slate-900: 226 232 234; /* primary ink — near-neutral, so the cyan reads as the accent */
+
+  /* Here the brand *is* the identity, so unlike every other theme it carries a
+     hue. A primary button is `bg-brand-600` with `text-white`, and `white` is
+     the card surface — so it comes out as dark type on a lit block, which is
+     how a terminal highlights anything. */
+  --c-brand-50: 12 32 36;
+  --c-brand-100: 16 45 51;
+  --c-brand-200: 22 64 72;
+  --c-brand-300: 32 100 112;
+  --c-brand-400: 45 140 155;
+  --c-brand-500: 60 178 196;
+  --c-brand-600: 92 214 232;
+  --c-brand-700: 130 230 244;
+  --c-brand-800: 170 240 250;
+  --c-brand-900: 200 248 253;
+
+  --c-emerald-50: 22 37 27;
+  --c-emerald-100: 28 51 35;
+  --c-emerald-200: 39 73 47;
+  --c-emerald-300: 62 122 77;
+  --c-emerald-400: 89 164 108;
+  --c-emerald-500: 111 190 131;
+  --c-emerald-600: 126 211 150;
+  --c-emerald-700: 147 223 168;
+  --c-emerald-800: 176 232 191;
+  --c-emerald-900: 204 241 214;
+
+  --c-rose-50: 42 26 26;
+  --c-rose-100: 58 35 35;
+  --c-rose-200: 82 48 47;
+  --c-rose-300: 138 78 76;
+  --c-rose-400: 184 107 104;
+  --c-rose-500: 212 133 131;
+  --c-rose-600: 232 154 151;
+  --c-rose-700: 240 175 172;
+  --c-rose-800: 245 198 196;
+  --c-rose-900: 250 220 219;
+
+  --c-amber-50: 42 35 19;
+  --c-amber-100: 58 47 25;
+  --c-amber-200: 78 63 34;
+  --c-amber-300: 128 106 60;
+  --c-amber-400: 173 143 79;
+  --c-amber-500: 208 172 98;
+  --c-amber-600: 227 190 116;
+  --c-amber-700: 237 206 146;
+  --c-amber-800: 242 220 178;
+  --c-amber-900: 248 236 212;
 }
 
 /* Report header — hidden on screen, printed at the top of every PDF so the

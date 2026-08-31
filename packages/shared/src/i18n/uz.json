@@ -19,7 +19,8 @@
     "label": "Ko'rinish",
     "ice": "Muz",
     "light": "Yorug'",
-    "dark": "Qorong'i"
+    "dark": "Qorong'i",
+    "edex": "eDEX"
   },
   "textSize": {
     "label": "Matn o'lchami",

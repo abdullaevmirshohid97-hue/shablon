@@ -91,6 +91,7 @@ export default {
       // control is and how round a card is — become theme-settable without a
       // sweep through every rounded-lg in the codebase.
       borderRadius: {
+        md: 'var(--radius-sm, 0.375rem)',
         lg: 'var(--radius-control, 0.5rem)',
         xl: 'var(--radius-card, 0.75rem)',
       },

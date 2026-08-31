@@ -44,16 +44,38 @@ function TerminalIcon({ className }: { className?: string }) {
   );
 }
 
+/** The eDEX skin: a chip, for the one theme that is a different look rather
+ * than a different light level. */
+function ChipIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={className}
+    >
+      <rect x="5.5" y="5.5" width="9" height="9" rx="1.5" />
+      <rect x="8.25" y="8.25" width="3.5" height="3.5" rx="0.5" />
+      <path
+        d="M8 5.5V3M12 5.5V3M8 17v-2.5M12 17v-2.5M5.5 8H3M5.5 12H3M17 8h-2.5M17 12h-2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 const icons: Record<Theme, (props: { className?: string }) => React.ReactElement> = {
   ice: IceIcon,
   light: SunIcon,
   dark: TerminalIcon,
+  edex: ChipIcon,
 };
 
 /**
- * Three backgrounds, one row of icons. Deliberately not a dropdown: the whole
- * point of a theme switch is that you try all three in two seconds and keep
- * the one your eyes prefer, which a menu makes into four clicks.
+ * Four looks, one row of icons. Deliberately not a dropdown: the whole point
+ * of a theme switch is that you try them all in two seconds and keep the one
+ * your eyes prefer, which a menu makes into four clicks.
  */
 export function ThemeSwitcher({ className = '' }: { className?: string }) {
   const { theme, setTheme } = useTheme();
