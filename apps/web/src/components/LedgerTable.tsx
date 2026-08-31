@@ -15,11 +15,11 @@ import { ReverseTransactionModal } from './ReverseTransactionModal';
 import { PeriodFilter, type PeriodFilterState } from './PeriodFilter';
 import { exportLedgerToExcel } from '@/lib/export/ledgerExcel';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
-import { useOrgRole } from '@/lib/auth/OrgRoleProvider';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge, ToggleChip } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
+import { draftStorageKey } from '@/lib/prefs/useLedgerMode';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@mubosher/api-client';
 
@@ -160,9 +160,6 @@ function emptyDraft() {
 }
 
 type Draft = ReturnType<typeof emptyDraft>;
-
-/** Half-typed rows live here, per client, until they are saved or cleared. */
-const draftStorageKey = (counterpartyId: string) => `mubosher.ledgerDraft.${counterpartyId}`;
 
 /**
  * The date, the currency and the fund source are always populated, so they say
@@ -554,6 +551,7 @@ export function LedgerTable({
   orgName = null,
   baseCurrency = 'UZS',
   summaryPrintable = true,
+  canEdit = false,
 }: {
   supabase: SupabaseClient<Database>;
   orgId: string;
@@ -577,6 +575,13 @@ export function LedgerTable({
   baseCurrency?: string;
   /** False when the page is printing a document that states the balances itself. */
   summaryPrintable?: boolean;
+  /**
+   * Whether this visit is here to change anything — the page's mode, narrowed
+   * by the viewer's role. False hides the entry row and the per-line controls,
+   * which is what a manager always sees and what an owner sees until they say
+   * otherwise.
+   */
+  canEdit?: boolean;
 }) {
   const [currencies, setCurrencies] = useState<string[]>(['UZS']);
   const [search, setSearch] = useState('');
@@ -584,12 +589,11 @@ export function LedgerTable({
   const [editing, setEditing] = useState<LedgerTransaction | null>(null);
   const [reversing, setReversing] = useState<LedgerTransaction | null>(null);
   const { locale, t } = useLocale();
-  const { canWrite } = useOrgRole();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
   const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   useEffect(() => {
-    if (!canWrite) return;
+    if (!canEdit) return;
     supabase
       .from('currencies')
       .select('code')
@@ -597,11 +601,11 @@ export function LedgerTable({
       .then(({ data }) => {
         if (data?.length) setCurrencies(data.map((c) => c.code));
       });
-  }, [supabase, canWrite]);
+  }, [supabase, canEdit]);
 
-  // Managers get the ledger without the entry row and without the edit
-  // column, so the table is one column narrower for them.
-  const columnCount = canWrite ? 10 : 9;
+  // Reading mode drops the edit column, so the table is one column narrower —
+  // the same shape a manager sees, and the same shape that prints.
+  const columnCount = canEdit ? 10 : 9;
 
   // Newest first, matching how the paper ledger reads. (The Excel statement
   // runs the other way, because a balance column only makes sense read
@@ -715,7 +719,7 @@ export function LedgerTable({
             {t('overview.onlyOverdue')}
           </ToggleChip>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
             variant="secondary"
@@ -825,7 +829,7 @@ export function LedgerTable({
             <col className="w-[12%]" />
             <col className="w-[9%]" />
             <col className="w-[10%]" />
-            {canWrite && <col className="w-[8%] print:hidden" />}
+            {canEdit && <col className="w-[8%] print:hidden" />}
           </colgroup>
           <thead className="sticky top-0 z-10 bg-white">
             <tr className="border-b border-slate-300 text-left">
@@ -840,11 +844,11 @@ export function LedgerTable({
               <th className={`${th} text-right`} title={t('ledger.balanceHint')}>
                 {t('ledger.balance')}
               </th>
-              {canWrite && <th className="print:hidden" />}
+              {canEdit && <th className="print:hidden" />}
             </tr>
           </thead>
           <tbody>
-            {canWrite && (
+            {canEdit && (
               <InlineEntryRow
                 supabase={supabase}
                 orgId={orgId}
@@ -931,7 +935,7 @@ export function LedgerTable({
                       );
                     })()}
                   </td>
-                  {canWrite && (
+                  {canEdit && (
                     <td className="px-2 py-2.5 text-right print:hidden">
                       {/* A reversed entry and its mirror are both history now —
                           neither can be edited or reversed again. */}
@@ -1007,14 +1011,14 @@ export function LedgerTable({
                   {statement.closingBalance < 0 ? '−' : ''}
                   {currencyFormatter.format(Math.abs(statement.closingBalance))}
                 </td>
-                {canWrite && <td className="print:hidden" />}
+                {canEdit && <td className="print:hidden" />}
               </tr>
             </tfoot>
           )}
         </table>
       </div>
 
-      {reversing && canWrite && (
+      {reversing && canEdit && (
         <ReverseTransactionModal
           supabase={supabase}
           orgId={orgId}
@@ -1024,7 +1028,7 @@ export function LedgerTable({
         />
       )}
 
-      {editing && canWrite && (
+      {editing && canEdit && (
         <EditTransactionModal
           supabase={supabase}
           orgId={orgId}

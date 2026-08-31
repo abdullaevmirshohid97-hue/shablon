@@ -162,7 +162,12 @@
     "largeAmountConfirm": "{amount} — bu summa odatdagidan ancha katta. Saqlaymizmi?",
     "searchPlaceholder": "Izoh yoki hujjat №",
     "filteredEmpty": "Filtrga mos yozuv topilmadi",
-    "copyLast": "Oxirgi yozuvdan nusxa"
+    "copyLast": "Oxirgi yozuvdan nusxa",
+    "modeView": "Ko'rish",
+    "modeEdit": "Tahrirlash",
+    "draftStashed": "Saqlanmagan yozuv bor",
+    "modeViewHint": "O'zgartirish uchun «Tahrirlash»ga o'ting",
+    "modeEditHint": "Yozuv qo'shish va tahrirlash yoqilgan"
   },
   "transaction": {
     "counterparty": "Kontragent",

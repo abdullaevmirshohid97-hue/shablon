@@ -2,8 +2,6 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getServerTranslator } from '@/lib/i18n/server';
-import { CounterpartySettings } from '@/components/CounterpartySettings';
-import { ArchiveCounterparty } from '@/components/ArchiveCounterparty';
 import { CounterpartyLedgerClient } from './ledger-client';
 
 export default async function CounterpartyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -70,42 +68,26 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
       <h1 className="no-print mb-6 text-fin-2xl font-semibold tracking-tight text-slate-900">
         {counterparty.name}
       </h1>
-      <div className="mb-4">
-        <CounterpartySettings
-          orgId={counterparty.org_id}
-          counterpartyId={counterparty.id}
-          canWrite={canWrite}
-          initial={{
-            name: counterparty.name,
-            phone: counterparty.phone,
-            currency: counterparty.currency,
-            managerId: counterparty.manager_id,
-            notes: counterparty.notes,
-            categories: counterparty.categories ?? [],
-          }}
-        />
-      </div>
-
+      {/* The settings card moved inside the ledger client: one view/edit
+          switch governs the whole page, and it cannot govern a sibling the
+          server rendered beside it. */}
       <CounterpartyLedgerClient
         orgId={counterparty.org_id}
         orgName={orgName}
         counterpartyId={counterparty.id}
         counterpartyName={counterparty.name}
         baseCurrency={baseCurrency}
+        canWrite={canWrite}
+        archivedAt={counterparty.archived_at}
+        details={{
+          name: counterparty.name,
+          phone: counterparty.phone,
+          currency: counterparty.currency,
+          managerId: counterparty.manager_id,
+          notes: counterparty.notes,
+          categories: counterparty.categories ?? [],
+        }}
       />
-
-      {/* Below the ledger, deliberately: removing a client is the last thing
-          on the page and never the first thing the eye lands on. */}
-      {canWrite && (
-        <div className="mt-6">
-          <ArchiveCounterparty
-            orgId={counterparty.org_id}
-            counterpartyId={counterparty.id}
-            counterpartyName={counterparty.name}
-            archivedAt={counterparty.archived_at}
-          />
-        </div>
-      )}
     </div>
   );
 }

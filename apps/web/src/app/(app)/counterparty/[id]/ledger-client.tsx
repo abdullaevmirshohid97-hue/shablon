@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTransactions } from '@mubosher/api-client';
 import { buildStatement } from '@mubosher/shared';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { ArchiveCounterparty } from '@/components/ArchiveCounterparty';
+import { CounterpartySettings } from '@/components/CounterpartySettings';
 import { LedgerTable } from '@/components/LedgerTable';
 import { LedgerAnalytics } from '@/components/LedgerAnalytics';
 import { PrintHeader, PrintSignatures } from '@/components/PrintHeader';
@@ -11,7 +13,9 @@ import { PrintMenu, type PrintMode } from '@/components/PrintMenu';
 import { ReconciliationAct } from '@/components/ReconciliationAct';
 import { ALL_TIME_RANGE, formatPeriodLabel, usePeriodFilter } from '@/components/PeriodFilter';
 import { analyticsFromTransactions } from '@/lib/analyticsData';
+import { hasStashedDraft, useLedgerMode } from '@/lib/prefs/useLedgerMode';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
+import { Segmented } from '@/components/ui/Segmented';
 
 export function CounterpartyLedgerClient({
   orgId,
@@ -19,12 +23,28 @@ export function CounterpartyLedgerClient({
   counterpartyId,
   counterpartyName,
   baseCurrency = 'UZS',
+  canWrite,
+  archivedAt = null,
+  details,
 }: {
   orgId: string;
   orgName: string | null;
   counterpartyId: string;
   counterpartyName: string;
   baseCurrency?: string;
+  /** Owner or admin. A manager reads the page and has no second mode at all. */
+  canWrite: boolean;
+  /** Set means the client has been put away already (0036). */
+  archivedAt?: string | null;
+  /** The client's own record, edited in the card above the ledger. */
+  details: {
+    name: string;
+    phone?: string | null;
+    currency?: string | null;
+    managerId?: string | null;
+    notes?: string | null;
+    categories?: string[];
+  };
 }) {
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const { data: transactions, isLoading, error } = useTransactions(supabase, orgId, counterpartyId);
@@ -33,6 +53,20 @@ export function CounterpartyLedgerClient({
   const [printWithAnalytics, setPrintWithAnalytics] = useState(false);
   const [printMode, setPrintMode] = useState<PrintMode>('statement');
   const period = usePeriodFilter('all');
+
+  // One switch for the whole page: the settings form above and the ledger
+  // below answer to it together, because "I am only reading" is a statement
+  // about the visit, not about one card on it.
+  const { mode, setMode } = useLedgerMode();
+  const canEdit = canWrite && mode === 'edit';
+
+  // A half-typed row survives being switched away from — it lives in storage,
+  // not in the entry row — but vanishing without a word is how it gets
+  // forgotten.
+  const [stashedDraft, setStashedDraft] = useState(false);
+  useEffect(() => {
+    setStashedDraft(canWrite && !canEdit && hasStashedDraft(counterpartyId));
+  }, [canWrite, canEdit, counterpartyId]);
 
   // Computed once here and handed down. The table, the reconciliation act and
   // the Excel export all render this same object, which is what stops any two
@@ -65,7 +99,49 @@ export function CounterpartyLedgerClient({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
+      {/* Above everything it governs, and the first thing on the page after
+          the client's name — switching stance should not mean hunting for the
+          switch. */}
+      {canWrite && (
+        <div className="no-print flex flex-wrap items-center gap-3">
+          <Segmented
+            value={mode}
+            onChange={setMode}
+            options={[
+              { value: 'view', label: t('ledger.modeView') },
+              {
+                value: 'edit',
+                label: t('ledger.modeEdit'),
+                // Not a white chip like every other segment: this one says the
+                // page can be changed now, and that should be the most
+                // definite thing on it.
+                activeClassName: 'bg-slate-900 text-white shadow-card',
+              },
+            ]}
+          />
+          <span className="text-fin-sm text-slate-500">
+            {canEdit ? t('ledger.modeEditHint') : t('ledger.modeViewHint')}
+          </span>
+          {stashedDraft && (
+            <button
+              type="button"
+              onClick={() => setMode('edit')}
+              className="text-fin-sm font-medium text-amber-700 underline-offset-2 hover:underline"
+            >
+              {t('ledger.draftStashed')}
+            </button>
+          )}
+        </div>
+      )}
+
+      <CounterpartySettings
+        orgId={orgId}
+        counterpartyId={counterpartyId}
+        canWrite={canEdit}
+        initial={details}
+      />
+
       {/* Two documents, one page. The act carries its own heading, parties and
           period, so the statement header stands down when it is the one being
           printed. */}
@@ -100,6 +176,7 @@ export function CounterpartyLedgerClient({
         period={period}
         orgName={orgName}
         baseCurrency={baseCurrency}
+        canEdit={canEdit}
         summaryPrintable={printMode === 'statement'}
         printMenu={
           <PrintMenu
@@ -111,6 +188,22 @@ export function CounterpartyLedgerClient({
       />
 
       <PrintSignatures counterpartyName={counterpartyName} />
+
+      {/* Below the ledger, deliberately: putting a client away is the last
+          thing on the page and never the first thing the eye lands on — and it
+          is not offered at all to a visit that came to read. A client already
+          archived is the exception: that card is how they are brought back,
+          and hiding it would strand them behind a mode switch. */}
+      {canWrite && (canEdit || archivedAt) && (
+        <div className="mt-2">
+          <ArchiveCounterparty
+            orgId={orgId}
+            counterpartyId={counterpartyId}
+            counterpartyName={counterpartyName}
+            archivedAt={archivedAt}
+          />
+        </div>
+      )}
     </div>
   );
 }
