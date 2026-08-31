@@ -850,5 +850,23 @@
     "conclusionOwesUs": "{date} holatiga {client} tomonidan {org} foydasiga {amount} miqdorida qarzdorlik mavjud.",
     "conclusionWeOwe": "{date} holatiga {org} tomonidan {client} foydasiga {amount} miqdorida qarzdorlik mavjud.",
     "disagreement": "Kelishmovchilik bo'lgan taqdirda, mijoz o'z ma'lumotlarini jadvalning o'ng ustuniga yozadi va farqni tasdiqlovchi hujjatlarni ilova qiladi. Dalolatnoma ikki nusxada tuzildi, har ikkala tomon uchun bir nusxadan."
+  },
+  "org": {
+    "selectTitle": "Tashkilotni tanlang",
+    "selectHint": "Qaysi tashkilot bilan ishlaysiz? Keyingi qadamda menejer va PIN so‘raladi.",
+    "emptyHint": "Hozircha tashkilot yo'q — birinchisini yarating.",
+    "current": "Joriy",
+    "createCta": "Yangi tashkilot",
+    "createTitle": "Yangi tashkilot",
+    "createHint": "Siz uning egasi bo‘lasiz.",
+    "nameLabel": "Tashkilot nomi",
+    "namePlaceholder": "masalan: Mery Collection",
+    "slugTaken": "Bu nom band — boshqacha nomlang",
+    "switch": "Tashkilotni almashtirish"
+  },
+  "role": {
+    "owner": "Egasi",
+    "admin": "Administrator",
+    "staff": "Xodim"
   }
 }

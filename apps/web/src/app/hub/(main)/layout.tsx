@@ -1,6 +1,4 @@
-import { redirect } from 'next/navigation';
-import { one } from '@mubosher/shared';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getOrgContext } from '@/lib/auth/activeOrg';
 import { HubShell } from '../hub-shell';
 
 /**
@@ -9,27 +7,17 @@ import { HubShell } from '../hub-shell';
  * each door asks for itself.
  */
 export default async function HubMainLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Deliberately not requireOrgChoice(): the module picker has to survive
+  // having no membership yet, and choosing a business before choosing a door
+  // is a question with no answer here. Each module asks for itself.
+  const { active, userEmail } = await getOrgContext();
 
-  if (!user) redirect('/login');
+  const isOrgAdmin = active?.role === 'owner' || active?.role === 'admin';
 
-  // Not requireModuleAccess(): that redirects a member-less user to /hub, which
-  // is this page — the module picker has to survive having no membership yet
-  // and simply show no organisation in the footer.
-  const { data: memberships } = await supabase
-    .from('memberships')
-    .select('role, organizations(name)')
-    .eq('user_id', user.id);
-
-  const orgName = one(memberships?.[0]?.organizations)?.name ?? null;
-  const role = memberships?.[0]?.role ?? null;
-  const isOrgAdmin = role === 'owner' || role === 'admin';
-
+  // Switching, and creating, both live in hub settings — an organization is
+  // not part of any one module, so the sidebar does not grow a control for it.
   return (
-    <HubShell orgName={orgName} userEmail={user.email ?? ''} isOrgAdmin={isOrgAdmin}>
+    <HubShell orgName={active?.name ?? null} userEmail={userEmail} isOrgAdmin={isOrgAdmin}>
       {children}
     </HubShell>
   );

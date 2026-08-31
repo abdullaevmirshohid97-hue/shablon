@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getOrgContext } from '@/lib/auth/activeOrg';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { getOverdueDebts } from '@/lib/counterpartyDebt';
 import { AddCounterpartyForm } from '../dashboard/add-counterparty-form';
@@ -15,18 +15,7 @@ import { CounterpartyList } from '../dashboard/counterparty-list';
 export default async function ClientsPage() {
   const supabase = await createSupabaseServerClient();
   const { t } = await getServerTranslator();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect('/login');
-
-  const { data: memberships } = await supabase
-    .from('memberships')
-    .select('org_id, role')
-    .eq('user_id', user.id);
-
-  const org = memberships?.[0];
+  const { active: org } = await getOrgContext();
   const canWrite = org?.role === 'owner' || org?.role === 'admin';
 
   if (!org) {
@@ -42,12 +31,12 @@ export default async function ClientsPage() {
     supabase
       .from('counterparties')
       .select('id, name, phone, categories')
-      .eq('org_id', org.org_id)
+      .eq('org_id', org.orgId)
       // Archived clients are put away, not deleted (0036) — the archive in
       // Finance settings is the one place they are meant to appear.
       .is('archived_at', null)
       .order('name'),
-    getOverdueDebts(supabase, org.org_id),
+    getOverdueDebts(supabase, org.orgId),
   ]);
 
   return (
@@ -83,7 +72,7 @@ export default async function ClientsPage() {
           form to be filled. */}
       {canWrite && (
         <div className="mb-6 max-w-2xl">
-          <AddCounterpartyForm orgId={org.org_id} collapsible />
+          <AddCounterpartyForm orgId={org.orgId} collapsible />
         </div>
       )}
 

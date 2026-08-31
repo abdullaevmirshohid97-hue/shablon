@@ -74,10 +74,12 @@ export function Sidebar({
   orgName,
   userEmail,
   moduleCategories,
+  canSwitchOrg = false,
 }: {
   orgName: string | null;
   userEmail: string;
   moduleCategories: string[];
+  canSwitchOrg?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -111,7 +113,33 @@ export function Sidebar({
           Sozlamalar because it is a "make this readable right now" control,
           not an org policy — it belongs one click from the ledger. */}
       <FinanceTextSizeControl className="mb-3 border-b border-slate-200 pb-3" />
-      {orgName && <p className="truncate text-xs font-semibold text-slate-700">{orgName}</p>}
+      {/* The organization in force, and — when there is more than one — the way
+          to another. It sits with the account details rather than in the nav,
+          because which business you are in is the same kind of fact as which
+          account you are signed into. */}
+      {orgName &&
+        (canSwitchOrg ? (
+          <Link
+            href="/select-org?next=/dashboard"
+            title={t('org.switch')}
+            className="flex w-full items-center gap-1 truncate text-xs font-semibold text-slate-700 hover:text-brand-700"
+          >
+            <span className="truncate">{orgName}</span>
+            <svg
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="h-3 w-3 shrink-0 text-slate-400"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.22 8.22a.75.75 0 011.06 0L10 11.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 9.28a.75.75 0 010-1.06z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </Link>
+        ) : (
+          <p className="truncate text-xs font-semibold text-slate-700">{orgName}</p>
+        ))}
       <p className="truncate text-xs text-slate-500">{userEmail}</p>
       {!canWrite && (
         <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-500">

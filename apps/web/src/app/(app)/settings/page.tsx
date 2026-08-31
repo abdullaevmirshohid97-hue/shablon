@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
-import { one } from '@mubosher/shared';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getOrgContext } from '@/lib/auth/activeOrg';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { OrganizationSettings } from './organization-settings';
 import { CounterpartiesSettings } from './counterparties-settings';
@@ -10,20 +9,8 @@ import { ExchangeRates } from './exchange-rates';
 import { AuditLog } from './audit-log';
 
 export default async function SettingsPage() {
-  const supabase = await createSupabaseServerClient();
   const { t } = await getServerTranslator();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect('/login');
-
-  const { data: memberships } = await supabase
-    .from('memberships')
-    .select('org_id, role, organizations(name, base_currency)')
-    .eq('user_id', user.id);
-
-  const org = memberships?.[0];
+  const { active: org } = await getOrgContext();
 
   if (!org) {
     return (
@@ -40,21 +27,18 @@ export default async function SettingsPage() {
   // link, this closes the direct-URL route too.
   if (org.role !== 'owner' && org.role !== 'admin') redirect('/dashboard');
 
-  const organization = one(org.organizations);
-  const baseCurrency = organization?.base_currency ?? 'UZS';
-
   return (
     <div className="max-w-4xl">
       <h1 className="mb-6 text-fin-2xl font-semibold tracking-tight text-slate-900">
         {t('settings.title')}
       </h1>
       <div className="flex flex-col gap-6">
-        <OrganizationSettings orgId={org.org_id} initialName={organization?.name ?? ''} />
-        <CounterpartiesSettings orgId={org.org_id} />
-        <ModulesSettings orgId={org.org_id} />
-        <AccountingPeriods orgId={org.org_id} />
-        <ExchangeRates orgId={org.org_id} baseCurrency={baseCurrency} />
-        <AuditLog orgId={org.org_id} />
+        <OrganizationSettings orgId={org.orgId} initialName={org.name} />
+        <CounterpartiesSettings orgId={org.orgId} />
+        <ModulesSettings orgId={org.orgId} />
+        <AccountingPeriods orgId={org.orgId} />
+        <ExchangeRates orgId={org.orgId} baseCurrency={org.baseCurrency} />
+        <AuditLog orgId={org.orgId} />
       </div>
     </div>
   );

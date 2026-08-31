@@ -1,25 +1,13 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { one } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getOrgContext } from '@/lib/auth/activeOrg';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { OverviewAnalytics } from '@/components/OverviewAnalytics';
 
 export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient();
   const { t } = await getServerTranslator();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect('/login');
-
-  const { data: memberships } = await supabase
-    .from('memberships')
-    .select('org_id, role, organizations(name, slug, base_currency)')
-    .eq('user_id', user.id);
-
-  const org = memberships?.[0];
+  const { active: org } = await getOrgContext();
 
   if (!org) {
     return (
@@ -33,7 +21,7 @@ export default async function DashboardPage() {
   const { count: counterpartyCount } = await supabase
     .from('counterparties')
     .select('id', { count: 'exact', head: true })
-    .eq('org_id', org.org_id)
+    .eq('org_id', org.orgId)
     .is('archived_at', null);
 
   // Brand-new org: no clients yet, so analytics would be an empty wall.
@@ -66,11 +54,7 @@ export default async function DashboardPage() {
         {t('nav.clients')}
       </h1>
 
-      <OverviewAnalytics
-        orgId={org.org_id}
-        orgName={one(org.organizations)?.name ?? null}
-        baseCurrency={one(org.organizations)?.base_currency ?? 'UZS'}
-      />
+      <OverviewAnalytics orgId={org.orgId} orgName={org.name} baseCurrency={org.baseCurrency} />
     </div>
   );
 }

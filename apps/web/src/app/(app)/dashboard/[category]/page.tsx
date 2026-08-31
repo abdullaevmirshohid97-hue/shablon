@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation';
-import { one } from '@mubosher/shared';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getOrgContext } from '@/lib/auth/activeOrg';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { getOverdueDebts } from '@/lib/counterpartyDebt';
 import { AddCounterpartyForm } from '../add-counterparty-form';
@@ -17,18 +16,7 @@ export default async function CategoryModulePage({
 
   const supabase = await createSupabaseServerClient();
   const { t } = await getServerTranslator();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect('/login');
-
-  const { data: memberships } = await supabase
-    .from('memberships')
-    .select('org_id, role, organizations(name, base_currency)')
-    .eq('user_id', user.id);
-
-  const org = memberships?.[0];
+  const { active: org } = await getOrgContext();
   const canWrite = org?.role === 'owner' || org?.role === 'admin';
 
   if (!org) {
@@ -44,13 +32,13 @@ export default async function CategoryModulePage({
     supabase
       .from('counterparties')
       .select('id, name, phone, categories')
-      .eq('org_id', org.org_id)
+      .eq('org_id', org.orgId)
       .contains('categories', [category])
       .is('archived_at', null)
       .order('name'),
     // Scoped to the module, like the list beside it: a badge counting debts
     // from clients this page does not show is a figure with no home.
-    getOverdueDebts(supabase, org.org_id, category),
+    getOverdueDebts(supabase, org.orgId, category),
   ]);
 
   return (
@@ -65,9 +53,9 @@ export default async function CategoryModulePage({
       </div>
 
       <OverviewAnalytics
-        orgId={org.org_id}
-        orgName={one(org.organizations)?.name ?? null}
-        baseCurrency={one(org.organizations)?.base_currency ?? 'UZS'}
+        orgId={org.orgId}
+        orgName={org.name}
+        baseCurrency={org.baseCurrency}
         categoryFilter={category}
       />
 
@@ -75,7 +63,7 @@ export default async function CategoryModulePage({
           RLS enforces it; this just doesn't offer a form that would fail. */}
       {canWrite && (
         <div className="mb-6 max-w-2xl">
-          <AddCounterpartyForm orgId={org.org_id} presetCategory={category} />
+          <AddCounterpartyForm orgId={org.orgId} presetCategory={category} />
         </div>
       )}
 
