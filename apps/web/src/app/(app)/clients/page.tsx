@@ -30,7 +30,7 @@ export default async function ClientsPage() {
   const [{ data: counterparties }, debtByCounterparty] = await Promise.all([
     supabase
       .from('counterparties')
-      .select('id, name, phone, categories')
+      .select('id, name, phone, categories, currency')
       .eq('org_id', org.orgId)
       // Archived clients are put away, not deleted (0036) — the archive in
       // Finance settings is the one place they are meant to appear.
@@ -80,6 +80,7 @@ export default async function ClientsPage() {
         counterparties={counterparties ?? []}
         debtByCounterparty={debtByCounterparty}
         showCategoryFilter={false}
+        baseCurrency={org.baseCurrency}
       />
     </div>
   );

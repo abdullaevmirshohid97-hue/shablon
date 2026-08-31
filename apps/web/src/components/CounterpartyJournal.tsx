@@ -51,7 +51,7 @@ export function CounterpartyJournal({
   const [roster, setRoster] = useState<
     { user_id: string; full_name: string | null; email: string | null }[]
   >([]);
-  const [currencies, setCurrencies] = useState<string[]>([]);
+  const [currencyOptions, setCurrencyOptions] = useState<string[]>([]);
 
   // The list comes from Postgres, so every keystroke would be a round trip.
   useEffect(() => {
@@ -65,14 +65,18 @@ export function CounterpartyJournal({
     void supabase
       .rpc('list_org_roster', { target_org_id: orgId })
       .then(({ data }) => setRoster(data ?? []));
-    void supabase
-      .from('currencies')
-      .select('code')
-      .order('code')
-      .then(({ data }) => setCurrencies((data ?? []).map((c) => c.code)));
   }, [supabase, orgId]);
 
   const { data: rows, isLoading } = useCounterpartyJournal(supabase, orgId, filters);
+
+  // The buttons are built from the currencies this book actually keeps
+  // accounts in — but only from an unfiltered read, because once one is
+  // picked the rows can only tell us about that one.
+  useEffect(() => {
+    if (filters.currency || !rows) return;
+    const found = [...new Set(rows.map((r) => r.currency))].sort();
+    setCurrencyOptions((prev) => (prev.join('|') === found.join('|') ? prev : found));
+  }, [rows, filters.currency]);
 
   const totals = useMemo(
     () =>
@@ -140,18 +144,19 @@ export function CounterpartyJournal({
             </option>
           ))}
         </Select>
-        <Select
-          value={filters.currency ?? ''}
-          onChange={(e) => setFilter('currency', e.target.value)}
-          className="w-32"
-        >
-          <option value="">{t('sklad.price.currencyLabel')}</option>
-          {currencies.map((code) => (
-            <option key={code} value={code}>
+        {/* Buttons rather than a dropdown: with two or three currencies the
+            whole choice fits on the row, and a menu makes a one-click filter
+            into three. */}
+        {currencyOptions.length > 1 &&
+          currencyOptions.map((code) => (
+            <ToggleChip
+              key={code}
+              active={filters.currency === code}
+              onClick={() => setFilter('currency', filters.currency === code ? '' : code)}
+            >
               {code}
-            </option>
+            </ToggleChip>
           ))}
-        </Select>
         <ToggleChip
           active={!!filters.onlyOverdue}
           onClick={() => setFilter('onlyOverdue', !filters.onlyOverdue)}

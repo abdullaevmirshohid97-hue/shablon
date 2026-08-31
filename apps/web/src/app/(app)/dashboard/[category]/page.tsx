@@ -31,7 +31,7 @@ export default async function CategoryModulePage({
   const [{ data: counterparties }, debtByCounterparty] = await Promise.all([
     supabase
       .from('counterparties')
-      .select('id, name, phone, categories')
+      .select('id, name, phone, categories, currency')
       .eq('org_id', org.orgId)
       .contains('categories', [category])
       .is('archived_at', null)
@@ -70,6 +70,7 @@ export default async function CategoryModulePage({
       <CounterpartyList
         counterparties={counterparties ?? []}
         debtByCounterparty={debtByCounterparty}
+        baseCurrency={org.baseCurrency}
       />
     </div>
   );

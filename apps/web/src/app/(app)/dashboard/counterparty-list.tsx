@@ -12,6 +12,8 @@ interface CounterpartyRow {
   name: string;
   phone: string | null;
   categories: string[];
+  /** The client's account currency. Null means they follow the org's base. */
+  currency?: string | null;
 }
 
 const currencyFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2 });
@@ -53,14 +55,31 @@ export function CounterpartyList({
    * people came to read.
    */
   showCategoryFilter = true,
+  baseCurrency = 'UZS',
 }: {
   counterparties: CounterpartyRow[];
   debtByCounterparty?: Record<string, CounterpartyDebt>;
   showCategoryFilter?: boolean;
+  /** What a client with no currency of their own is kept in. */
+  baseCurrency?: string;
 }) {
   const { t, locale } = useLocale();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeCurrency, setActiveCurrency] = useState<string | null>(null);
+
+  const currencyOf = (c: CounterpartyRow) => c.currency || baseCurrency;
+
+  // Built from the currencies actually in the book, with a count on each: a
+  // row of buttons for currencies nobody trades in is a row of dead ends.
+  const currencyCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const c of counterparties) {
+      const code = c.currency || baseCurrency;
+      counts.set(code, (counts.get(code) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [counterparties, baseCurrency]);
 
   const allCategories = useMemo(() => {
     const set = new Set<string>();
@@ -75,15 +94,36 @@ export function CounterpartyList({
     [counterparties],
   );
 
-  const filtered =
-    activeCategory === UNCATEGORIZED
-      ? counterparties.filter((c) => !c.categories?.length)
-      : activeCategory
-        ? counterparties.filter((c) => c.categories?.includes(activeCategory))
-        : counterparties;
+  const filtered = counterparties.filter((c) => {
+    if (activeCurrency && currencyOf(c) !== activeCurrency) return false;
+    if (activeCategory === UNCATEGORIZED) return !c.categories?.length;
+    if (activeCategory) return c.categories?.includes(activeCategory) ?? false;
+    return true;
+  });
 
   return (
     <div>
+      {/* Only when there is more than one: a single-currency book does not need
+          to be told which currency it is in on every visit. */}
+      {currencyCounts.length > 1 && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          <ToggleChip active={activeCurrency === null} onClick={() => setActiveCurrency(null)}>
+            {t('categories.all')}
+            <span className="ml-1.5 tabular-nums opacity-60">{counterparties.length}</span>
+          </ToggleChip>
+          {currencyCounts.map(([code, count]) => (
+            <ToggleChip
+              key={code}
+              active={activeCurrency === code}
+              onClick={() => setActiveCurrency(activeCurrency === code ? null : code)}
+            >
+              {code}
+              <span className="ml-1.5 tabular-nums opacity-60">{count}</span>
+            </ToggleChip>
+          ))}
+        </div>
+      )}
+
       {showCategoryFilter && allCategories.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-1.5">
           <ToggleChip active={activeCategory === null} onClick={() => setActiveCategory(null)}>
