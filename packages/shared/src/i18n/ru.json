@@ -225,7 +225,9 @@
     "onlyDebtors": "Только должники",
     "journalTitle": "Журнал клиентов",
     "journalSearch": "Клиент, телефон или менеджер",
-    "journalEmpty": "Клиенты не найдены"
+    "journalEmpty": "Клиенты не найдены",
+    "amountsIn": "Все суммы в {code}",
+    "accountCurrency": "Валюта счёта"
   },
   "hub": {
     "finance": "Finance",

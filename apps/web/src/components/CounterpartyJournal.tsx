@@ -33,7 +33,14 @@ const agingColumns: { key: string; pick: (row: CounterpartyJournalRow) => number
  * passed, less everything paid since — so a payment lowers it and a new sale
  * raises only the total.
  */
-export function CounterpartyJournal({ orgId }: { orgId: string }) {
+export function CounterpartyJournal({
+  orgId,
+  baseCurrency = 'UZS',
+}: {
+  orgId: string;
+  /** Every money column here is summed from the base-currency amounts. */
+  baseCurrency?: string;
+}) {
   const { t, locale } = useLocale();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
   const [supabase] = useState(() => createSupabaseBrowserClient());
@@ -100,9 +107,18 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-fin-lg font-semibold text-slate-900">{t('overview.journalTitle')}</h2>
         <span className="text-fin-sm text-slate-500 tabular-nums">
-          {(rows ?? []).length} · {money.format(totals.total)}
+          {(rows ?? []).length} · {money.format(totals.total)}{' '}
+          <span className="tabular-nums">{baseCurrency}</span>
         </span>
       </div>
+
+      {/* Said once, here, rather than stamped against every figure — and it
+          used to be stamped *wrongly*: the row carried the client's own account
+          currency beside a total summed from the base-currency amounts, so a
+          dollar client's balance read as dollars while the number was sums. */}
+      <p className="mb-3 text-fin-sm text-slate-500">
+        {t('overview.amountsIn').replace('{code}', baseCurrency)}
+      </p>
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Input
@@ -196,9 +212,20 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
                   >
                     {row.name}
                   </Link>
-                  {row.phone && (
-                    <span className="block text-fin-xs text-slate-400">{row.phone}</span>
-                  )}
+                  <span className="block text-fin-xs text-slate-400">
+                    {row.phone}
+                    {/* Only when it differs from the reporting currency. On a
+                        single-currency book this would be the same three
+                        letters on every row. */}
+                    {row.currency !== baseCurrency && (
+                      <span
+                        className="ml-1 font-medium text-slate-500"
+                        title={t('overview.accountCurrency')}
+                      >
+                        {row.currency}
+                      </span>
+                    )}
+                  </span>
                 </td>
                 <td className="px-3 py-2 text-slate-600">{row.managerName ?? '—'}</td>
                 {showAging ? (
@@ -229,7 +256,6 @@ export function CounterpartyJournal({ orgId }: { orgId: string }) {
                 )}
                 <td className="px-3 py-2 text-right tabular-nums text-slate-900">
                   {money.format(row.totalDebt)}
-                  <span className="ml-1 text-fin-xs text-slate-400">{row.currency}</span>
                 </td>
                 <td className="px-3 py-2 tabular-nums text-slate-500">
                   {showAging

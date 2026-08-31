@@ -160,7 +160,7 @@ export function OverviewAnalytics({
         </div>
         <div className="flex flex-col gap-4">
           <AgingLadder rows={scopedJournal} />
-          <TopDebtors rows={scopedJournal} />
+          <TopDebtors rows={scopedJournal} baseCurrency={baseCurrency} />
         </div>
       </div>
 
@@ -168,7 +168,7 @@ export function OverviewAnalytics({
           the question asked here is which client owes what, and a per-module
           turnover row cannot answer it. The module table stays below it, and
           only when there is more than one module to compare. */}
-      {!categoryFilter && <CounterpartyJournal orgId={orgId} />}
+      {!categoryFilter && <CounterpartyJournal orgId={orgId} baseCurrency={baseCurrency} />}
 
       {!categoryFilter && data.modules.length > 1 && (
         <ModuleBreakdownTable modules={data.modules} />

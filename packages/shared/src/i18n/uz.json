@@ -225,7 +225,9 @@
     "onlyDebtors": "Faqat qarzdorlar",
     "journalTitle": "Mijozlar jurnali",
     "journalSearch": "Mijoz, telefon yoki menejer",
-    "journalEmpty": "Mijoz topilmadi"
+    "journalEmpty": "Mijoz topilmadi",
+    "amountsIn": "Barcha summalar {code} da",
+    "accountCurrency": "Hisob valyutasi"
   },
   "hub": {
     "finance": "Finance",

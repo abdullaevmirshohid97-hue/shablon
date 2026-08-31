@@ -48,7 +48,9 @@ export default async function CategoryModulePage({
       .contains('categories', [category])
       .is('archived_at', null)
       .order('name'),
-    getOverdueDebts(supabase, org.org_id),
+    // Scoped to the module, like the list beside it: a badge counting debts
+    // from clients this page does not show is a figure with no home.
+    getOverdueDebts(supabase, org.org_id, category),
   ]);
 
   return (

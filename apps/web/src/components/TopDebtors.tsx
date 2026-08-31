@@ -20,7 +20,14 @@ const money = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
  * The list scrolls rather than truncating: "eng ko'p" is a sort order, not a
  * reason to hide the seventh debtor.
  */
-export function TopDebtors({ rows }: { rows: CounterpartyJournalRow[] }) {
+export function TopDebtors({
+  rows,
+  baseCurrency = 'UZS',
+}: {
+  rows: CounterpartyJournalRow[];
+  /** Both money columns are summed from the base-currency amounts. */
+  baseCurrency?: string;
+}) {
   const { t, locale } = useLocale();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
 
@@ -34,7 +41,15 @@ export function TopDebtors({ rows }: { rows: CounterpartyJournalRow[] }) {
 
   return (
     <Card className="flex flex-col p-4">
-      <h2 className="mb-3 text-fin-lg font-semibold text-slate-900">{t('overview.topDebtors')}</h2>
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-fin-lg font-semibold text-slate-900">{t('overview.topDebtors')}</h2>
+        {/* Said once, rather than stamped against every figure — and it used to
+            be stamped wrongly: the client's own account currency sat beside a
+            total summed from the base-currency amounts. */}
+        <span className="text-fin-sm text-slate-500">
+          {t('overview.amountsIn').replace('{code}', baseCurrency)}
+        </span>
+      </div>
 
       {debtors.length === 0 ? (
         <p className="text-fin-md text-slate-500">{t('overview.noDebtors')}</p>
@@ -69,7 +84,6 @@ export function TopDebtors({ rows }: { rows: CounterpartyJournalRow[] }) {
                   </td>
                   <td className="py-1.5 text-right tabular-nums text-slate-900">
                     {money.format(row.totalDebt)}
-                    <span className="ml-1 text-fin-xs text-slate-400">{row.currency}</span>
                   </td>
                 </tr>
               ))}
