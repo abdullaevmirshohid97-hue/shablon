@@ -16,6 +16,9 @@ import { analyticsFromTransactions } from '@/lib/analyticsData';
 import { hasStashedDraft, useLedgerMode } from '@/lib/prefs/useLedgerMode';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Segmented } from '@/components/ui/Segmented';
+import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
+import { agingFromStatement } from '@/components/AgingLadder';
 
 export function CounterpartyLedgerClient({
   orgId,
@@ -52,6 +55,7 @@ export function CounterpartyLedgerClient({
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
   const [printWithAnalytics, setPrintWithAnalytics] = useState(false);
   const [printMode, setPrintMode] = useState<PrintMode>('statement');
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const period = usePeriodFilter('all');
 
   // One switch for the whole page: the settings form above and the ledger
@@ -135,12 +139,44 @@ export function CounterpartyLedgerClient({
         </div>
       )}
 
-      <CounterpartySettings
-        orgId={orgId}
-        counterpartyId={counterpartyId}
-        canWrite={canEdit}
-        initial={details}
-      />
+      {/* The client's record, behind a button rather than spread across a form
+          at the top of the page. It changes a few times a year; the ledger
+          under it is why anyone opened this page. The line beside the button
+          carries the part that gets looked up without opening anything. */}
+      <div className="no-print flex flex-wrap items-center gap-3">
+        <Button type="button" variant="secondary" size="sm" onClick={() => setDetailsOpen(true)}>
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-slate-500">
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clipRule="evenodd"
+            />
+          </svg>
+          {t('counterparty.detailsTitle')}
+        </Button>
+        <span className="min-w-0 truncate text-fin-sm text-slate-500">
+          {[details.phone, details.currency ?? baseCurrency, details.categories?.join(', ')]
+            .filter(Boolean)
+            .join(' · ')}
+        </span>
+      </div>
+
+      {detailsOpen && (
+        <Modal
+          onClose={() => setDetailsOpen(false)}
+          title={t('counterparty.detailsTitle')}
+          description={counterpartyName}
+          width="xl"
+        >
+          <CounterpartySettings
+            orgId={orgId}
+            counterpartyId={counterpartyId}
+            canWrite={canEdit}
+            initial={details}
+            onSaved={() => setDetailsOpen(false)}
+          />
+        </Modal>
+      )}
 
       {/* Two documents, one page. The act carries its own heading, parties and
           period, so the statement header stands down when it is the one being
@@ -162,7 +198,12 @@ export function CounterpartyLedgerClient({
         />
       )}
 
-      <LedgerAnalytics data={analytics} period={period} forcePrintVisible={printWithAnalytics} />
+      <LedgerAnalytics
+        data={analytics}
+        period={period}
+        forcePrintVisible={printWithAnalytics}
+        aging={agingFromStatement(statement)}
+      />
 
       <LedgerTable
         supabase={supabase}

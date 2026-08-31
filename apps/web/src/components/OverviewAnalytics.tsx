@@ -8,7 +8,7 @@ import { exportOrgSummaryToExcel } from '@/lib/export/orgSummaryExcel';
 import { analyticsFromReport } from '@/lib/analyticsData';
 import { LedgerAnalytics } from './LedgerAnalytics';
 import { TopDebtors } from './TopDebtors';
-import { AgingLadder } from './AgingLadder';
+import { AgingLadder, agingFromJournal } from './AgingLadder';
 import { ModuleBreakdownTable } from './ModuleBreakdownTable';
 import { CounterpartyJournal } from './CounterpartyJournal';
 import { PrintHeader, PrintSignatures } from './PrintHeader';
@@ -159,7 +159,7 @@ export function OverviewAnalytics({
           <LedgerAnalytics data={analytics} period={period} forcePrintVisible />
         </div>
         <div className="flex flex-col gap-4">
-          <AgingLadder rows={scopedJournal} />
+          <AgingLadder totals={agingFromJournal(scopedJournal)} />
           <TopDebtors rows={scopedJournal} baseCurrency={baseCurrency} />
         </div>
       </div>

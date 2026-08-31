@@ -6,6 +6,7 @@ import type { AnalyticsData } from '@/lib/analyticsData';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card, StatCard } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { AgingLadder, type AgingTotals } from '@/components/AgingLadder';
 import { formatPeriodLabel, type PeriodFilterState } from '@/components/PeriodFilter';
 
 const currencyFormatter = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2 });
@@ -15,6 +16,7 @@ export function LedgerAnalytics({
   data,
   period,
   forcePrintVisible = false,
+  aging,
 }: {
   /**
    * Already aggregated — in Postgres for the dashboard, in the browser for a
@@ -29,6 +31,12 @@ export function LedgerAnalytics({
   period: PeriodFilterState;
   /** When true (set right before printing), this section ignores its normal print:hidden rule. */
   forcePrintVisible?: boolean;
+  /**
+   * One client's aged receivable. Present on a client's own page and absent on
+   * the dashboard, where "who is late" is a list of people and the ladder is
+   * its own card beside this one.
+   */
+  aging?: AgingTotals;
 }) {
   const { t, locale } = useLocale();
   const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
@@ -39,6 +47,13 @@ export function LedgerAnalytics({
 
   const overdueTotal = useMemo(
     () => overdueRows.reduce((sum, row) => sum + row.overdueAmount, 0),
+    [overdueRows],
+  );
+
+  // Since when, across everyone on the list: the oldest deadline that has gone
+  // by is what dates the figure beside it.
+  const overdueSince = useMemo(
+    () => overdueRows.map((row) => row.overdueDate).sort()[0] ?? null,
     [overdueRows],
   );
 
@@ -53,43 +68,51 @@ export function LedgerAnalytics({
 
       {(overdueRows.length > 0 || dueSoon.length > 0) && (
         <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {/* One cell: the figure, what it means, and who it is — rather than a
-              total floating above a list that repeated the heading. */}
-          <div className="rounded-lg border border-rose-200 bg-rose-50/50 p-4">
-            <p className="text-fin-xs font-semibold uppercase tracking-[0.04em] text-rose-700">
-              {t('analytics.overdueTotal')}
-            </p>
-            <p className="mt-0.5 text-fin-2xl font-bold tabular-nums text-rose-700">
-              {currencyFormatter.format(overdueTotal)}
-            </p>
-            <p className="mt-1 text-fin-sm leading-snug text-rose-600">
-              {t('analytics.overdueNote').replace('{n}', String(overdueRows.length))}
-            </p>
+          {/* On one client's page the question "who is late" has a single
+              answer — them — and a list of one linking to the page it is on
+              is furniture. The ladder answers the question actually left:
+              how long it has been late. */}
+          {aging ? (
+            <div className="rounded-lg border border-rose-200 bg-rose-50/50 p-4">
+              <AgingLadder totals={aging} bare />
+            </div>
+          ) : (
+            <div className="rounded-lg border border-rose-200 bg-rose-50/50 p-4">
+              <p className="text-fin-xs font-semibold uppercase tracking-[0.04em] text-rose-700">
+                {t('analytics.overdueTotal')}
+              </p>
+              <p className="mt-0.5 text-fin-2xl font-bold tabular-nums text-rose-700">
+                {currencyFormatter.format(overdueTotal)}
+              </p>
+              <p className="mt-1 text-fin-sm leading-snug text-rose-600">
+                {t('analytics.overdueNote').replace('{n}', String(overdueRows.length))}
+              </p>
 
-            <ul className="mt-3 space-y-1 border-t border-rose-200 pt-3">
-              {overdueRows.map((row) => (
-                <li key={row.id}>
-                  <Link
-                    href={`/counterparty/${row.id}`}
-                    className="flex items-center justify-between gap-2 text-fin hover:underline"
-                  >
-                    <span className="truncate font-medium text-rose-700">{row.name}</span>
-                    <span className="ml-2 shrink-0 text-right">
-                      <span className="block tabular-nums font-semibold text-rose-700">
-                        {currencyFormatter.format(row.overdueAmount)}
+              <ul className="mt-3 space-y-1 border-t border-rose-200 pt-3">
+                {overdueRows.map((row) => (
+                  <li key={row.id}>
+                    <Link
+                      href={`/counterparty/${row.id}`}
+                      className="flex items-center justify-between gap-2 text-fin hover:underline"
+                    >
+                      <span className="truncate font-medium text-rose-700">{row.name}</span>
+                      <span className="ml-2 shrink-0 text-right">
+                        <span className="block tabular-nums font-semibold text-rose-700">
+                          {currencyFormatter.format(row.overdueAmount)}
+                        </span>
+                        <span className="block text-fin-xs text-rose-500">
+                          {new Date(row.overdueDate).toLocaleDateString(dateLocale)}
+                        </span>
                       </span>
-                      <span className="block text-fin-xs text-rose-500">
-                        {new Date(row.overdueDate).toLocaleDateString(dateLocale)}
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-              {!overdueRows.length && (
-                <li className="text-fin text-slate-500">{t('analytics.noDueItems')}</li>
-              )}
-            </ul>
-          </div>
+                    </Link>
+                  </li>
+                ))}
+                {!overdueRows.length && (
+                  <li className="text-fin text-slate-500">{t('analytics.noDueItems')}</li>
+                )}
+              </ul>
+            </div>
+          )}
           <div className="rounded-lg border border-slate-200 bg-white p-4">
             <p className="mb-2 text-fin-xs font-semibold uppercase tracking-[0.04em] text-amber-700">
               {t('analytics.dueSoonTitle')} ({dueSoon.length})
@@ -97,7 +120,11 @@ export function LedgerAnalytics({
             <ul className="space-y-1">
               {dueSoon.map((row) => (
                 <li key={row.id} className="flex items-center justify-between text-fin">
-                  <span className="truncate text-slate-700">{row.label}</span>
+                  {/* An entry with no description used to render as a blank
+                      row with a date floating beside it. */}
+                  <span className="truncate text-slate-700">
+                    {row.label || t('ledger.noDescription')}
+                  </span>
                   <span className="ml-2 shrink-0 tabular-nums text-amber-700">
                     {new Date(row.dueDate).toLocaleDateString(dateLocale)}
                   </span>
@@ -114,7 +141,7 @@ export function LedgerAnalytics({
       {/* Three filled colour blocks side by side read as a traffic light and
           drowned the figures they were meant to present. The tone now lives in
           a 2px rule on the edge; the number itself carries the colour. */}
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label={t('analytics.totalKirim')}
           value={currencyFormatter.format(stats.totalKirim)}
@@ -130,6 +157,19 @@ export function LedgerAnalytics({
         <StatCard
           label={t('analytics.totalDebt')}
           value={currencyFormatter.format(stats.totalDebt)}
+        />
+        {/* The figure the other three exist to give context to. It was on the
+            card already, but only inside the panel above — never in the row a
+            reader scans first. */}
+        <StatCard
+          label={t('overview.overdueSum')}
+          value={currencyFormatter.format(overdueTotal)}
+          tone={overdueTotal > 0 ? 'danger' : 'neutral'}
+          hint={
+            overdueSince
+              ? `${new Date(overdueSince).toLocaleDateString(dateLocale)} ${t('analytics.since')}`
+              : undefined
+          }
         />
       </div>
 

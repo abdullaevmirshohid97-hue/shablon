@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useModules, useUpdateCounterparty } from '@mubosher/api-client';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
-import { Card } from '@/components/ui/Card';
 import { Input, Label, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ToggleChip } from '@/components/ui/Badge';
@@ -45,6 +44,7 @@ export function CounterpartySettings({
   counterpartyId,
   initial,
   canWrite,
+  onSaved,
 }: {
   orgId: string;
   counterpartyId: string;
@@ -57,6 +57,8 @@ export function CounterpartySettings({
     categories?: string[];
   };
   canWrite: boolean;
+  /** Called once a save has gone through — the dialog this sits in closes on it. */
+  onSaved?: () => void;
 }) {
   const { t } = useLocale();
   const router = useRouter();
@@ -148,6 +150,7 @@ export function CounterpartySettings({
       setPhone(phone.trim());
       setNotes(notes.trim());
       setSaved(true);
+      onSaved?.();
       // The name is printed by the page heading, the ledger header and the
       // print header, all rendered on the server — none of which knows the
       // form just changed it.
@@ -157,117 +160,117 @@ export function CounterpartySettings({
     }
   }
 
+  // No card of its own: this lives inside a dialog now, and a card inside a
+  // dialog is a border drawn on top of a border.
   return (
-    <Card className="no-print p-4">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div>
+        <Label>{t('addCounterparty.nameLabel')}</Label>
+        <Input
+          type="text"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          disabled={!canWrite}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div>
-          <Label>{t('addCounterparty.nameLabel')}</Label>
+          <Label>{t('counterparty.currencyLabel')}</Label>
+          <Select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            disabled={!canWrite}
+          >
+            <option value="">{t('counterparty.currencyDefault')}</option>
+            {currencies.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </Select>
+          <p className="mt-1 text-fin-xs leading-snug text-slate-400">
+            {t('counterparty.currencyHint')}
+          </p>
+        </div>
+        <div>
+          <Label>{t('overview.manager')}</Label>
+          <Select
+            value={managerId}
+            onChange={(e) => setManagerId(e.target.value)}
+            disabled={!canWrite}
+          >
+            <option value="">—</option>
+            {roster.map((r) => (
+              <option key={r.user_id} value={r.user_id}>
+                {r.full_name ?? r.email}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <Label>{t('addCounterparty.phoneLabel')}</Label>
           <Input
             type="text"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             disabled={!canWrite}
           />
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div>
-            <Label>{t('counterparty.currencyLabel')}</Label>
-            <Select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              disabled={!canWrite}
+      <div>
+        <Label>{t('addCounterparty.categoriesLabel')}</Label>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {(modules ?? []).map((m) => (
+            <ToggleChip
+              key={m.id}
+              active={categories.includes(m.name)}
+              onClick={() => canWrite && toggleCategory(m.name)}
             >
-              <option value="">{t('counterparty.currencyDefault')}</option>
-              {currencies.map((code) => (
-                <option key={code} value={code}>
-                  {code}
-                </option>
-              ))}
-            </Select>
-            <p className="mt-1 text-fin-xs leading-snug text-slate-400">
-              {t('counterparty.currencyHint')}
-            </p>
-          </div>
-          <div>
-            <Label>{t('overview.manager')}</Label>
-            <Select
-              value={managerId}
-              onChange={(e) => setManagerId(e.target.value)}
-              disabled={!canWrite}
-            >
-              <option value="">—</option>
-              {roster.map((r) => (
-                <option key={r.user_id} value={r.user_id}>
-                  {r.full_name ?? r.email}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <Label>{t('addCounterparty.phoneLabel')}</Label>
-            <Input
-              type="text"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              disabled={!canWrite}
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label>{t('addCounterparty.categoriesLabel')}</Label>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {(modules ?? []).map((m) => (
-              <ToggleChip
-                key={m.id}
-                active={categories.includes(m.name)}
-                onClick={() => canWrite && toggleCategory(m.name)}
-              >
-                {m.name}
+              {m.name}
+            </ToggleChip>
+          ))}
+          {/* A tag the client carries that no module declares any more —
+                shown so it can be taken off, rather than silently kept. */}
+          {categories
+            .filter((c) => !modules?.some((m) => m.name === c))
+            .map((c) => (
+              <ToggleChip key={c} active onClick={() => canWrite && toggleCategory(c)}>
+                {c} ×
               </ToggleChip>
             ))}
-            {/* A tag the client carries that no module declares any more —
-                shown so it can be taken off, rather than silently kept. */}
-            {categories
-              .filter((c) => !modules?.some((m) => m.name === c))
-              .map((c) => (
-                <ToggleChip key={c} active onClick={() => canWrite && toggleCategory(c)}>
-                  {c} ×
-                </ToggleChip>
-              ))}
-          </div>
         </div>
+      </div>
 
-        <div>
-          <Label>{t('counterparty.notesLabel')}</Label>
-          <textarea
-            className={textareaClass}
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder={t('counterparty.notesPlaceholder')}
-            disabled={!canWrite}
-          />
+      <div>
+        <Label>{t('counterparty.notesLabel')}</Label>
+        <textarea
+          className={textareaClass}
+          rows={3}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder={t('counterparty.notesPlaceholder')}
+          disabled={!canWrite}
+        />
+      </div>
+
+      {errorMessage && <p className="text-fin-md text-rose-600">{errorMessage}</p>}
+
+      {canWrite && (
+        <div className="flex items-center gap-3">
+          <Button type="submit" size="sm" disabled={update.isPending}>
+            {update.isPending ? t('common.saving') : t('common.save')}
+          </Button>
+          {saved && !isDirty && (
+            <span className="text-fin-md text-emerald-700">{t('counterparty.saved')}</span>
+          )}
+          {isDirty && (
+            <span className="text-fin-sm text-amber-700">{t('ledger.draftUnsaved')}</span>
+          )}
         </div>
-
-        {errorMessage && <p className="text-fin-md text-rose-600">{errorMessage}</p>}
-
-        {canWrite && (
-          <div className="flex items-center gap-3">
-            <Button type="submit" size="sm" disabled={update.isPending}>
-              {update.isPending ? t('common.saving') : t('common.save')}
-            </Button>
-            {saved && !isDirty && (
-              <span className="text-fin-md text-emerald-700">{t('counterparty.saved')}</span>
-            )}
-            {isDirty && (
-              <span className="text-fin-sm text-amber-700">{t('ledger.draftUnsaved')}</span>
-            )}
-          </div>
-        )}
-      </form>
-    </Card>
+      )}
+    </form>
   );
 }

@@ -1,11 +1,51 @@
 'use client';
 
-import { useMemo } from 'react';
-import type { CounterpartyJournalRow } from '@mubosher/shared';
+import type { CounterpartyJournalRow, CounterpartyStatement } from '@mubosher/shared';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import { Card } from '@/components/ui/Card';
 
 const money = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+
+export interface AgingTotals {
+  /** 1–30, 31–60, 61–90, 90+ — in that order, and they sum to `overdue`. */
+  buckets: [number, number, number, number];
+  overdue: number;
+  notYetDue: number;
+  debt: number;
+}
+
+/** The whole book: one client's ladder plus the next, added up. */
+export function agingFromJournal(rows: CounterpartyJournalRow[]): AgingTotals {
+  return rows.reduce<AgingTotals>(
+    (acc, row) => ({
+      buckets: [
+        acc.buckets[0] + row.overdue1To30,
+        acc.buckets[1] + row.overdue31To60,
+        acc.buckets[2] + row.overdue61To90,
+        acc.buckets[3] + row.overdue90Plus,
+      ],
+      overdue: acc.overdue + row.overdueAmount,
+      notYetDue: acc.notYetDue + row.notYetDue,
+      debt: acc.debt + row.totalDebt,
+    }),
+    { buckets: [0, 0, 0, 0], overdue: 0, notYetDue: 0, debt: 0 },
+  );
+}
+
+/** One client's, from the statement their own page already has. */
+export function agingFromStatement(statement: CounterpartyStatement): AgingTotals {
+  return {
+    buckets: [
+      statement.aging[0]?.amount ?? 0,
+      statement.aging[1]?.amount ?? 0,
+      statement.aging[2]?.amount ?? 0,
+      statement.aging[3]?.amount ?? 0,
+    ],
+    overdue: statement.overdueAmount,
+    notYetDue: statement.notYetDue,
+    debt: statement.totalDebt,
+  };
+}
 
 /**
  * The aged receivable — how long the overdue money has been overdue.
@@ -23,35 +63,24 @@ const money = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
  * overdue is a figure below the ladder, not a fifth segment, because it is not
  * a stage of lateness.
  */
-export function AgingLadder({ rows }: { rows: CounterpartyJournalRow[] }) {
+export function AgingLadder({
+  totals,
+  bare = false,
+}: {
+  totals: AgingTotals;
+  /** True when it already sits inside a card — on a client's analytics panel. */
+  bare?: boolean;
+}) {
   const { t } = useLocale();
 
-  const totals = useMemo(
-    () =>
-      rows.reduce(
-        (acc, row) => ({
-          b1: acc.b1 + row.overdue1To30,
-          b2: acc.b2 + row.overdue31To60,
-          b3: acc.b3 + row.overdue61To90,
-          b4: acc.b4 + row.overdue90Plus,
-          overdue: acc.overdue + row.overdueAmount,
-          notYetDue: acc.notYetDue + row.notYetDue,
-          debt: acc.debt + row.totalDebt,
-        }),
-        { b1: 0, b2: 0, b3: 0, b4: 0, overdue: 0, notYetDue: 0, debt: 0 },
-      ),
-    [rows],
-  );
+  const buckets = (
+    ['export.aging1', 'export.aging2', 'export.aging3', 'export.aging4'] as const
+  ).map((key, i) => ({ label: t(key), amount: totals.buckets[i] ?? 0 }));
 
-  const buckets = [
-    { label: t('export.aging1'), amount: totals.b1 },
-    { label: t('export.aging2'), amount: totals.b2 },
-    { label: t('export.aging3'), amount: totals.b3 },
-    { label: t('export.aging4'), amount: totals.b4 },
-  ];
+  const Frame = bare ? 'div' : Card;
 
   return (
-    <Card className="flex flex-col p-4">
+    <Frame className={bare ? 'flex flex-col' : 'flex flex-col p-4'}>
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-fin-lg font-semibold text-slate-900">{t('analytics.agingTitle')}</h2>
         <span className="text-fin-sm text-slate-500">
@@ -115,6 +144,6 @@ export function AgingLadder({ rows }: { rows: CounterpartyJournalRow[] }) {
           <dd className="tabular-nums text-slate-900">{money.format(totals.debt)}</dd>
         </div>
       </dl>
-    </Card>
+    </Frame>
   );
 }
