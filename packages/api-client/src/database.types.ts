@@ -150,13 +150,9 @@ export interface Database {
           user_id: string;
           role: 'owner' | 'admin' | 'staff';
           created_at: string;
-          /**
-           * bcrypt, set and checked only through set_finance_pin /
-           * verify_finance_pin (0008, 0020) — both hard-scoped to auth.uid().
-           * Declared here so a caller can ask whether it is set; the value
-           * itself is never compared outside Postgres.
-           */
-          finance_pin_hash: string | null;
+          // finance_pin_hash is deliberately absent. The column exists (0008)
+          // but 0040 revokes SELECT on it, so declaring it here would only
+          // invite a query that now fails — ask has_finance_pin() instead.
         };
         Insert: Partial<Database['public']['Tables']['memberships']['Row']> & {
           org_id: string;

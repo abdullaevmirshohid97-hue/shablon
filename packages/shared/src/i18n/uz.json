@@ -9,7 +9,8 @@
     "error": "Xatolik yuz berdi",
     "errorRetry": "Xatolik yuz berdi, qayta urinib ko'ring.",
     "apply": "Qo'llash",
-    "close": "Bekor"
+    "close": "Bekor",
+    "closeDialog": "Yopish"
   },
   "header": {
     "title": "Finance",
@@ -215,7 +216,8 @@
     "flowTitle": "Oylik kirim / chiqim",
     "flowPeak": "Eng katta oylik ustun: {amount}",
     "byCurrencyTitle": "Valyutalar bo‘yicha",
-    "consolidated": "Umumiy ({code})"
+    "consolidated": "Umumiy ({code})",
+    "asOf": "holatiga"
   },
   "overview": {
     "topDebtors": "Eng ko'p qarzdorlar",
@@ -346,7 +348,9 @@
       "empty": "Hozircha mahsulot kartasi yo‘q",
       "deleteInUse": "Bu mahsulot bo‘yicha ombor partiyalari bor — avval ularni o‘chiring.",
       "lengthLabel": "Bo‘yi (sm)",
-      "widthLabel": "Eni (sm)"
+      "widthLabel": "Eni (sm)",
+      "donaLabel": "Dona",
+      "kgLabel": "Kg"
     },
     "batch": {
       "title": "Kirim / partiya",

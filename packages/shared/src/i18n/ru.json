@@ -9,7 +9,8 @@
     "error": "Произошла ошибка",
     "errorRetry": "Произошла ошибка, попробуйте снова.",
     "apply": "Применить",
-    "close": "Отмена"
+    "close": "Отмена",
+    "closeDialog": "Закрыть"
   },
   "header": {
     "title": "Finance",
@@ -215,7 +216,8 @@
     "flowTitle": "Приход / расход по месяцам",
     "flowPeak": "Наибольший месячный столбец: {amount}",
     "byCurrencyTitle": "По валютам",
-    "consolidated": "Сводно ({code})"
+    "consolidated": "Сводно ({code})",
+    "asOf": "на дату"
   },
   "overview": {
     "topDebtors": "Крупнейшие должники",
@@ -346,7 +348,9 @@
       "empty": "Карточек товаров пока нет",
       "deleteInUse": "По этому товару есть партии на складе — сначала удалите их.",
       "lengthLabel": "Длина (см)",
-      "widthLabel": "Ширина (см)"
+      "widthLabel": "Ширина (см)",
+      "donaLabel": "Штук",
+      "kgLabel": "Кг"
     },
     "batch": {
       "title": "Приход / партия",

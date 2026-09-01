@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef } from 'react';
+import { useLocale } from '@/lib/i18n/LocaleProvider';
 
 /**
  * The dialog shell, once.
@@ -40,6 +41,7 @@ export function Modal({
   footer?: React.ReactNode;
   width?: keyof typeof widths;
 }) {
+  const { t } = useLocale();
   const panel = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
@@ -93,7 +95,7 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="✕"
+            aria-label={t('common.closeDialog')}
             className="-mr-1 -mt-1 shrink-0 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">

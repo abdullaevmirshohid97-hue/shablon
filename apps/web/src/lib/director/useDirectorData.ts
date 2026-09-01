@@ -108,17 +108,36 @@ export function useAllOrgRosters(orgs: OrgOption[]) {
           if (error) throw error;
 
           const roleOf = new Map((rows ?? []).map((r) => [r.user_id, r.role as OrgRole]));
+          const named = new Map(
+            (roster ?? []).map((m) => [
+              m.user_id,
+              {
+                userId: m.user_id,
+                fullName: m.full_name,
+                email: m.email,
+                avatarUrl: m.avatar_url,
+                role: roleOf.get(m.user_id) ?? null,
+              },
+            ]),
+          );
 
-          return {
-            org,
-            members: (roster ?? []).map((m) => ({
-              userId: m.user_id,
-              fullName: m.full_name,
-              email: m.email,
-              avatarUrl: m.avatar_url,
-              role: roleOf.get(m.user_id) ?? null,
-            })),
-          };
+          // Membership is the list that matters: someone the roster could not
+          // name — a profile row that never got written, an account the RPC's
+          // join misses — is still a person with rights in this business, and
+          // dropping them off a director's roster is how they stop being
+          // noticed.
+          const members: RosterMember[] = (rows ?? []).map(
+            (r) =>
+              named.get(r.user_id) ?? {
+                userId: r.user_id,
+                fullName: null,
+                email: null,
+                avatarUrl: null,
+                role: r.role as OrgRole,
+              },
+          );
+
+          return { org, members };
         }),
       ),
   });

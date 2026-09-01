@@ -36,22 +36,25 @@ export function DirectorGate({ orgs, children }: { orgs: OrgOption[]; children: 
   const [error, setError] = useState<string | null>(null);
   const [hasPin, setHasPin] = useState<boolean | null>(null);
 
-  // Whether a code has ever been set — read from this account's own rows and
-  // reduced to a yes/no immediately. Nothing else is done with it.
+  // Whether a code has ever been set. Asked through has_finance_pin (0020),
+  // which answers yes or no in Postgres — the first version of this read the
+  // hash column itself and decided in the browser, which pulled a credential
+  // hash across the wire to compute a boolean the database was already
+  // willing to compute.
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    void supabase.auth.getUser().then(({ data }) => {
-      const userId = data.user?.id;
-      if (!userId) return;
-      void supabase
-        .from('memberships')
-        .select('finance_pin_hash')
-        .eq('user_id', userId)
-        .then(({ data: rows }) => {
-          setHasPin((rows ?? []).some((r) => Boolean(r.finance_pin_hash)));
-        });
+    let cancelled = false;
+
+    void Promise.all(
+      orgs.map((org) => supabase.rpc('has_finance_pin', { target_org_id: org.orgId })),
+    ).then((results) => {
+      if (!cancelled) setHasPin(results.some((r) => r.data === true));
     });
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [orgs]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -113,8 +116,11 @@ export function DirectorGate({ orgs, children }: { orgs: OrgOption[]; children: 
             </p>
           )}
 
-          <Button type="submit" disabled={checking || pin.length < 4}>
-            {checking ? t('common.loading') : t('director.unlock')}
+          {/* Held until the answer arrives. Submitting before it does would
+              compare the initial code against an unknown, and tell a person
+              typing the right code that it is wrong. */}
+          <Button type="submit" disabled={checking || hasPin === null || pin.length < 4}>
+            {checking || hasPin === null ? t('common.loading') : t('director.unlock')}
           </Button>
         </form>
 

@@ -70,13 +70,21 @@ export function CounterpartyJournal({
   const { data: rows, isLoading } = useCounterpartyJournal(supabase, orgId, filters);
 
   // The buttons are built from the currencies this book actually keeps
-  // accounts in — but only from an unfiltered read, because once one is
-  // picked the rows can only tell us about that one.
+  // accounts in — but only from a read with *nothing* narrowing it. Any active
+  // filter shrinks the rows, and a currency held only by clients the manager
+  // filter is hiding would quietly drop out of the row of buttons.
+  const unfiltered =
+    !filters.currency &&
+    !filters.search &&
+    !filters.managerId &&
+    !filters.onlyOverdue &&
+    !filters.onlyDebtors;
+
   useEffect(() => {
-    if (filters.currency || !rows) return;
+    if (!unfiltered || !rows) return;
     const found = [...new Set(rows.map((r) => r.currency))].sort();
     setCurrencyOptions((prev) => (prev.join('|') === found.join('|') ? prev : found));
-  }, [rows, filters.currency]);
+  }, [rows, unfiltered]);
 
   const totals = useMemo(
     () =>

@@ -26,6 +26,7 @@ export function CurrencyBreakdown({
   selected,
   onSelect,
   baseCurrency,
+  asOf = null,
   isLoading = false,
 }: {
   rows: CurrencyTotalsRow[];
@@ -33,9 +34,15 @@ export function CurrencyBreakdown({
   selected: string | null;
   onSelect: (currency: string | null) => void;
   baseCurrency: string;
+  /** The date the debt figures are stated at — the period end, or today. */
+  asOf?: string | null;
   isLoading?: boolean;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const dateLocale = locale === 'ru' ? 'ru-RU' : 'uz-UZ';
+  const asOfLabel = `${new Date(asOf ?? Date.now()).toLocaleDateString(dateLocale)} ${t(
+    'analytics.asOf',
+  )}`;
 
   if (isLoading) {
     return (
@@ -98,7 +105,13 @@ export function CurrencyBreakdown({
                 <Line label={t('analytics.totalKirim')} value={row.totalKirim} tone="success" />
                 <Line label={t('analytics.totalChiqim')} value={row.totalChiqim} tone="danger" />
                 <div className="flex items-baseline justify-between gap-2 border-t border-slate-100 pt-1 font-semibold">
-                  <dt className="text-slate-600">{t('analytics.totalDebt')}</dt>
+                  {/* A position, not a flow like the two above it — so it is
+                      stated as of a date rather than "for the period", and the
+                      date is the period's end when one is chosen. */}
+                  <dt className="text-slate-600">
+                    {t('analytics.totalDebt')}
+                    <span className="ml-1 font-normal text-fin-xs text-slate-400">{asOfLabel}</span>
+                  </dt>
                   <dd className="tabular-nums text-slate-900">{money.format(row.totalDebt)}</dd>
                 </div>
               </dl>

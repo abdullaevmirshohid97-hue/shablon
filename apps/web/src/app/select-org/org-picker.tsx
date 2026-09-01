@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { useLocale } from '@/lib/i18n/LocaleProvider';
 import type { OrgOption } from '@/lib/auth/activeOrg';
@@ -45,7 +44,6 @@ export function OrgPicker({
   canCreate?: boolean;
 }) {
   const { t } = useLocale();
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
@@ -94,10 +92,10 @@ export function OrgPicker({
       if (!created) throw new Error(t('org.slugTaken'));
 
       setCreating(false);
+      // chooseOrg redirects, so there is nothing here to refresh into.
       startTransition(() => {
         void chooseOrg(created!, next);
       });
-      router.refresh();
     } catch (err) {
       setErrorMessage((err as Error).message);
     } finally {

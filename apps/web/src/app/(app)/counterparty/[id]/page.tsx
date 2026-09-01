@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getOrgContext } from '@/lib/auth/activeOrg';
 import { getServerTranslator } from '@/lib/i18n/server';
 import { CounterpartyLedgerClient } from './ledger-client';
 
@@ -26,6 +27,18 @@ export default async function CounterpartyPage({ params }: { params: Promise<{ i
   // when it was folded into this query.
   if (error) throw new Error(`counterparty ${id} could not be loaded: ${error.message}`);
   if (!counterparty) notFound();
+
+  // A client of another of this account's businesses. RLS let the row through
+  // because the account is a member there too, but the page around it — the
+  // sidebar, the module gate, the org name in the print header — is the active
+  // organization's. Rendering one company's client inside another's frame is
+  // how a figure ends up filed under the wrong business, so the choice is made
+  // first. Reached by a pasted link or browser history; the director's list
+  // switches before it navigates.
+  const { active } = await getOrgContext();
+  if (active && active.orgId !== counterparty.org_id) {
+    redirect(`/select-org?next=${encodeURIComponent(`/counterparty/${id}`)}`);
+  }
 
   // Decoration for the print header only. Fetched separately and allowed to
   // come back null, so it can never take the whole ledger page down with it.

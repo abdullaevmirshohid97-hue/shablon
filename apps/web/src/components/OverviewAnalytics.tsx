@@ -205,6 +205,7 @@ export function OverviewAnalytics({
           selected={trendCurrency}
           onSelect={setTrendCurrency}
           baseCurrency={baseCurrency}
+          asOf={period.range?.end ?? null}
           isLoading={currencyLoading}
         />
       )}

@@ -49,9 +49,12 @@ export function LedgerTrend({
     const bottom = Math.min(...values, 0);
     const span = top - bottom || 1;
     const step = points.length > 1 ? (W - PAD_X * 2) / (points.length - 1) : 0;
+    // A single month has no line to draw, so it sits in the middle rather than
+    // pinned to the left edge as the general formula would put it.
+    const originX = points.length > 1 ? PAD_X : W / 2;
 
     const coords = points.map((p, i) => ({
-      x: PAD_X + i * step,
+      x: originX + i * step,
       y: PAD_Y + (1 - (p.closingDebt - bottom) / span) * (H - PAD_Y * 2),
       point: p,
     }));
