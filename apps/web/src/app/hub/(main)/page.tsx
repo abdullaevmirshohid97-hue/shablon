@@ -17,26 +17,47 @@ export default async function HubPage() {
 
   // The flag was hardcoded false, so every admin-only door was missing from
   // the front door — including, once it existed, the director's.
-  const { options } = await getOrgContext();
+  const { options, active } = await getOrgContext();
   const isOrgAdmin = options.some((o) => o.role === 'owner' || o.role === 'admin');
   const tiles = ontology.tiles({ isOrgAdmin });
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {tiles.map((module) => {
-        const Icon = iconFor(module.icon);
-        return (
-          <Link key={module.href} href={module.href}>
-            <Card className="flex h-full flex-col gap-2 p-6 transition-shadow hover:shadow-md">
-              <Icon className="h-8 w-8 text-brand-600" />
-              <h2 className="text-lg font-semibold text-slate-900">{t(module.titleKey)}</h2>
-              <p className="text-sm text-slate-500">
-                {module.descriptionKey ? t(module.descriptionKey) : null}
-              </p>
-            </Card>
+    <>
+      {/* Which business this is, and the way to another one.
+       *
+       * It has to be here, on the one screen every role can reach. The
+       * organization picker lived only in hub settings, and hub settings is an
+       * admin-only door — so an owner whose active organization happened to be
+       * one where they are merely staff lost the settings link *and* the only
+       * route to the switcher that would have put it back. Locked out of their
+       * own admin screens by a cookie, with nothing on screen explaining why.
+       */}
+      {options.length > 1 && (
+        <div className="mb-5 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-slate-500">{t('org.selectTitle')}:</span>
+          <span className="font-semibold text-slate-900">{active?.name ?? '—'}</span>
+          <Link href="/select-org?next=/hub" className="text-brand-700 hover:underline">
+            {t('org.switch')}
           </Link>
-        );
-      })}
-    </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {tiles.map((module) => {
+          const Icon = iconFor(module.icon);
+          return (
+            <Link key={module.href} href={module.href}>
+              <Card className="flex h-full flex-col gap-2 p-6 transition-shadow hover:shadow-md">
+                <Icon className="h-8 w-8 text-brand-600" />
+                <h2 className="text-lg font-semibold text-slate-900">{t(module.titleKey)}</h2>
+                <p className="text-sm text-slate-500">
+                  {module.descriptionKey ? t(module.descriptionKey) : null}
+                </p>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    </>
   );
 }
