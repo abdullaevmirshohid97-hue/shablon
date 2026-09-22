@@ -40,3 +40,8 @@ Thumbs.db
 # logs
 *.log
 npm-debug.log*
+
+# Agent-tool scratch: local playbooks and CLI config. They carry infrastructure
+# notes (host names, ports, DNS) and this repository is public.
+/.agents/
+/.codex/
