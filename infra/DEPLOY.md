@@ -103,7 +103,31 @@ DNS tarqalgach Caddy SSL'ni avtomatik oladi (certbot kerak emas).
 cd /opt/mery && bash infra/deploy.sh
 ```
 
-`git pull` → `npm ci` → standalone build → `pm2 restart mery-web`.
+`git pull` → `npm ci` → standalone build → `pm2 restart infra/ecosystem.config.cjs`
+(env, shu jumladan `/opt/mery-keys/server.env`, qayta o'qiladi).
+
+## Dorixona ulanishi (admin → Dorixona, bir marta)
+
+Admin panelning **Dorixona** bo'limi dorixona.idaa.uz tarmoqlarini qo'shadi va
+boshqaradi — dorixona serveriga server → server so'rov (`X-Platform-Key`). Bu
+kalit barcha dorixona tarmoqlarini ochadi, shuning uchun u repoda ham,
+`.env.production` da ham turmaydi — alohida faylda, faqat server o'qiydi:
+
+```bash
+sudo mkdir -p /opt/mery-keys && sudo chmod 700 /opt/mery-keys
+sudo nano /opt/mery-keys/server.env
+#   DORIXONA_API_URL=https://dorixona.idaa.uz/api/v1
+#   DORIXONA_PLATFORM_KEY=<dorixona serveridagi /opt/dorixona/keys/api.env → PLATFORM_KEY>
+sudo chmod 600 /opt/mery-keys/server.env
+pm2 restart /opt/mery/infra/ecosystem.config.cjs --update-env
+```
+
+- Ikkala loyiha bitta serverda bo'lsa, kalit tarmoqqa chiqmasin:
+  `DORIXONA_API_URL=http://127.0.0.1:<API_PORT>/api/v1`
+  (`grep API_PORT /opt/dorixona/keys/api.env`).
+- Boshqa manzil faqat `https://` bilan — `http://` manzilga bo'lim kalitni yubormaydi.
+- Fayl yo'q yoki bo'sh bo'lsa — bo'lim "Ulanmagan" deb turadi, qolgan sayt ishlayveradi.
+- Kalit almashsa: yangisini shu faylga yozing va yuqoridagi `pm2 restart` buyrug'i.
 
 ## Foydali buyruqlar
 

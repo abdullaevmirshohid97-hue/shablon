@@ -7,6 +7,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 const navItems = [
   { href: '/admin', label: 'Umumiy' },
   { href: '/admin/organizations', label: 'Tashkilotlar' },
+  { href: '/admin/dorixona', label: 'Dorixona' },
 ];
 
 function isActive(pathname: string, href: string): boolean {

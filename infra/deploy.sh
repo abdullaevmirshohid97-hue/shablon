@@ -70,7 +70,8 @@ ok "Standalone tayyor"
 # --- 6. pm2 ---
 if pm2 describe mery-web > /dev/null 2>&1; then
   log "mery-web qayta ishga tushirilyapti (pm2)..."
-  pm2 restart mery-web --update-env
+  # Fayl orqali: env (shu jumladan /opt/mery-keys/server.env) har deployda qayta o'qiladi.
+  pm2 restart "$REPO_DIR/infra/ecosystem.config.cjs" --update-env
 else
   log "mery-web birinchi marta ishga tushirilyapti (pm2)..."
   pm2 start "$REPO_DIR/infra/ecosystem.config.cjs"

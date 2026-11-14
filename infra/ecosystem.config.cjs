@@ -9,8 +9,32 @@
 //   pm2 save          # reboot'dan keyin avtomatik tiklanishi uchun
 //   pm2 startup       # (bir marta) systemd bilan avtostart
 //
-// Keyingi deploylar deploy.sh orqali: pm2 restart mery-web --update-env
+// Keyingi deploylar deploy.sh orqali: pm2 restart infra/ecosystem.config.cjs --update-env
+// (shu fayl qayta o'qiladi — kalitlar fayli o'zgarsa ham yangisini oladi)
 // ============================================================================
+const fs = require('fs');
+
+// Maxfiy server kalitlari repodan TASHQARIDA turadi (chmod 600) va bundle'ga
+// hech qachon tushmaydi: faqat NEXT_PUBLIC_ bo'lmagan nomlar, faqat server o'qiydi.
+// Hozircha: DORIXONA_API_URL, DORIXONA_PLATFORM_KEY (admin → Dorixona bo'limi).
+// Fayl yo'q bo'lsa — bo'lim "ulanmagan" deb ko'rsatadi, qolgan sayt ishlayveradi.
+const KEYS_FILE = '/opt/mery-keys/server.env';
+
+function serverKeys() {
+  let text;
+  try {
+    text = fs.readFileSync(KEYS_FILE, 'utf8');
+  } catch {
+    return {};
+  }
+  const keys = {};
+  for (const line of text.split(/\r?\n/)) {
+    const m = /^([A-Z][A-Z0-9_]*)=(.*)$/.exec(line.trim());
+    if (m && !m[1].startsWith('NEXT_PUBLIC_')) keys[m[1]] = m[2];
+  }
+  return keys;
+}
+
 module.exports = {
   apps: [
     {
@@ -25,6 +49,7 @@ module.exports = {
       // .env.production dagi NEXT_PUBLIC_* build paytida bundle'ga yopishtiriladi;
       // bu yerda faqat runtime server sozlamalari.
       env: {
+        ...serverKeys(),
         NODE_ENV: 'production',
         // FAQAT localhost'ga bind — tashqariga Caddy reverse_proxy orqali chiqadi.
         // Node porti (3100) to'g'ridan-to'g'ri internetga ochilmaydi.
